@@ -1,6 +1,7 @@
 import { SceneObjectNode, SceneObject } from '../scene_graph.js';
 import { phong_frag_shader } from '../frag_shaders.js';
 import { phong_vert_shader } from '../vert_shaders.js';
+import { translate } from '../transitions.js';
 
 export class SphereObject extends SceneObject {
 //id, gl, vert_shader=null, frag_shader=null)
@@ -29,7 +30,7 @@ export class SphereNode extends SceneObjectNode {
    * constructor and inits
    * ----------------------------------
    */
-  constructor(id, gl, program, base_color=[0.5, 0.5, 0.5], static_transforms=[]) {
+  constructor(id, gl, program, base_color=[0.5, 0.5, 0.5], static_transforms=[translate([0, 0, -10])]) {
     const math_pack = gen_math_pack();
     const basic_colors = gen_colors(math_pack.vertices.length, base_color);
     super(
@@ -55,7 +56,7 @@ export class SphereNode extends SceneObjectNode {
  * vertices, index mapping, normals, tangents, texel mapping.
  */
 function gen_math_pack() {
-  const r = 1.0; // unit sphere
+  const r = 1.0; // unit sphere-ish
   const h_step = 0.1; // horizontal resolution
   const v_step = 0.1; // vertical resolution
 
