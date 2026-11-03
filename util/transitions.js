@@ -83,14 +83,20 @@ export function perspective(fov, aspect, near, far) {
 }
 
 // Orthographic matrix
-export function ortho(left, right, bottom, top, near, far) {
-    const lr = 1 / (left - right), bt = 1 / (bottom - top), nf = 1 / (near - far);
-    return new Float32Array([
-        -2*lr, 0, 0, 0,
-        0, -2*bt, 0, 0,
-        0, 0, 2*nf, 0,
-        (left+right)*lr, (top+bottom)*bt, (far+near)*nf, 1
-    ]);
+// export function ortho(left, right, bottom, top, near, far) {
+//     const lr = 1 / (left - right), bt = 1 / (bottom - top), nf = 1 / (near - far);
+//     return new Float32Array([
+//         -2*lr, 0, 0, 0,
+//         0, -2*bt, 0, 0,
+//         0, 0, 2*nf, 0,
+//         (left+right)*lr, (top+bottom)*bt, (far+near)*nf, 1
+//     ]);
+// }
+export function ortho(orthoSize, aspect, zNear, zFar) { // the same as above pretty much, but moving this here.
+  return matMul(
+      box2Cube(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize, zNear, zFar),
+      flipZ()
+    )
 }
 
 // Identity matrix

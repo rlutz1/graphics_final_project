@@ -13,6 +13,7 @@ export class SphereObject extends SceneObject {
   constructor(id, gl, vert_shader=phong_vert_shader, frag_shader=phong_frag_shader) {
     super(id, gl, vert_shader, frag_shader);
     this.add_root(new SphereNode("sphere_root", gl, this.program));
+    // console.log(this.roots)
   } // end constructor
 
   /**
