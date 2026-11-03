@@ -8,6 +8,11 @@
 </head>
 
 <body>
+
+  <!-- ======================================================= -->
+  <!-- PRIMARY HTML PAGE                                       -->
+  <!-- ======================================================= -->
+
   <h1>Space Duck Hunt: The Birdening</h1>
 
   <div style="display: flex; gap: 10px; align-items: flex-start;">
@@ -16,22 +21,39 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT SETUP -->
+  <!-- ======================================================= -->
+  <!-- JAVASCRIPT IMPORTS                                      -->
+  <!-- ======================================================= -->
+
   <!-- <script src="transformations.js"></script> -->
   <!-- <script src="primitive_generators.js"></script> -->
-  <script src="vert_shaders.js"></script>
-  <script src="frag_shaders.js"></script>
-  <script src="scene_graph.js"></script>
   <!-- <script src="object_generators.js"></script> -->
-  <script src="ui_util.js"></script>
+  
+  <!-- backend pieces -->
+  <!-- <script src="vert_shaders.js"></script> -->
+  <!-- <script src="frag_shaders.js"></script> -->
+  <!-- <script src="scene_graph.js"></script> -->
+  <!-- <script src="ui_util.js"></script> -->
 
-  <script>
+  <!-- testing -->
+  <!-- <script type="module">
+    import * as SphereGenerator from 'scene_building/primitives/sphere.js';
+    window.SphereGenerator = SphereGenerator;
+  </script> -->
+
+  <!-- ======================================================= -->
+  <!-- MAIN RENDER LOOP                                        -->
+  <!-- ======================================================= -->
+
+  <script type="module">
+    import * as SphereGenerator from './scene_building/primitives/sphere.js';
+    console.log(SphereGenerator.testing)
     // WebGL setup
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl2");
     if (!gl) alert("WebGL2 not supported");
 
-    start_time = Date.now() // start the clock 
+    const start_time = Date.now() // start the clock 
 
     /**
      * render the scene.
