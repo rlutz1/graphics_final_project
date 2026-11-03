@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>UNM CS 412/512 HW5</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <h1>Space Duck Hunt: The Birdening</h1>
+
+  <div style="display: flex; gap: 10px; align-items: flex-start;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <canvas id="glcanvas" width="800" height="800"></canvas>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT SETUP -->
+  <!-- <script src="transformations.js"></script> -->
+  <!-- <script src="primitive_generators.js"></script> -->
+  <script src="vert_shaders.js"></script>
+  <script src="frag_shaders.js"></script>
+  <script src="scene_graph.js"></script>
+  <!-- <script src="object_generators.js"></script> -->
+  <script src="ui_util.js"></script>
+
+  <script>
+    // WebGL setup
+    const canvas = document.getElementById("glcanvas");
+    const gl = canvas.getContext("webgl2");
+    if (!gl) alert("WebGL2 not supported");
+
+    start_time = Date.now() // start the clock 
+
+    /**
+     * render the scene.
+     */
+    function render() {
+      // TODO
+    } // end render
+
+    // Initialize when page loads
+    window.onload = function () {
+      setInterval(render, 30); // execute this code with a 30 ms delay on each call
+    }
+
+  </script>
+</body>
+
+</html>
