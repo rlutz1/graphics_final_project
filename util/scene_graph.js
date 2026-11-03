@@ -18,7 +18,7 @@
  * ============================================================
  */
 
-class SceneGraph {
+export class SceneGraph {
 
   objects = []; // these are root objects of the scene. can be a single node.
   point_lights_global = []; // these are point lights that should default be used on all objects
@@ -307,8 +307,8 @@ export class SceneObject {
    */
   create_program() {
     // create the shaders
-    this.vert_shader = this.create_shader(this.gl.VERTEX_SHADER, this.vert_shader_raw.src);
-    this.frag_shader = this.create_shader(this.gl.FRAGMENT_SHADER, this.frag_shader_raw.src);
+    this.vert_shader = this.create_shader(this.gl.VERTEX_SHADER, this.vert_shader_raw);
+    this.frag_shader = this.create_shader(this.gl.FRAGMENT_SHADER, this.frag_shader_raw);
     // create the program for this object and children
     this.program = this.gl.createProgram();
     // attach shaders
@@ -426,7 +426,7 @@ export class SceneObject {
  * hierarchy.
  * ============================================================
  */
-class SceneObjectNode {
+export class SceneObjectNode {
 
   gl = null; // ref to gl for buffer generation
   program = null; // program in use for this node (set by the above Object)

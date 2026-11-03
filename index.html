@@ -41,13 +41,19 @@
 
   <script type="module">
     // import test
-    // import * as SphereGenerator from './util/primitives/sphere.js';
-    // console.log(SphereGenerator.testing)
+    // import * from './util/primitives/sphere.js';
+    import * as SphereGen from "./util/primitives/sphere.js";
+    
 
+   
     // WebGL setup
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl2");
     if (!gl) alert("WebGL2 not supported");
+
+    const test = new SphereGen.SphereObject("test", gl); // id, gl, program,
+    console.log(test.vert_shader_raw)
+
 
     const start_time = Date.now() // start the clock 
 
