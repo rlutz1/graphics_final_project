@@ -228,6 +228,61 @@ export const phong_vert_shader = `#version 300 es
     }
   `;
 
+
+/**
+ * EDITED TO HELP RESTRUCTURING
+ * a vertex shader that implements the vertex shading of 
+ * phong shading. meaning: phong will pass normal to frag shader
+ * for normal interpolation and lighting calculated per fragment.
+ * should be used with: phong_frag_shader
+ */
+export const struct_phong_vert_shader = {
+  "model_view": "uModelViewMatrix",
+  "projection": "uProjectionMatrix",
+  
+  "src": `#version 300 es
+      precision mediump float;
+      
+      in vec3 aPosition;
+      in vec3 aNormal;
+      in vec3 aColor;
+
+      uniform mat4 uModelViewMatrix;
+      uniform mat4 uProjectionMatrix;
+
+      // allow for many matrices in a row
+      uniform mat4 uModelTransformationMatrix[50];
+      uniform int transforms_up_to; // marker of how many transforms
+
+      out vec3 vPosition;
+      out vec3 vNormal;
+      out vec3 vColor;
+
+      void main() {
+        // cast for transformations to a 4d homogenous coord
+        vec4 pos = vec4(aPosition, 1.0);
+        vec3 norm = aNormal;
+
+        for (int i = 0; i < transforms_up_to; i++) {
+          pos = uModelTransformationMatrix[i] * pos; // add all transforms
+          norm = mat3(uModelTransformationMatrix[i]) * norm; // ensure to also alter the norm
+        } // end loop
+
+        // save the position of this vertex prior to projection -- send to frag.
+        vec4 p = uModelViewMatrix * pos;
+        vPosition = p.xyz;
+
+        // use model view and apply to given normal -- send to frag.
+        vNormal = mat3(uModelViewMatrix) * norm;
+
+        // set the actual positioning in the projection
+        gl_Position = uProjectionMatrix * p;
+
+        vColor = aColor; // send out the vertex color to frag shader
+      }
+    `
+};
+
 const texture_vertex_shader = `#version 300 es
   in vec3 aPosition;
   in vec3 aNormal;

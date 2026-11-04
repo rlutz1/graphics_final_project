@@ -209,28 +209,8 @@
     sphere.set_mesh(mesh).set_material(material);
     // console.log(sphere)
 
-    
-
-
-    // make a basic scene graph
-    // let sphere_scene = new SceneGraph(gl); // create a top level scene root with top level objects
-    // // scene.add_object(cake_flat); // add to the scene graph
-    // // scene.add_object(cake_gouraud); // add to the scene graph
-    // // scene.add_object(cake_phong); // add to the scene graph
-    // sphere_scene.add_point_light_global([0, 5, 5]); // just to have a base light
-    // sphere_scene.add_object(new SphereGen.SphereObject("test", gl)); // add a crappy sphere to the scene
-    // function get_silver_lighting() {
-    //   return {
-    //     "ka": [0.19225, 0.19225, 0.19225],
-    //     "kd": [0.50754, 0.50754, 0.50754],
-    //     "ks": [0.508273, 0.508273, 0.508273],
-    //     "alpha": 51.2,
-    //     "transparency": 1.0
-    //   }
-    // } // end function
-    // sphere_scene.update_material_global("test", get_silver_lighting());
-    
-
+    // rendering manager at your service
+    const renderer = new Builder.Renderer();
 
     const start_time = Date.now() // start the clock 
     let delta_time;
@@ -241,6 +221,9 @@
     function render() {
       // TODO
       delta_time = (Date.now() - start_time) / 1000
+
+
+      renderer.draw(scene, gl);
       // // TODO i hate this system, will be changing, just testing to see if this restructure is working.
       // sphere_scene.render({
       //   "test": {

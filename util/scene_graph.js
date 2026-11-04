@@ -1,4 +1,6 @@
 import { perspective, mat4Identity, ortho } from './transitions.js';
+import { phong_frag_shader } from './frag_shaders.js';
+import { phong_vert_shader } from './vert_shaders.js';
 
 /**
  * ==============================================
@@ -195,10 +197,10 @@ export class Material {
     shininess=32,
     transparency=1
   }={}) {
-    this.color = color;
-    this.ka = ka;
-    this.kd = kd;
-    this.ks = ks;
+    this.color = new Float32Array(color);
+    this.ka = new Float32Array(ka);
+    this.kd = new Float32Array(kd);
+    this.ks = new Float32Array(ks);
     this.shininess = shininess;
     this.transparency = transparency;
   } 
@@ -219,8 +221,8 @@ export class Light {
     position=[3, 4, 5],
     color=[1, 1, 1]
   }={}) {
-    this.position = position;
-    this.color = color;
+    this.position = new Float32Array(position);
+    this.color = new Float32Array(color);
   }
 } // end class
 
@@ -255,7 +257,7 @@ export class Camera {
   /**
    * TODO: placeholder!
    */
-  getViewMatrix() {
+  get_view_matrix() {
     return mat4Identity();
   }
 } // end class
@@ -264,7 +266,7 @@ export class Camera {
  * split up the cameras this way. perspective camera.
  */
 export class PerspectiveCamera extends Camera {
-  getProjectionMatrix() {
+  get_projection_matrix() {
       return perspective(
         this.fov,
         this.aspect,
@@ -279,8 +281,196 @@ export class PerspectiveCamera extends Camera {
  * split up the cameras this way. perspective camera.
  */
 export class OrthographicCamera extends Camera {
-  getProjectionMatrix() {
+  get_projection_matrix() {
     return ortho(this.ortho_size, this.aspect, this.near, this.far);
   }
+} // end class
+
+
+/**
+ * ==============================================
+ * SHADERS
+ * ==============================================
+ */
+
+/**
+ * generally, take two shaders and turn into a program.
+ */
+export class Shader {
+  constructor(vert_shader, frag_shader, gl) {
+    // create the shaders
+    this.vert_shader = this.create_shader(gl.VERTEX_SHADER, gl.createShader(vert_shader));
+    this.frag_shader = this.create_shader(gl.FRAGMENT_SHADER, gl.createShader(frag_shader));
+    // create the program for this object and children
+    this.program = gl.createProgram();
+    // attach shaders
+    gl.attachShader(this.program, this.vert_shader);
+    gl.attachShader(this.program, this.frag_shader);
+    // link the program
+    gl.linkProgram(this.program);
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+      throw new Error(gl.getProgramInfoLog(this.program));
+    } // end if
+  }
+
+  /**
+   * function to generate a shader for this object and its (optional) children.
+   */
+  create_shader(type, shader) {
+    this.gl.shaderSource(type, shader);
+    this.gl.compileShader(shader);
+    if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+      throw new Error(this.gl.getShaderInfoLog(shader));
+    } // end if
+    return shader;
+  } // end function
+
+} // end class
+
+/**
+ * just call with a basic phong shader
+ */
+export class PhongShader {
+  constructor() {
+    super(phong_vert_shader, phong_frag_shader);
+  }
+} // end class
+
+/**
+ * ==============================================
+ * RENDERING WORKHORSE
+ * ==============================================
+ */
+
+export class Renderer {
+  constructor(gl) {
+    this.gl = gl;
+
+    this.clear(); // first thing, clear
+
+    // (1) at the top scene level, these are the uniform fields in all general shaders.
+    //      + projection and model view matrices
+    //      + lights (positions and light-specific metadata)
+    model_view_loc = null; // location in vert shader for model_view transform
+    projection_loc = null; // location in vert shader for projection transform
+    lights_loc = null; // location for the lights to render on scene
+    num_lights_loc = null; // location for the number of lights on scene
+
+    // (2) at the node(s) level, these are the more specific material and mesh information
+    // this needs to be somewhat tailored per node render, but can be optimized here.
+  }
+
+  /**
+   * main draw function
+   */
+  draw(scene) {
+    this.clear(); // clear out (?)
+
+    const basic_shader = new PhongShader();
+
+    // gather a bunch of locations
+    this.model_view_loc = this.gl.getUniformLocation(basic_shader.program, "uModelViewMatrix"); 
+    this.projection_loc = this.gl.getUniformLocation(basic_shader.program, "uProjectionMatrix"); 
+    this.lights_loc = this.gl.getUniformLocation(basic_shader.program, "uPointLights");
+    this.num_lights_loc =  this.gl.getUniformLocation(basic_shader.program, "uNumPointLights"); 
+
+    // set gl attributes for the camera_matrices
+    this.gl.uniformMatrix4fv(this.projection_loc, false, scene.camera.get_projection_matrix());
+    this.gl.uniformMatrix4fv(this.model_view_loc, false, scene.camera.get_view_matrix());
+    // set gl for the global lights of the scene
+    this.gl.uniform3fv(this.point_lights_loc, scene.get_lights());
+    this.gl.uniform1i(this.lights_loc, this.point_lights.length / 3);
+
+
+    this.material_params_loc["ka"] = this.gl.getUniformLocation(basic_shader.program, 'uLightParams.ka');
+    this.material_params_loc["kd"] = this.gl.getUniformLocation(basic_shader.program, 'uLightParams.kd');
+    this.material_params_loc["ks"] = this.gl.getUniformLocation(basic_shader.program, 'uLightParams.ks');
+    this.material_params_loc["alpha"] = this.gl.getUniformLocation(basic_shader.program, 'uLightParams.alpha');
+    this.material_params_loc["transparency"] = this.gl.getUniformLocation(basic_shader.program, 'uLightParams.transparency');
+
+    // FOR TESTING
+
+    scene.roots.forEach((r) => {
+      // from object
+      this.gl.useProgram(basic_shader.program);
+
+      
+      this.gl.uniform3fv(this.material_params_loc["ka"], new Float32Array(this.material_params["ka"]));
+      this.gl.uniform3fv(this.material_params_loc["kd"], new Float32Array(this.material_params["kd"]));
+      this.gl.uniform3fv(this.material_params_loc["ks"], new Float32Array(this.material_params["ks"]));
+      this.gl.uniform1f(this.material_params_loc["alpha"], this.material_params["alpha"]);
+      this.gl.uniform1f(this.material_params_loc["transparency"], this.material_params["transparency"]);
+
+
+       // vertex/positions buffer
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.pos_buff);
+      this.gl.enableVertexAttribArray(this.pos_loc);
+      this.gl.vertexAttribPointer(this.pos_loc, 3, this.gl.FLOAT, false, 0, 0);
+
+      // norm buffer setup
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.norm_buff);
+      this.gl.enableVertexAttribArray(this.norm_loc);
+      this.gl.vertexAttribPointer(this.norm_loc, 3, this.gl.FLOAT, false, 0, 0);
+
+      // index buffer for drawing as triangles
+      this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indices_buff);
+
+
+      // from node
+      // color buffer
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.color_buff);
+      this.gl.enableVertexAttribArray(this.color_loc);
+      this.gl.vertexAttribPointer(this.color_loc, 3, this.gl.FLOAT, false, 0, 0);
+
+      // flatten the dynamic transforms.
+      const dynamic_flattened = this.flatten_matrices(node_transforms.dynamic_transforms);
+      // also flatten the static transformations.
+      const static_flattened = this.flatten_matrices(this.static_transforms);
+
+      // we are going to add the transforms to the stack. 
+      // BUT, we need to remember that they are carried out from FRONT -> BACK
+      // we then need to add to the stack in the CORRECT ORDER!
+      stack = [...static_flattened, ...stack]; // add static so these are done second
+      stack = [...dynamic_flattened, ...stack]; // add dynamic so these are done FIRST.
+
+      // stack for this node is given with its unique "joint" transforms, but they are not
+      // saved to the stack passed forward (in effect: popped off).
+      // the joint transforms are for moving the object to a specific point
+      // in order to affect its dynamic origin. this isn't perfect, but a start to the idea.
+      // TODO: potentially a "reverse" transform to undo this joint_transform after the dynamic is complete.
+      //       ie: joint_transform -> rotate -> undo_joint_transform -> carry on with hierarchy.
+      //       but for now: just be aware of this in the static transforms set past this.
+      const stack_float32 = new Float32Array([...this.flatten_matrices(node_transforms.joint_transforms), ...stack]);
+
+      // debugging
+      // console.log(
+      //     `HOW MANY TRANSFORMS on ${this.id}:`,
+      //     stack_float32.length / 16, // 4x4 matrices
+      //     "matrices,",
+      //     stack_float32.length, // how many vals
+      //     "floats"
+      // );
+
+      // set this nodes transformation matrix
+      this.gl.uniformMatrix4fv(this.node_transforms_loc, false, stack_float32);
+      // set how many matrices
+      this.gl.uniform1i(this.num_my_transforms_loc, stack_float32.length / 16);
+      // draw the node.
+      this.gl.drawElements(this.gl.TRIANGLES, this.indices.length, this.gl.UNSIGNED_SHORT, 0);
+
+    });
+
+  } // end function
+
+  /**
+   * clear out gl, should be used on every render call.
+   */
+  clear() {
+    // clear things.
+    this.gl.enable(this.gl.DEPTH_TEST);
+    this.gl.clearColor(0.5, 0.5, 0.5, 1);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+  } // end function
+
 } // end class
 
