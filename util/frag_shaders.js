@@ -31,7 +31,7 @@ const flat_frag_shader = `#version 300 es
       vec3 ka;
       vec3 kd;
       vec3 ks;
-      float alpha;
+      float shininess;
       float transparency;
     };
 
@@ -57,7 +57,7 @@ const flat_frag_shader = `#version 300 es
         vec3 L = normalize(uPointLights[i] - vPosition); // get l as vector from this point
         vec3 R = reflect(-L, N); // r = 2(dot(n, l) * n - l) 
         float diff = max(dot(N, L), 0.0); // diffuse max
-        float spec = pow(max(dot(V, R), 0.0), uLightParams.alpha); // specular max and power alpha
+        float spec = pow(max(dot(V, R), 0.0), uLightParams.shininess); // specular max and power shininess
         diffuse_acc += (uLightParams.kd * vColor) * diff;
         spec_acc += (uLightParams.ks * vColor) * spec;
       } // end loop 
@@ -84,7 +84,7 @@ const gouraud_frag_shader = `#version 300 es
       vec3 ka;
       vec3 kd;
       vec3 ks;
-      float alpha;
+      float shininess;
       float transparency;
     };
 
@@ -136,7 +136,7 @@ export const phong_frag_shader = `#version 300 es
         vec3 L = normalize(uPointLights[i] - vPosition); // get l as vector from this point
         vec3 R = reflect(-L, N); // r = 2(dot(n, l) * n - l) 
         float diff = max(dot(N, L), 0.0); // diffuse max
-        float spec = pow(max(dot(V, R), 0.0), uLightParams.alpha); // specular max and power alpha
+        float spec = pow(max(dot(V, R), 0.0), uLightParams.shininess); // specular max and power shininess
         diffuse_acc += (uLightParams.kd * vColor) * diff;
         spec_acc += (uLightParams.ks * vColor) * spec;
       } // end loop 
@@ -161,7 +161,7 @@ const texture_frag_shader = `#version 300 es
     vec3 ka;
     vec3 kd;
     vec3 ks;
-    float alpha;
+    float shininess;
     float transparency;
   };
 
@@ -225,7 +225,7 @@ const texture_frag_shader = `#version 300 es
       vec3 L = normalize(uPointLights[i] - vPosition); // get l as vector from this point
       vec3 R = reflect(-L, N); // r = 2(dot(n, l) * n - l) 
       float diff = max(dot(N, L), 0.0); // diffuse max
-      float spec = pow(max(dot(V, R), 0.0), uLightParams.alpha); // specular max and power alpha
+      float spec = pow(max(dot(V, R), 0.0), uLightParams.shininess); // specular max and power shininess
       diffuse_acc += (uLightParams.kd * baseColor) * diff;
       spec_acc += (uLightParams.ks * baseColor) * spec;
     } // end loop 

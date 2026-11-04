@@ -394,7 +394,7 @@ export class PhongShader extends Shader {
     this.material_params_loc["ka"] = gl.getUniformLocation(this.program, 'uLightParams.ka');
     this.material_params_loc["kd"] = gl.getUniformLocation(this.program, 'uLightParams.kd');
     this.material_params_loc["ks"] = gl.getUniformLocation(this.program, 'uLightParams.ks');
-    this.material_params_loc["alpha"] = gl.getUniformLocation(this.program, 'uLightParams.alpha');
+    this.material_params_loc["shininess"] = gl.getUniformLocation(this.program, 'uLightParams.shininess');
     this.material_params_loc["transparency"] = gl.getUniformLocation(this.program, 'uLightParams.transparency');
 
     // more meshy information here.
@@ -429,7 +429,7 @@ export class PhongShader extends Shader {
     gl.uniform3fv(this.material_params_loc["ka"], node.material.ka);
     gl.uniform3fv(this.material_params_loc["kd"], node.material.kd);
     gl.uniform3fv(this.material_params_loc["ks"], node.material.ks);
-    gl.uniform1f(this.material_params_loc["alpha"], node.material.shininess);
+    gl.uniform1f(this.material_params_loc["shininess"], node.material.shininess);
     gl.uniform1f(this.material_params_loc["transparency"], node.material.transparency);
 
     // vertex/positions buffer
