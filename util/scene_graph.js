@@ -204,9 +204,6 @@ export class Mesh {
     this.tangents = tangents;
     this.texels = texels;
 
-    console.log(this.vertices.length/3)
-    console.log(Math.max(...Array.from(this.indices)))
-
     // initialize whatever we have into a grabable buffer
     if (vertices) this.vert_buff = this.init_buffer(vertices, gl);
     if (indices) this.ind_buff = this.init_buffer(indices, gl, gl.ELEMENT_ARRAY_BUFFER);
@@ -405,17 +402,6 @@ export class PhongShader extends Shader {
     this.norm_loc = gl.getAttribLocation(this.program, "aNormal");
     this.color_loc = gl.getAttribLocation(this.program, "aColor");
     this.node_transforms_loc = gl.getUniformLocation(this.program, "uModelTransformationMatrix"); 
-    // this.num_my_transforms_loc = this.gl.getUniformLocation(this.program, "transforms_up_to"); // removing this
-
-
-    // spots for buffers fo inputs
-    // this.pos_buff = null;
-    // this.norm_buff = null;
-    // this.indices_buff = null;
-    // this.color_buff = null;
-    // this is not in the phong_V1, but for example...
-    // this.tangent_buff = null;
-    // this.texel_buff = null;
   }
 
   /**
@@ -434,7 +420,7 @@ export class PhongShader extends Shader {
     gl.uniformMatrix4fv(this.model_view_loc, false, camera.get_view_matrix());
     // set gl for the global lights of the scene
     gl.uniform3fv(this.lights_loc, this.process_lights(lights)); // TODO
-    gl.uniform1i(this.num_lights_loc, lights.length / 3);
+    gl.uniform1i(this.num_lights_loc, lights.length);
 
     // set this nodes transformation matrix
     gl.uniformMatrix4fv(this.node_transforms_loc, false, node.transformation_matrix); // TODO

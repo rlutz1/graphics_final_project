@@ -17,7 +17,7 @@
 
   <div style="display: flex; gap: 10px; align-items: flex-start;">
     <div style="display: flex; flex-direction: column; gap: 10px;">
-      <canvas id="glcanvas" width="800" height="800"></canvas>
+      <canvas id="glcanvas" width="600" height="600"></canvas>
     </div>
   </div>
 
@@ -136,7 +136,7 @@
         const next_ring_pt = current_ring_pt + 1;
         indices.push(last_pt_index, next_ring_pt, current_ring_pt);
       }
-      
+
       // return as a js dict
       return {
         "vertices": new Float32Array(vertices), 

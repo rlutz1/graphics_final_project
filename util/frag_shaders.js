@@ -110,7 +110,7 @@ export const phong_frag_shader = `#version 300 es
       vec3 ka;
       vec3 kd;
       vec3 ks;
-      float alpha;
+      float shininess;
       float transparency;
     };
 
