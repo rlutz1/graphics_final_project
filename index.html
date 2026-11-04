@@ -225,10 +225,10 @@
       const cos = Math.cos(delta_time);
 
       // sphere.position = [Math.sin(delta_time), Math.cos(delta_time), -10]
-      // sphere.rotation = [0, 0, cos]
+      sphere.rotation = [0, 0, cos]
       // sphere.scale = [cos + 2, cos + 2, cos + 2]
 
-      child.rotation = [0, cos, 0]
+      child.rotation = [0, 0, cos]
       // console.log("rendering");
       renderer.draw(scene);
     } // end render
