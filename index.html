@@ -172,10 +172,17 @@
     const light = new Builder.PointLight({
       "position": [0, 5, 5]
     })
+
+    const ya_light = new Builder.PointLight({
+      "position": [-4, -5, 5]
+    })
     scene.add_light(light);
+    scene.add_light(ya_light);
 
     // add a camera to the scene. (using camera defaults here)
     scene.set_camera(new Builder.PerspectiveCamera())
+
+    const rando_sphere = new Builder.SceneNode("sphere"); // set up a node to add to the scene
 
     const sphere = new Builder.SceneNode("sphere"); // set up a node to add to the scene
     const child = new Builder.SceneNode("ya_sphere");
@@ -197,7 +204,9 @@
     sphere.set_mesh(mesh).set_material(material);
     child.set_mesh(mesh).set_material(material);
     gchild.set_mesh(mesh).set_material(material);
+    rando_sphere.set_mesh(mesh).set_material(material);
     // console.log(sphere)
+    rando_sphere.position = [-4, 0, -20]
     sphere.position = [0, 0, -10];
     child.position = [0, 1.5, 0];
     child.scale = [0.8, 0.8, 0.8]
@@ -209,6 +218,7 @@
     child.add_child(gchild);
 
     scene.add_node(sphere); // add sphere to the scene
+    scene.add_node(rando_sphere)
 
     // rendering manager at your service
     const renderer = new Builder.Renderer(gl);
