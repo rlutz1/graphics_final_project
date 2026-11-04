@@ -1,5 +1,10 @@
 import { perspective, mat4Identity, ortho } from './transitions.js';
 
+/**
+ * ==============================================
+ * SCENE SETUP
+ * ==============================================
+ */
 
 /**
  * complete rework of api given the additions of 
@@ -86,14 +91,8 @@ export class SceneNode {
     this.parent = null; // parent of this node, null to start
     this.children = []; // all children of this node
 
-    // this.position = [0, 0, 0];
-    // this.rotation = [0, 0, 0];
-    // this.scale = [1, 1, 1];
-
     this.mesh = null; // mesh of the node, encompassing vertices, index mapping, norms, etc...
     this.material = null; // material of this node (ka, kd, ...)
-
-    // this.visible = true; // maybe?
   } // end constructor
 
   /**
@@ -145,6 +144,13 @@ export class SceneNode {
 
 } // end class
 
+/**
+ * ==============================================
+ * MESH
+ * 
+ * how to draw the object
+ * ==============================================
+ */
 
 /**
  * build a basic mesh, wrapping the bad dict roxanne
@@ -169,6 +175,14 @@ export class Mesh {
 } // end class
 
 /**
+ * ==============================================
+ * MATERIAL
+ * 
+ * what material a node should look like.
+ * ==============================================
+ */
+
+/**
  * wrap up a specific material in the most
  * general way possible.
  */
@@ -191,6 +205,12 @@ export class Material {
 } // end class
 
 /**
+ * ==============================================
+ * LIGHT
+ * ==============================================
+ */
+
+/**
  * a general light that can be extended out to other 
  * kinds.
  */
@@ -203,6 +223,13 @@ export class Light {
     this.color = color;
   }
 } // end class
+
+
+/**
+ * ==============================================
+ * CAMERA
+ * ==============================================
+ */
 
 export class Camera {
   constructor({
