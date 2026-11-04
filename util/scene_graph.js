@@ -538,7 +538,7 @@ export class Renderer {
     shader.draw(node, this.gl); // draw this node
     if (node.children) {
       node.children.forEach((c) => { // drill down the tree
-        this.draw_nodes(c, camera);
+        this.draw_nodes(c, camera, lights);
       });
     } // end if
     

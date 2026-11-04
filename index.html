@@ -179,6 +179,7 @@
 
     const sphere = new Builder.SceneNode("sphere"); // set up a node to add to the scene
     const child = new Builder.SceneNode("ya_sphere");
+    const gchild = new Builder.SceneNode("ya_ya_sphere");
 
     const mesh = new Builder.Mesh(gl, gen_sphere_mesh()); // generate a basic mesh
     // console.log(mesh)
@@ -195,11 +196,17 @@
     // add mesh and material to the sphere.
     sphere.set_mesh(mesh).set_material(material);
     child.set_mesh(mesh).set_material(material);
+    gchild.set_mesh(mesh).set_material(material);
     // console.log(sphere)
     sphere.position = [0, 0, -10];
-    child.position = [0, 2, 0];
+    child.position = [0, 1.5, 0];
+    child.scale = [0.8, 0.8, 0.8]
+    gchild.position = [0, 1.5, 0]
 
-    // sphere.add_child(child); // add child to the sphere
+
+
+    sphere.add_child(child); // add child to the sphere
+    child.add_child(gchild);
 
     scene.add_node(sphere); // add sphere to the scene
 
@@ -215,10 +222,13 @@
     function render() {
       // TODO
       delta_time = (Date.now() - start_time) / 1000
+      const cos = Math.cos(delta_time);
 
-      sphere.position = [Math.sin(delta_time), Math.cos(delta_time), -10]
-      // sphere.scale = [2, 2, 2]
-      // sphere.scale = [1, 1, 1]
+      // sphere.position = [Math.sin(delta_time), Math.cos(delta_time), -10]
+      // sphere.rotation = [0, 0, cos]
+      // sphere.scale = [cos + 2, cos + 2, cos + 2]
+
+      child.rotation = [0, cos, 0]
       // console.log("rendering");
       renderer.draw(scene);
     } // end render
