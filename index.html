@@ -208,6 +208,9 @@
     // add mesh and material to the sphere.
     sphere.set_mesh(mesh).set_material(material);
     // console.log(sphere)
+    sphere.position = [0, 0, -10]
+
+    scene.add_node(sphere); // add sphere to the scene
 
     // rendering manager at your service
     const renderer = new Builder.Renderer(gl);
@@ -221,18 +224,8 @@
     function render() {
       // TODO
       delta_time = (Date.now() - start_time) / 1000
-
-
+      // console.log("rendering");
       renderer.draw(scene);
-      // // TODO i hate this system, will be changing, just testing to see if this restructure is working.
-      // sphere_scene.render({
-      //   "test": {
-      //     "sphere_root": {
-      //       "dynamic_transforms": [],
-      //       "joint_transforms": []
-      //     }
-      //   }
-      // });
     } // end render
 
     // Initialize when page loads

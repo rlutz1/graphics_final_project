@@ -251,8 +251,8 @@ export class Light {
     position=[3, 4, 5],
     color=[1, 1, 1]
   }={}) {
-    this.position = new Float32Array(position);
-    this.color = new Float32Array(color);
+    this.position = position;
+    this.color = color;
   }
 } // end class
 
@@ -260,7 +260,7 @@ export class Light {
  * a point light
  * TODO: anything to add beyond parent class above?
  */
-export class PointLight { }
+export class PointLight extends Light { }
 
 
 /**
@@ -329,8 +329,8 @@ export class OrthographicCamera extends Camera {
 export class Shader {
   constructor(vert_shader, frag_shader, gl) {
     // create the shaders
-    this.vert_shader = this.create_shader(gl.VERTEX_SHADER, gl.createShader(vert_shader));
-    this.frag_shader = this.create_shader(gl.FRAGMENT_SHADER, gl.createShader(frag_shader));
+    this.vert_shader = this.create_shader(gl.VERTEX_SHADER, vert_shader, gl);
+    this.frag_shader = this.create_shader(gl.FRAGMENT_SHADER, frag_shader, gl);
     // create the program for this object and children
     this.program = gl.createProgram();
     // attach shaders
@@ -346,21 +346,32 @@ export class Shader {
   /**
    * function to generate a shader for this object and its (optional) children.
    */
-  create_shader(type, shader) {
-    this.gl.shaderSource(type, shader);
-    this.gl.compileShader(shader);
-    if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      throw new Error(this.gl.getShaderInfoLog(shader));
+  create_shader(type, source, gl) {
+    const shader = gl.createShader(type)
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw new Error(gl.getShaderInfoLog(shader));
     } // end if
     return shader;
   } // end function
 
+  /**
+   * wrapper around the creation and binding of a buffer so no steps missed!
+   */
+  init_buffer(data, gl, type=gl.ARRAY_BUFFER, gl_hint=gl.STATIC_DRAW) {
+      const buff = gl.createBuffer();
+      gl.bindBuffer(type, buff);
+      gl.bufferData(type, data, gl_hint);
+      return buff
+  } // end function
+  
 } // end class
 
 /**
  * just call with a basic phong shader
  */
-export class PhongShader {
+export class PhongShader extends Shader {
   constructor(gl) {
     super(phong_vert_shader, phong_frag_shader, gl);
     // camera and light items (may be able to pull out into the renderer if consistent.)
@@ -371,17 +382,17 @@ export class PhongShader {
 
     // some lighting specific locations
     this.material_params_loc = {};
-    this.material_params_loc["ka"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.ka');
-    this.material_params_loc["kd"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.kd');
-    this.material_params_loc["ks"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.ks');
-    this.material_params_loc["alpha"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.alpha');
-    this.material_params_loc["transparency"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.transparency');
+    this.material_params_loc["ka"] = gl.getUniformLocation(this.program, 'uLightParams.ka');
+    this.material_params_loc["kd"] = gl.getUniformLocation(this.program, 'uLightParams.kd');
+    this.material_params_loc["ks"] = gl.getUniformLocation(this.program, 'uLightParams.ks');
+    this.material_params_loc["alpha"] = gl.getUniformLocation(this.program, 'uLightParams.alpha');
+    this.material_params_loc["transparency"] = gl.getUniformLocation(this.program, 'uLightParams.transparency');
 
     // more meshy information here.
-    this.pos_loc = this.gl.getAttribLocation(this.program, "aPosition");
-    this.norm_loc = this.gl.getAttribLocation(this.program, "aNormal");
-    this.color_loc = this.gl.getAttribLocation(this.program, "aColor");
-    this.node_transforms_loc = this.gl.getUniformLocation(this.program, "uModelTransformationMatrix"); 
+    this.pos_loc = gl.getAttribLocation(this.program, "aPosition");
+    this.norm_loc = gl.getAttribLocation(this.program, "aNormal");
+    this.color_loc = gl.getAttribLocation(this.program, "aColor");
+    this.node_transforms_loc = gl.getUniformLocation(this.program, "uModelTransformationMatrix"); 
     // this.num_my_transforms_loc = this.gl.getUniformLocation(this.program, "transforms_up_to"); // removing this
 
 
@@ -404,14 +415,14 @@ export class PhongShader {
   load(node, camera, lights, gl) {
     // from object
     gl.useProgram(this.program);
-    this.init_buffers(node) // init the buffers for this node, sets all the buff vals
+    this.init_buffers(node, gl) // init the buffers for this node, sets all the buff vals
 
     // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
     // set gl attributes for the camera_matrices
     gl.uniformMatrix4fv(this.projection_loc, false, camera.get_projection_matrix());
     gl.uniformMatrix4fv(this.model_view_loc, false, camera.get_view_matrix());
     // set gl for the global lights of the scene
-    gl.uniform3fv(this.lights_loc, process_lights(lights)); // TODO
+    gl.uniform3fv(this.lights_loc, this.process_lights(lights)); // TODO
     gl.uniform1i(this.num_lights_loc, lights.length / 3);
 
     // set up material information for the phong shader
@@ -448,6 +459,7 @@ export class PhongShader {
    */
   draw(node, gl) {
     // draw the node.
+    console.log("salkdnas");
     gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
   } // end function
 
@@ -458,24 +470,27 @@ export class PhongShader {
    * 3. colors
    * used for drawing this node.
    */
-  init_buffers(node) {
-      this.pos_buff = this.init_buffer(node.mesh.vertices);
-      this.norm_buff = this.init_buffer(node.mesh.normals);
-      this.indices_buff = this.init_buffer(node.mesh.indices, this.gl.ELEMENT_ARRAY_BUFFER);
-      this.color_buff = this.init_buffer(node.mesh.colors);
+  init_buffers(node, gl) {
+      this.pos_buff = this.init_buffer(node.mesh.vertices, gl);
+      this.norm_buff = this.init_buffer(node.mesh.normals, gl);
+      this.indices_buff = this.init_buffer(node.mesh.indices, gl, gl.ELEMENT_ARRAY_BUFFER);
+      this.color_buff = this.init_buffer(node.mesh.colors, gl);
       // this is not in the phong_V1, but for example...
       // this.tangent_buff = this.init_buffer(node.mesh.tangents);
       // this.texel_buff = this.init_buffer(node.mesh.texels);
   } // end function
 
   /**
-   * wrapper around the creation and binding of a buffer so no steps missed!
+   * not sure this will stay this way, but for now, 
+   * process the light objects -> a flat float32array
    */
-  init_buffer(data, type=this.gl.ARRAY_BUFFER, gl_hint=this.gl.STATIC_DRAW) {
-      const buff = this.gl.createBuffer();
-      this.gl.bindBuffer(type, buff);
-      this.gl.bufferData(type, data, gl_hint);
-      return buff
+  process_lights(lights) {
+    const all_positions = [];
+    lights.forEach((l) => {
+      all_positions.push(...l.position);
+    });
+    console.log(all_positions.length)
+    return new Float32Array(all_positions);
   } // end function
 
 } // end class
@@ -497,7 +512,7 @@ export class Renderer {
     // TODO: this could come from a file that's easy to edit for all without
     // destroying everything hehe
     this.shader_map = {
-      "phong_V1": PhongShader() // right now just one to test with 
+      "phong_V1": new PhongShader(gl) // right now just one to test with 
     }
   }
 
@@ -515,7 +530,7 @@ export class Renderer {
       // for each node in hierarchy tree (maybe combine with prior step to 
       // optimize this a bit, but for clarity, this is two separate steps)
       // grab their shader, load the shader, and draw with shader.
-      this.draw_nodes(r);
+      this.draw_nodes(r, scene.camera, scene.lights);
     });
 
   } // end function
@@ -536,14 +551,14 @@ export class Renderer {
   /**
    * traverse all nodes a tree and draw them with their shader
    */
-  draw_nodes(node, camera, gl) {
-    const shader = this.shader_map[node.shader_i]; // grab this nodes shader
+  draw_nodes(node, camera, lights) {
+    const shader = this.shader_map[node.shader_id]; // grab this nodes shader
     console.log(shader); // testing
-    shader.load(node, camera, gl); // load up the buffer locations
-    shader.draw(node, gl); // draw this node
+    shader.load(node, camera, lights, this.gl); // load up the buffer locations
+    shader.draw(node, this.gl); // draw this node
     if (node.children) {
       node.children.forEach((c) => { // drill down the tree
-        this.draw_nodes(c, camera, gl);
+        this.draw_nodes(c, camera);
       });
     } // end if
     
