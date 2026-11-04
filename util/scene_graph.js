@@ -189,7 +189,7 @@ export class SceneNode {
  * used before.
  */
 export class Mesh {
-  constructor({
+  constructor(gl, {
     vertices,
     indices,
     colors=null,
@@ -203,7 +203,29 @@ export class Mesh {
     this.normals = normals;
     this.tangents = tangents;
     this.texels = texels;
+
+    console.log(this.vertices.length/3)
+    console.log(Math.max(...Array.from(this.indices)))
+
+    // initialize whatever we have into a grabable buffer
+    if (vertices) this.vert_buff = this.init_buffer(vertices, gl);
+    if (indices) this.ind_buff = this.init_buffer(indices, gl, gl.ELEMENT_ARRAY_BUFFER);
+    if (normals) this.norm_buff = this.init_buffer(normals, gl);
+    if (colors) this.color_buff = this.init_buffer(colors, gl);
+    if (tangents) this.tangent_buff = this.init_buffer(tangents, gl);
+    if (texels) this.tex_buff = this.init_buffer(texels, gl);
   }
+
+  /**
+   * wrapper around the creation and binding of a buffer so no steps missed!
+   */
+  init_buffer(data, gl, type=gl.ARRAY_BUFFER, gl_hint=gl.STATIC_DRAW) {
+      const buff = gl.createBuffer();
+      gl.bindBuffer(type, buff);
+      gl.bufferData(type, data, gl_hint);
+      return buff
+  } // end function
+
 } // end class
 
 /**
@@ -355,16 +377,6 @@ export class Shader {
     } // end if
     return shader;
   } // end function
-
-  /**
-   * wrapper around the creation and binding of a buffer so no steps missed!
-   */
-  init_buffer(data, gl, type=gl.ARRAY_BUFFER, gl_hint=gl.STATIC_DRAW) {
-      const buff = gl.createBuffer();
-      gl.bindBuffer(type, buff);
-      gl.bufferData(type, data, gl_hint);
-      return buff
-  } // end function
   
 } // end class
 
@@ -397,10 +409,10 @@ export class PhongShader extends Shader {
 
 
     // spots for buffers fo inputs
-    this.pos_buff = null;
-    this.norm_buff = null;
-    this.indices_buff = null;
-    this.color_buff = null;
+    // this.pos_buff = null;
+    // this.norm_buff = null;
+    // this.indices_buff = null;
+    // this.color_buff = null;
     // this is not in the phong_V1, but for example...
     // this.tangent_buff = null;
     // this.texel_buff = null;
@@ -415,7 +427,6 @@ export class PhongShader extends Shader {
   load(node, camera, lights, gl) {
     // from object
     gl.useProgram(this.program);
-    this.init_buffers(node, gl) // init the buffers for this node, sets all the buff vals
 
     // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
     // set gl attributes for the camera_matrices
@@ -425,6 +436,9 @@ export class PhongShader extends Shader {
     gl.uniform3fv(this.lights_loc, this.process_lights(lights)); // TODO
     gl.uniform1i(this.num_lights_loc, lights.length / 3);
 
+    // set this nodes transformation matrix
+    gl.uniformMatrix4fv(this.node_transforms_loc, false, node.transformation_matrix); // TODO
+
     // set up material information for the phong shader
     gl.uniform3fv(this.material_params_loc["ka"], node.material.ka);
     gl.uniform3fv(this.material_params_loc["kd"], node.material.kd);
@@ -433,25 +447,23 @@ export class PhongShader extends Shader {
     gl.uniform1f(this.material_params_loc["transparency"], node.material.transparency);
 
     // vertex/positions buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.pos_buff);
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
     gl.enableVertexAttribArray(this.pos_loc);
     gl.vertexAttribPointer(this.pos_loc, 3, gl.FLOAT, false, 0, 0);
 
     // norm buffer setup
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.norm_buff);
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.norm_buff);
     gl.enableVertexAttribArray(this.norm_loc);
     gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
 
     // color buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buff);
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.color_buff);
     gl.enableVertexAttribArray(this.color_loc);
     gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
 
     // index buffer for drawing as triangles
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indices_buff);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
     
-    // set this nodes transformation matrix
-    gl.uniformMatrix4fv(this.node_transforms_loc, false, node.transformation_matrix); // TODO
   } // end function
 
   /**
@@ -460,23 +472,6 @@ export class PhongShader extends Shader {
   draw(node, gl) {
     // draw the node.
     gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
-  } // end function
-
-  /**
-   * initialize the buffers for 
-   * 1. positions/vertices
-   * 2. indices
-   * 3. colors
-   * used for drawing this node.
-   */
-  init_buffers(node, gl) {
-      this.pos_buff = this.init_buffer(node.mesh.vertices, gl);
-      this.norm_buff = this.init_buffer(node.mesh.normals, gl);
-      this.indices_buff = this.init_buffer(node.mesh.indices, gl, gl.ELEMENT_ARRAY_BUFFER);
-      this.color_buff = this.init_buffer(node.mesh.colors, gl);
-      // this is not in the phong_V1, but for example...
-      // this.tangent_buff = this.init_buffer(node.mesh.tangents);
-      // this.texel_buff = this.init_buffer(node.mesh.texels);
   } // end function
 
   /**
