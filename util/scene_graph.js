@@ -348,6 +348,23 @@ export class PhongShader {
     this.material_params_loc["ks"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.ks');
     this.material_params_loc["alpha"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.alpha');
     this.material_params_loc["transparency"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.transparency');
+
+    // more meshy information here.
+    this.pos_loc = this.gl.getAttribLocation(this.program, "aPosition");
+    this.norm_loc = this.gl.getAttribLocation(this.program, "aNormal");
+    this.color_loc = this.gl.getAttribLocation(this.program, "aColor");
+    this.node_transforms_loc = this.gl.getUniformLocation(this.program, "uModelTransformationMatrix"); 
+    // this.num_my_transforms_loc = this.gl.getUniformLocation(this.program, "transforms_up_to"); // removing this
+
+
+    // spots for buffers fo inputs
+    this.pos_buff = null;
+    this.norm_buff = null;
+    this.indices_buff = null;
+    this.color_buff = null;
+    // this is not in the phong_V1, but for example...
+    // this.tangent_buff = null;
+    // this.texel_buff = null;
   }
 
   /**
@@ -359,6 +376,7 @@ export class PhongShader {
   load(node, camera, lights, gl) {
     // from object
     gl.useProgram(this.program);
+    this.init_buffers(node) // init the buffers for this node, sets all the buff vals
 
     // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
     // set gl attributes for the camera_matrices
@@ -388,22 +406,50 @@ export class PhongShader {
     // index buffer for drawing as triangles
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indices_buff);
 
-
-    // from node
     // color buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buff);
     gl.enableVertexAttribArray(this.color_loc);
     gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
+    
     // set this nodes transformation matrix
-    gl.uniformMatrix4fv(this.node_transforms_loc, false, stack_float32);
-    // set how many matrices
-    gl.uniform1i(this.num_my_transforms_loc, stack_float32.length / 16);
+    gl.uniformMatrix4fv(this.node_transforms_loc, false, node.get_transformation_matrix()); // TODO
   } // end function
 
+  /**
+   * define how to draw with this shader.
+   */
   draw(node, gl) {
     // draw the node.
     gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
   } // end function
+
+  /**
+   * initialize the buffers for 
+   * 1. positions/vertices
+   * 2. indices
+   * 3. colors
+   * used for drawing this node.
+   */
+  init_buffers(node) {
+      this.pos_buff = this.init_buffer(node.mesh.vertices);
+      this.norm_buff = this.init_buffer(node.mesh.normals);
+      this.indices_buff = this.init_buffer(node.mesh.indices, this.gl.ELEMENT_ARRAY_BUFFER);
+      this.color_buff = this.init_buffer(node.mesh.colors);
+      // this is not in the phong_V1, but for example...
+      // this.tangent_buff = this.init_buffer(node.mesh.tangents);
+      // this.texel_buff = this.init_buffer(node.mesh.texels);
+  } // end function
+
+  /**
+   * wrapper around the creation and binding of a buffer so no steps missed!
+   */
+  init_buffer(data, type=this.gl.ARRAY_BUFFER, gl_hint=this.gl.STATIC_DRAW) {
+      const buff = this.gl.createBuffer();
+      this.gl.bindBuffer(type, buff);
+      this.gl.bufferData(type, data, gl_hint);
+      return buff
+  } // end function
+
 } // end class
 
 /**
