@@ -442,13 +442,13 @@ export class PhongShader extends Shader {
     gl.enableVertexAttribArray(this.norm_loc);
     gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
 
-    // index buffer for drawing as triangles
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indices_buff);
-
     // color buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buff);
     gl.enableVertexAttribArray(this.color_loc);
     gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
+
+    // index buffer for drawing as triangles
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indices_buff);
     
     // set this nodes transformation matrix
     gl.uniformMatrix4fv(this.node_transforms_loc, false, node.transformation_matrix); // TODO
@@ -459,7 +459,6 @@ export class PhongShader extends Shader {
    */
   draw(node, gl) {
     // draw the node.
-    console.log("salkdnas");
     gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
   } // end function
 

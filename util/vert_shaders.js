@@ -197,8 +197,7 @@ export const phong_vert_shader = `#version 300 es
     uniform mat4 uProjectionMatrix;
 
     // allow for many matrices in a row
-    uniform mat4 uModelTransformationMatrix[50];
-    uniform int transforms_up_to; // marker of how many transforms
+    uniform mat4 uModelTransformationMatrix;
 
     out vec3 vPosition;
     out vec3 vNormal;
@@ -209,10 +208,8 @@ export const phong_vert_shader = `#version 300 es
       vec4 pos = vec4(aPosition, 1.0);
       vec3 norm = aNormal;
 
-      for (int i = 0; i < transforms_up_to; i++) {
-        pos = uModelTransformationMatrix[i] * pos; // add all transforms
-        norm = mat3(uModelTransformationMatrix[i]) * norm; // ensure to also alter the norm
-      } // end loop
+      pos = uModelTransformationMatrix * pos; // add all transforms
+      norm = mat3(uModelTransformationMatrix) * norm; // ensure to also alter the norm
 
       // save the position of this vertex prior to projection -- send to frag.
       vec4 p = uModelViewMatrix * pos;
