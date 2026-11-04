@@ -163,14 +163,14 @@ export class Mesh {
     colors=null,
     normals=null,
     tangents=null,
-    texel_mapping=null,
+    texels=null,
   }) {
     this.vertices = vertices;
     this.indices = indices;
     this.colors = colors;
     this.normals = normals;
     this.tangents = tangents;
-    this.texel_mapping = texel_mapping;
+    this.texels = texels;
   }
 } // end class
 
