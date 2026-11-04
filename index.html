@@ -178,6 +178,7 @@
     scene.set_camera(new Builder.PerspectiveCamera())
 
     const sphere = new Builder.SceneNode("sphere"); // set up a node to add to the scene
+    const child = new Builder.SceneNode("ya_sphere");
 
     const mesh = new Builder.Mesh(gl, gen_sphere_mesh()); // generate a basic mesh
     // console.log(mesh)
@@ -193,8 +194,12 @@
 
     // add mesh and material to the sphere.
     sphere.set_mesh(mesh).set_material(material);
+    child.set_mesh(mesh).set_material(material);
     // console.log(sphere)
-    sphere.position = [0, 0, -20]
+    sphere.position = [0, 0, -10];
+    child.position = [0, 2, 0];
+
+    sphere.add_child(child);
 
     scene.add_node(sphere); // add sphere to the scene
 
