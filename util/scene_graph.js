@@ -1,4 +1,4 @@
-import { perspective, mat4Identity, ortho } from './transitions.js';
+import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat4FromRows } from './transitions.js';
 import { phong_frag_shader } from './frag_shaders.js';
 import { phong_vert_shader } from './vert_shaders.js';
 
@@ -97,6 +97,17 @@ export class SceneNode {
     this.material = null; // material of this node (ka, kd, ...)
 
     this.shader_id = shader_id; // id corresponding to the shader i want to use for this node.
+
+    // pretty much everything can be described as a translation (position)
+    // rotation, and scale. may include reflect/skew later. (TODO)
+    this.position = [0, 0, 0];
+    this.rotation = [0, 0, 0];
+    this.scale = [1, 1, 1];
+    // the final transformation matrix (single matrix) to return.
+    // it's more calculation on the cpu, but easier to manage.
+    // @Theo may be a place for C if things are chuggy.
+    this.transformation_matrix = mat4Identity();
+
   } // end constructor
 
   /**
@@ -104,6 +115,23 @@ export class SceneNode {
    * functions
    * --------------------------------------
    */
+
+  /**
+   * update my transformation dumbly, simply calculate:
+   * M_world_child = M_world_parent * M_local_child
+   */
+  update_transformation_matrix(M_parent) {
+    // TODO: NEEDS TESTING!! there could be problems with column vects.
+    const translation = translate(this.position);
+    const rotation = translate(this.rotation);
+    const scale = translate(this.scale);
+
+    // my local transformations
+    const M_local = matMul(translation, rotation, scale);
+
+    // add my transformations to the world's
+    this.transformation_matrix = matMul(M_parent, M_local);
+  } // end function
 
   /**
    * add a child to this node, creating a hierarchical relationship
@@ -412,7 +440,7 @@ export class PhongShader {
     gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
     
     // set this nodes transformation matrix
-    gl.uniformMatrix4fv(this.node_transforms_loc, false, node.get_transformation_matrix()); // TODO
+    gl.uniformMatrix4fv(this.node_transforms_loc, false, node.transformation_matrix); // TODO
   } // end function
 
   /**
@@ -481,8 +509,8 @@ export class Renderer {
 
     scene.roots.forEach((r) => {
       // setup any new transformation matrices first in the hierarchy
-      // TODO
-      // this.update_transformations(r, mat4Identity());
+      // TODO: dirty bit optimization to avoid needless calculation (thanks for that idea gemini)
+      this.update_transformations(r, mat4Identity());
 
       // for each node in hierarchy tree (maybe combine with prior step to 
       // optimize this a bit, but for clarity, this is two separate steps)
@@ -490,52 +518,17 @@ export class Renderer {
       this.draw_nodes(r);
     });
 
-    
-    // FOR TESTING
-
-    
-      
-
-    //   // flatten the dynamic transforms.
-    //   const dynamic_flattened = this.flatten_matrices(node_transforms.dynamic_transforms);
-    //   // also flatten the static transformations.
-    //   const static_flattened = this.flatten_matrices(this.static_transforms);
-
-    //   // we are going to add the transforms to the stack. 
-    //   // BUT, we need to remember that they are carried out from FRONT -> BACK
-    //   // we then need to add to the stack in the CORRECT ORDER!
-    //   stack = [...static_flattened, ...stack]; // add static so these are done second
-    //   stack = [...dynamic_flattened, ...stack]; // add dynamic so these are done FIRST.
-
-    //   // stack for this node is given with its unique "joint" transforms, but they are not
-    //   // saved to the stack passed forward (in effect: popped off).
-    //   // the joint transforms are for moving the object to a specific point
-    //   // in order to affect its dynamic origin. this isn't perfect, but a start to the idea.
-    //   // TODO: potentially a "reverse" transform to undo this joint_transform after the dynamic is complete.
-    //   //       ie: joint_transform -> rotate -> undo_joint_transform -> carry on with hierarchy.
-    //   //       but for now: just be aware of this in the static transforms set past this.
-    //   const stack_float32 = new Float32Array([...this.flatten_matrices(node_transforms.joint_transforms), ...stack]);
-
-    //   // debugging
-    //   // console.log(
-    //   //     `HOW MANY TRANSFORMS on ${this.id}:`,
-    //   //     stack_float32.length / 16, // 4x4 matrices
-    //   //     "matrices,",
-    //   //     stack_float32.length, // how many vals
-    //   //     "floats"
-    //   // );
-
-      
-
-    // });
-
   } // end function
 
-  update_transformations(node, M_parent) {
-    // TODO: do something
-    if (node.children) {
-      node.children.forEach((c) => { // drill down the tree
-        this.update_transformations(c);
+  /**
+   * update all transformations in the tree, working your way down.
+   */
+  update_transformations(parent, M_parent) {
+    parent.update_transformation_matrix(M_parent);
+
+    if (parent.children) {
+      parent.children.forEach((c) => { // drill down the tree
+        this.update_transformations(c, parent.transformation_matrix);
       });
     } // end if
   } // end function

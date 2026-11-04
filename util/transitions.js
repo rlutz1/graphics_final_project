@@ -230,7 +230,7 @@ export function scale(factor) {
  * radians   -> should be a 3d list where [rx, ry, rz]
  * clockwise -> bool, true/false
  */
-export function rotate(radians, clockwise) {
+export function rotate(radians) {
     let rot // rotation matrix
     const rx = radians[0]
     const ry = radians[1]

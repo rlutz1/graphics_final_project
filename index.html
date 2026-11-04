@@ -210,7 +210,7 @@
     // console.log(sphere)
 
     // rendering manager at your service
-    const renderer = new Builder.Renderer();
+    const renderer = new Builder.Renderer(gl);
 
     const start_time = Date.now() // start the clock 
     let delta_time;
@@ -223,7 +223,7 @@
       delta_time = (Date.now() - start_time) / 1000
 
 
-      renderer.draw(scene, gl);
+      renderer.draw(scene);
       // // TODO i hate this system, will be changing, just testing to see if this restructure is working.
       // sphere_scene.render({
       //   "test": {
