@@ -123,11 +123,11 @@ export class SceneNode {
   update_transformation_matrix(M_parent) {
     // TODO: NEEDS TESTING!! there could be problems with column vects.
     const translation = translate(this.position);
-    const rotation = translate(this.rotation);
-    const scale = translate(this.scale);
+    const rotation = rotate(this.rotation);
+    const scale_mtx = scale(this.scale);
 
     // my local transformations
-    const M_local = matMul(translation, rotation, scale);
+    const M_local = matMul(translation, rotation, scale_mtx);
 
     // add my transformations to the world's
     this.transformation_matrix = matMul(M_parent, M_local);
