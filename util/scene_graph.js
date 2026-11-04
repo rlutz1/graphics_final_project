@@ -87,7 +87,7 @@ export class SceneNode {
    * constructor
    * --------------------------------------
    */
-  constructor(id = null) {
+  constructor(id=null, shader_id="phong_V1") {
     this.id = id; // specifying id
 
     this.parent = null; // parent of this node, null to start
@@ -96,7 +96,7 @@ export class SceneNode {
     this.mesh = null; // mesh of the node, encompassing vertices, index mapping, norms, etc...
     this.material = null; // material of this node (ka, kd, ...)
 
-    this.shader_id = "phong_V1"
+    this.shader_id = shader_id; // id corresponding to the shader i want to use for this node.
   } // end constructor
 
   /**
@@ -348,60 +348,56 @@ export class PhongShader {
     this.material_params_loc["ks"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.ks');
     this.material_params_loc["alpha"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.alpha');
     this.material_params_loc["transparency"] = gl.getUniformLocation(basic_shader.program, 'uLightParams.transparency');
-
   }
 
   /**
    * shader is here to (1) hold the compiled shader program.
    * and (2) bind and load up the buffers that it is aware of.
    * this is intended highly customizable to whatever shader you want to build.
+   * just implement a new shader with load() and draw() and set the id in the node.
    */
-  load(node, camera, gl) {
-
-    // set gl attributes for the camera_matrices
-    gl.uniformMatrix4fv(this.projection_loc, false, scene.camera.get_projection_matrix());
-    gl.uniformMatrix4fv(this.model_view_loc, false, scene.camera.get_view_matrix());
-    // set gl for the global lights of the scene
-    gl.uniform3fv(this.point_lights_loc, scene.get_lights());
-    gl.uniform1i(this.lights_loc, this.point_lights.length / 3);
-
-
-    
-
+  load(node, camera, lights, gl) {
     // from object
-      gl.useProgram(basic_shader.program);
+    gl.useProgram(this.program);
 
-      
-      gl.uniform3fv(this.material_params_loc["ka"], new Float32Array(this.material_params["ka"]));
-      gl.uniform3fv(this.material_params_loc["kd"], new Float32Array(this.material_params["kd"]));
-      gl.uniform3fv(this.material_params_loc["ks"], new Float32Array(this.material_params["ks"]));
-      gl.uniform1f(this.material_params_loc["alpha"], this.material_params["alpha"]);
-      gl.uniform1f(this.material_params_loc["transparency"], this.material_params["transparency"]);
+    // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
+    // set gl attributes for the camera_matrices
+    gl.uniformMatrix4fv(this.projection_loc, false, camera.get_projection_matrix());
+    gl.uniformMatrix4fv(this.model_view_loc, false, camera.get_view_matrix());
+    // set gl for the global lights of the scene
+    gl.uniform3fv(this.lights_loc, process_lights(lights)); // TODO
+    gl.uniform1i(this.num_lights_loc, lights.length / 3);
+
+    // set up material information for the phong shader
+    gl.uniform3fv(this.material_params_loc["ka"], node.material.ka);
+    gl.uniform3fv(this.material_params_loc["kd"], node.material.kd);
+    gl.uniform3fv(this.material_params_loc["ks"], node.material.ks);
+    gl.uniform1f(this.material_params_loc["alpha"], node.material.shininess);
+    gl.uniform1f(this.material_params_loc["transparency"], node.material.transparency);
+
+    // vertex/positions buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.pos_buff);
+    gl.enableVertexAttribArray(this.pos_loc);
+    gl.vertexAttribPointer(this.pos_loc, 3, gl.FLOAT, false, 0, 0);
+
+    // norm buffer setup
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.norm_buff);
+    gl.enableVertexAttribArray(this.norm_loc);
+    gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
+
+    // index buffer for drawing as triangles
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indices_buff);
 
 
-       // vertex/positions buffer
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.pos_buff);
-      gl.enableVertexAttribArray(this.pos_loc);
-      gl.vertexAttribPointer(this.pos_loc, 3, gl.FLOAT, false, 0, 0);
-
-      // norm buffer setup
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.norm_buff);
-      gl.enableVertexAttribArray(this.norm_loc);
-      gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
-
-      // index buffer for drawing as triangles
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indices_buff);
-
-
-      // from node
-      // color buffer
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buff);
-      gl.enableVertexAttribArray(this.color_loc);
-      gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
-      // set this nodes transformation matrix
-      gl.uniformMatrix4fv(this.node_transforms_loc, false, stack_float32);
-      // set how many matrices
-      gl.uniform1i(this.num_my_transforms_loc, stack_float32.length / 16);
+    // from node
+    // color buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.color_buff);
+    gl.enableVertexAttribArray(this.color_loc);
+    gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
+    // set this nodes transformation matrix
+    gl.uniformMatrix4fv(this.node_transforms_loc, false, stack_float32);
+    // set how many matrices
+    gl.uniform1i(this.num_my_transforms_loc, stack_float32.length / 16);
   } // end function
 
   draw(node, gl) {
