@@ -182,15 +182,17 @@
 
     const scene = new Builder.Scene(); // make a scene
 
-    const sphere = new Builder.SceneNode("sphere"); // set up a node
-    // {
-  //   vertices,
-  //   indices,
-  //   colors=null,
-  //   normals=null,
-  //   tangents=null,
-  //   texel_mapping=null,
-  // }
+    // add a light to the scene.
+    const light = new Builder.PointLight({
+      "position": [0, 5, 5]
+    })
+    scene.add_light(light);
+
+    // add a camera to the scene. (using camera defaults here)
+    scene.set_camera(new Builder.PerspectiveCamera())
+
+    const sphere = new Builder.SceneNode("sphere"); // set up a node to add to the scene
+
     const mesh = new Builder.Mesh(gen_sphere_mesh()); // generate a basic mesh
     // console.log(mesh)
     
@@ -202,6 +204,12 @@
         "transparency": 1.0
     });
     // console.log(material);
+
+    // add mesh and material to the sphere.
+    sphere.set_mesh(mesh).set_material(material);
+    // console.log(sphere)
+
+    
 
 
     // make a basic scene graph

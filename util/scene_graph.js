@@ -69,7 +69,7 @@ export class Scene {
    * set a specific camera to the scene.
    * this is meaning PERSPECTIVE.
    */
-  setCamera(camera) {
+  set_camera(camera) {
     this.camera = camera;
   } // end function
 
@@ -223,6 +223,12 @@ export class Light {
     this.color = color;
   }
 } // end class
+
+/**
+ * a point light
+ * TODO: anything to add beyond parent class above?
+ */
+export class PointLight { }
 
 
 /**
