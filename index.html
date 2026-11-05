@@ -35,130 +35,15 @@
   <!-- <script src="scene_graph.js"></script> -->
   <!-- <script src="ui_util.js"></script> -->
 
-  <!-- TESTING -->
-   <script>
-    function gen_sphere_mesh() {
-    const r = 1.0; // unit sphere-ish
-    const h_step = 0.1; // horizontal resolution
-    const v_step = 0.1; // vertical resolution
-
-    // how many steps we are taking in that range.
-    let h_steps = Math.round((2 * Math.PI) / h_step)
-    let v_steps = Math.round(Math.PI / v_step)
-
-    const vertices = [] // simple js array for collection of vertices
-    const indices = [] // js array for collecting indices
-    const norms = []; // norms for the planes
-    const tangents = []; // for texture mapping; tangent to the minisurface
-    const texels = []; // texture coordinates for sampling
-    const colors = []; // basic colors of the primitive mesh
-
-    // ==================================
-    //  GENERATE POINTS
-    // ==================================
-
-    vertices.push(0, r, 0) // save the north polar cap
-    norms.push(0, 1, 0); // pointing straight up
-    tangents.push(-1, 0, 0); // push the tangent at that point
-    texels.push(0.5, 0.5); // grab the conversion to the texture map
-    colors.push(0.5, 0.5, 0.5); // baseline color
-
-    // generate the bands of the sphere
-    for (let v_i = 1; v_i < v_steps; v_i++) { // for each vertical step
-        // get our current v, which is the v in (h, v)
-          const v = (v_i / v_steps) * Math.PI;
-          const sin_v = Math.sin(v) // save for later
-          const cos_v = Math.cos(v)
-
-          for (let h_i = 0; h_i <= h_steps; h_i++) { // for each horizontal step
-            const h = (h_i / h_steps) * 2 * Math.PI; // percent of steps, re-mapped to an angle
-
-            // gather points
-            const x = r * sin_v * Math.cos(h);
-            const z = r * sin_v * Math.sin(h);
-            const y = r * cos_v;
-
-            vertices.push(x, y, z); // get vertex
-            norms.push(x, y, z); // norm is just the point here 
-            tangents.push(-z, 0, x); // basic tangent for this points
-            texels.push(h_i / h_steps, v_i / v_steps); // do a very basic mapping pull
-            colors.push(0.5, 0.5, 0.5); // baseline color
-        } // end loop
-      } // end loop
-    
-      vertices.push(0, -r, 0) // save the south polar cap
-      norms.push(0, -1, 0); // pointing straight down
-      tangents.push(1, 0, 0); // push the tangent at that point
-      texels.push(0.5, 0.5); // grab the conversion to the texture map
-      colors.push(0.5, 0.5, 0.5); // baseline color
-
-      // ==================================
-      //  GENERATE INDICES
-      // ==================================
-
-      // Each horizontal ring actually contains (h_steps + 1) vertices due to the <= h_steps loop
-      const vertices_per_ring = h_steps + 1; 
-      let last_pt_index = (vertices.length / 3) - 1; // The south polar cap index
-
-      // 1. NORTH POLAR CAP INDICES
-      // Index 0 is the north pole. The first ring starts at index 1.
-      for (let h_i = 0; h_i < h_steps; h_i++) {
-        const current_ring_pt = 1 + h_i;
-        const next_ring_pt = current_ring_pt + 1;
-        indices.push(0, current_ring_pt, next_ring_pt);
-      }
-
-      // 2. MIDDLE BANDING INDICES
-      // We have (v_steps - 1) rings of vertices in the middle. 
-      // We loop through (v_steps - 2) rows of bands between those rings.
-      for (let v_i = 0; v_i < v_steps - 2; v_i++) {
-        const current_ring_start = 1 + (v_i * vertices_per_ring);
-        const next_ring_start = current_ring_start + vertices_per_ring;
-
-        for (let h_i = 0; h_i < h_steps; h_i++) {
-          const bottom_left  = current_ring_start + h_i;
-          const bottom_right = bottom_left + 1;
-          const top_left     = next_ring_start + h_i;
-          const top_right    = top_left + 1;
-
-          indices.push(
-            bottom_left, top_left, top_right,
-            bottom_left, top_right, bottom_right
-          );
-        }
-      }
-
-      // 3. SOUTH POLAR CAP INDICES
-      // The last ring of vertices before the south pole starts here:
-      const last_ring_start = 1 + ((v_steps - 2) * vertices_per_ring);
-      for (let h_i = 0; h_i < h_steps; h_i++) {
-        const current_ring_pt = last_ring_start + h_i;
-        const next_ring_pt = current_ring_pt + 1;
-        indices.push(last_pt_index, next_ring_pt, current_ring_pt);
-      }
-
-      // return as a js dict
-      return {
-        "vertices": new Float32Array(vertices), 
-        "indices": new Uint16Array(indices),
-        "normals": new Float32Array(norms),
-        "tangents": new Float32Array(tangents),
-        "texels": new Float32Array(texels),
-        "colors": new Float32Array(colors)
-      };
-    } // end function
-   </script>
-
   <!-- ======================================================= -->
   <!-- MAIN RENDER LOOP                                        -->
   <!-- ======================================================= -->
 
   <script type="module">
-    // import test
-    // import * from './util/primitives/sphere.js';
-    // import * as  from "./util/primitives/sphere.js";
-    import * as Builder from "./util/scene_graph.js";    
-
+    // can use basic ES6 modules to "import" things so can
+    // modularize the code base a bit nicer.
+    import * as SceneBuilder from "./util/scene_graph.js";
+    import * as MeshBuilder from "./util/mesh.js";
    
     // WebGL setup
     const canvas = document.getElementById("glcanvas");
@@ -166,62 +51,69 @@
     if (!gl) alert("WebGL2 not supported");
 
 
-    const scene = new Builder.Scene(); // make a scene
-
-    // add a light to the scene.
-    const light = new Builder.PointLight({
-      "position": [0, 5, 5]
-    })
-
-    const ya_light = new Builder.PointLight({
-      "position": [-4, -5, 5]
-    })
+    /**
+     * scene at highest level consists of global items:
+     * camera, lights, root nodes of node groups/hierarchies
+     */
+    const scene = new SceneBuilder.Scene(); // make a scene
+    // add a camera to the scene. (using camera defaults here)
+    scene.set_camera(new SceneBuilder.PerspectiveCamera())
+    // add com light to the scene.
+    const light = new SceneBuilder.PointLight({"position": [0, 5, 5]});
+    const ya_light = new SceneBuilder.PointLight({"position": [-4, -5, 5]});
     scene.add_light(light);
     scene.add_light(ya_light);
 
-    // add a camera to the scene. (using camera defaults here)
-    scene.set_camera(new Builder.PerspectiveCamera())
+    /**
+     * simple flow: initialize a node with mesh, material, set up the hierarchy however,
+     * add it to the scene.
+     */ 
+    const daddy = new SceneBuilder.SceneNode("daddy"); // set up a simple hierarchy
+    const child = new SceneBuilder.SceneNode("ya_sphere");
+    const gchild = new SceneBuilder.SceneNode("ya_ya_sphere");
+    const rando_sphere = new SceneBuilder.SceneNode("rando"); // just a lil rando in the back for testing
 
-    const rando_sphere = new Builder.SceneNode("sphere"); // set up a node to add to the scene
-
-    const sphere = new Builder.SceneNode("sphere"); // set up a node to add to the scene
-    const child = new Builder.SceneNode("ya_sphere");
-    const gchild = new Builder.SceneNode("ya_ya_sphere");
-
-    const mesh = new Builder.Mesh(gl, gen_sphere_mesh()); // generate a basic mesh
-    // console.log(mesh)
-    
-    const material = new Builder.Material({ // generate a silver material for fun
+    const mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_sphere_mesh()); // generate a basic sphere mesh
+    const material = new SceneBuilder.Material({ // create a material (this is the constants for silver)
         "ka": [0.19225, 0.19225, 0.19225],
         "kd": [0.50754, 0.50754, 0.50754],
         "ks": [0.508273, 0.508273, 0.508273],
         "shininess": 51.2,
         "transparency": 1.0
     });
-    // console.log(material);
 
-    // add mesh and material to the sphere.
-    sphere.set_mesh(mesh).set_material(material);
+    // add mesh and material to the spheres.
+    daddy.set_mesh(mesh).set_material(material);
     child.set_mesh(mesh).set_material(material);
     gchild.set_mesh(mesh).set_material(material);
     rando_sphere.set_mesh(mesh).set_material(material);
-    // console.log(sphere)
-    rando_sphere.position = [-4, 0, -20]
-    sphere.position = [0, 0, -10];
-    child.position = [0, 1.5, 0];
-    child.scale = [0.8, 0.8, 0.8]
-    gchild.position = [0, 1.5, 0]
 
+    // gonna add some initial positioning, scaling, etc, prior to render. 
+    // at a baseline, the generic node transformation matrix is:
+    // M_parent * (position * rotation * scale)
+    rando_sphere.position = [-4, 0, -20];
+    daddy.position = [0, 0, -10]; // note that these ones are in a hierarchy
+    child.position = [0, 1.5, 0];  // so the transformations carry through.
+    child.scale = [0.8, 0.8, 0.8]; // it is up to dev to consider this and manage.
+    gchild.position = [0, 1.5, 0];
 
+    // setup a basic hierarchy
+    daddy.add_child(child); // add child to the daddy
+    child.add_child(gchild); // and gchild -> child
 
-    sphere.add_child(child); // add child to the sphere
-    child.add_child(gchild);
-
-    scene.add_node(sphere); // add sphere to the scene
+    // add root nodes to the scene (note the children of daddy
+    // are automatically carried through).
+    scene.add_node(daddy); 
     scene.add_node(rando_sphere)
-
-    // rendering manager at your service
-    const renderer = new Builder.Renderer(gl);
+    
+    /**
+     * rendering manager is a lightweight, simple
+     * iteration to (1) update all nodes' transformation matrices
+     * and (2) coordinate the correct shader for the node.
+     * this is intended to be incredibly simple and should stay so.
+     * any scene given to render(scene) should *just work*.
+     */ 
+    const renderer = new SceneBuilder.Renderer(gl);
 
     const start_time = Date.now() // start the clock 
     let delta_time;
@@ -230,16 +122,14 @@
      * render the scene.
      */
     function render() {
-      // TODO
       delta_time = (Date.now() - start_time) / 1000
-      const cos = Math.cos(delta_time);
+      const cos = Math.cos(delta_time); // for ease of writing
 
-      // sphere.position = [Math.sin(delta_time), Math.cos(delta_time), -10]
-      sphere.rotation = [0, 0, cos]
-      // sphere.scale = [cos + 2, cos + 2, cos + 2]
+      // feel free to fuck with this and let know if any glaring bugs in the meantime!
+      daddy.rotation = [0, 0, cos];
+      child.rotation = [0, 0, cos];
 
-      child.rotation = [0, 0, cos]
-      // console.log("rendering");
+      // ultimate render call 
       renderer.draw(scene);
     } // end render
 
