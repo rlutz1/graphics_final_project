@@ -3,6 +3,10 @@
  * generate a sphere mesh programmatically.
  * if anything else needed, add it here!
  */
+
+/**
+ * basic sphere mesh generation (dont @me i know it's a pile of trash)
+ */
 export function gen_sphere_mesh(
   r=1.0, // radius
   h_step=0.1, // horizontal "resolution"

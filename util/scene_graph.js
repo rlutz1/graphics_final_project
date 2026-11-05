@@ -384,7 +384,6 @@ export class Renderer {
    */
   draw_nodes(node, camera, lights) {
     const shader = this.shader_map[node.shader_id]; // grab this nodes shader
-    console.log(shader); // testing
     shader.load(node, camera, lights, this.gl); // load up the buffer locations
     shader.draw(node, this.gl); // draw this node
     if (node.children) {
