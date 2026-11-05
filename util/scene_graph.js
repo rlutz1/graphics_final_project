@@ -117,7 +117,10 @@ export class SceneNode {
 
   /**
    * update my transformation dumbly, simply calculate:
-   * M_world_child = M_world_parent * M_local_child
+   * M_world_child = M_world_parent * M_local_child.
+   * if want to change, extend the SceneNode and override, but you MUST
+   * set the transformation_matrix, otherwise nothing will happen/
+   * incorrect renderiing.
    */
   update_transformation_matrix(M_parent) {
     // TODO: NEEDS TESTING!! there could be problems with column vects.
@@ -186,6 +189,10 @@ export class SceneNode {
 /**
  * build a basic mesh, wrapping the bad dict roxanne
  * used before.
+ * 
+ * feel free to extend/override, but be sure to set
+ * up the buffers here! that way this only happens once and
+ * can be reused by many nodes if needed.
  */
 export class Mesh {
   constructor(gl, {
@@ -262,7 +269,8 @@ export class Material {
 
 /**
  * a general light that can be extended out to other 
- * kinds.
+ * kinds. here is where you could extend and add things
+ * like light attenuation, etc...
  */
 export class Light {
   constructor ({
