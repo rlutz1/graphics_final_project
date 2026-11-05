@@ -17,7 +17,7 @@
 
   <div style="display: flex; gap: 10px; align-items: flex-start;">
     <div style="display: flex; flex-direction: column; gap: 10px;">
-      <canvas id="glcanvas" width="800" height="800"></canvas>
+      <canvas id="glcanvas" width="600" height="600"></canvas>
     </div>
   </div>
 
@@ -40,22 +40,97 @@
   <!-- ======================================================= -->
 
   <script type="module">
-    // import test
-    // import * as SphereGenerator from './util/primitives/sphere.js';
-    // console.log(SphereGenerator.testing)
-
+    // can use basic ES6 modules to "import" things so can
+    // modularize the code base a bit nicer.
+    import * as SceneBuilder from "./util/scene_graph.js";
+    import * as MeshBuilder from "./util/mesh.js";
+   
     // WebGL setup
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl2");
     if (!gl) alert("WebGL2 not supported");
 
+
+    /**
+     * scene at highest level consists of global items:
+     * camera, lights, root nodes of node groups/hierarchies
+     */
+    const scene = new SceneBuilder.Scene(); // make a scene
+    // add a camera to the scene. (using camera defaults here)
+    scene.set_camera(new SceneBuilder.PerspectiveCamera())
+    // add com light to the scene.
+    const light = new SceneBuilder.PointLight({"position": [0, 5, 5]});
+    const ya_light = new SceneBuilder.PointLight({"position": [-4, -5, 5]});
+    scene.add_light(light);
+    scene.add_light(ya_light);
+
+    /**
+     * simple flow: initialize a node with mesh, material, set up the hierarchy however,
+     * add it to the scene.
+     */ 
+    const daddy = new SceneBuilder.SceneNode("daddy"); // set up a simple hierarchy
+    const child = new SceneBuilder.SceneNode("ya_sphere");
+    const gchild = new SceneBuilder.SceneNode("ya_ya_sphere");
+    const rando_sphere = new SceneBuilder.SceneNode("rando"); // just a lil rando in the back for testing
+
+    const mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_sphere_mesh()); // generate a basic sphere mesh
+    const material = new SceneBuilder.Material({ // create a material (this is the constants for silver)
+        "ka": [0.19225, 0.19225, 0.19225],
+        "kd": [0.50754, 0.50754, 0.50754],
+        "ks": [0.508273, 0.508273, 0.508273],
+        "shininess": 51.2,
+        "transparency": 1.0
+    });
+
+    // add mesh and material to the spheres.
+    daddy.set_mesh(mesh).set_material(material);
+    child.set_mesh(mesh).set_material(material);
+    gchild.set_mesh(mesh).set_material(material);
+    rando_sphere.set_mesh(mesh).set_material(material);
+
+    // gonna add some initial positioning, scaling, etc, prior to render. 
+    // at a baseline, the generic node transformation matrix is:
+    // M_parent * (position * rotation * scale)
+    rando_sphere.position = [-4, 0, -20];
+    daddy.position = [0, 0, -10]; // note that these ones are in a hierarchy
+    child.position = [0, 1.5, 0];  // so the transformations carry through.
+    child.scale = [0.8, 0.8, 0.8]; // it is up to dev to consider this and manage.
+    gchild.position = [0, 1.5, 0];
+
+    // setup a basic hierarchy
+    daddy.add_child(child); // add child to the daddy
+    child.add_child(gchild); // and gchild -> child
+
+    // add root nodes to the scene (note the children of daddy
+    // are automatically carried through).
+    scene.add_node(daddy); 
+    scene.add_node(rando_sphere)
+    
+    /**
+     * rendering manager is a lightweight, simple
+     * iteration to (1) update all nodes' transformation matrices
+     * and (2) coordinate the correct shader for the node.
+     * this is intended to be incredibly simple and should stay so.
+     * any scene given to render(scene) should *just work*.
+     */ 
+    const renderer = new SceneBuilder.Renderer(gl);
+
     const start_time = Date.now() // start the clock 
+    let delta_time;
 
     /**
      * render the scene.
      */
     function render() {
-      // TODO
+      delta_time = (Date.now() - start_time) / 1000
+      const cos = Math.cos(delta_time); // for ease of writing
+
+      // feel free to fuck with this and let know if any glaring bugs in the meantime!
+      daddy.rotation = [0, 0, cos];
+      child.rotation = [0, 0, cos];
+
+      // ultimate render call 
+      renderer.draw(scene);
     } // end render
 
     // Initialize when page loads
