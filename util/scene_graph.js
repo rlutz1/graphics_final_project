@@ -1,6 +1,5 @@
 import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat4FromRows } from './transitions.js';
-import { phong_frag_shader } from './frag_shaders.js';
-import { phong_vert_shader } from './vert_shaders.js';
+import { SHADER_MAP } from './shaders.js';
 
 /**
  * ==============================================
@@ -87,7 +86,7 @@ export class SceneNode {
    * constructor
    * --------------------------------------
    */
-  constructor(id=null, shader_id="phong_V1") {
+  constructor(id=null, shader_id="phong_basic") {
     this.id = id; // specifying id
 
     this.parent = null; // parent of this node, null to start
@@ -335,146 +334,6 @@ export class OrthographicCamera extends Camera {
   }
 } // end class
 
-
-/**
- * ==============================================
- * SHADERS
- * ==============================================
- */
-
-/**
- * generally, take two shaders and turn into a program.
- */
-export class Shader {
-  constructor(vert_shader, frag_shader, gl) {
-    // create the shaders
-    this.vert_shader = this.create_shader(gl.VERTEX_SHADER, vert_shader, gl);
-    this.frag_shader = this.create_shader(gl.FRAGMENT_SHADER, frag_shader, gl);
-    // create the program for this object and children
-    this.program = gl.createProgram();
-    // attach shaders
-    gl.attachShader(this.program, this.vert_shader);
-    gl.attachShader(this.program, this.frag_shader);
-    // link the program
-    gl.linkProgram(this.program);
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-      throw new Error(gl.getProgramInfoLog(this.program));
-    } // end if
-  }
-
-  /**
-   * function to generate a shader for this object and its (optional) children.
-   */
-  create_shader(type, source, gl) {
-    const shader = gl.createShader(type)
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      throw new Error(gl.getShaderInfoLog(shader));
-    } // end if
-    return shader;
-  } // end function
-  
-} // end class
-
-/**
- * just call with a basic phong shader
- */
-export class PhongShader extends Shader {
-  constructor(gl) {
-    super(phong_vert_shader, phong_frag_shader, gl);
-    // camera and light items (may be able to pull out into the renderer if consistent.)
-    this.model_view_loc = gl.getUniformLocation(this.program, "uModelViewMatrix"); 
-    this.projection_loc = gl.getUniformLocation(this.program, "uProjectionMatrix"); 
-    this.lights_loc = gl.getUniformLocation(this.program, "uPointLights");
-    this.num_lights_loc =  gl.getUniformLocation(this.program, "uNumPointLights"); 
-
-    // some lighting specific locations
-    this.material_params_loc = {};
-    this.material_params_loc["ka"] = gl.getUniformLocation(this.program, 'uLightParams.ka');
-    this.material_params_loc["kd"] = gl.getUniformLocation(this.program, 'uLightParams.kd');
-    this.material_params_loc["ks"] = gl.getUniformLocation(this.program, 'uLightParams.ks');
-    this.material_params_loc["shininess"] = gl.getUniformLocation(this.program, 'uLightParams.shininess');
-    this.material_params_loc["transparency"] = gl.getUniformLocation(this.program, 'uLightParams.transparency');
-
-    // more meshy information here.
-    this.pos_loc = gl.getAttribLocation(this.program, "aPosition");
-    this.norm_loc = gl.getAttribLocation(this.program, "aNormal");
-    this.color_loc = gl.getAttribLocation(this.program, "aColor");
-    this.node_transforms_loc = gl.getUniformLocation(this.program, "uModelTransformationMatrix"); 
-  }
-
-  /**
-   * shader is here to (1) hold the compiled shader program.
-   * and (2) bind and load up the buffers that it is aware of.
-   * this is intended highly customizable to whatever shader you want to build.
-   * just implement a new shader with load() and draw() and set the id in the node.
-   */
-  load(node, camera, lights, gl) {
-    // from object
-    gl.useProgram(this.program);
-
-    // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
-    // set gl attributes for the camera_matrices
-    gl.uniformMatrix4fv(this.projection_loc, false, camera.get_projection_matrix());
-    gl.uniformMatrix4fv(this.model_view_loc, false, camera.get_view_matrix());
-    // set gl for the global lights of the scene
-    gl.uniform3fv(this.lights_loc, this.process_lights(lights)); // TODO
-    gl.uniform1i(this.num_lights_loc, lights.length);
-
-    // set this nodes transformation matrix
-    gl.uniformMatrix4fv(this.node_transforms_loc, false, node.transformation_matrix); // TODO
-
-    // set up material information for the phong shader
-    gl.uniform3fv(this.material_params_loc["ka"], node.material.ka);
-    gl.uniform3fv(this.material_params_loc["kd"], node.material.kd);
-    gl.uniform3fv(this.material_params_loc["ks"], node.material.ks);
-    gl.uniform1f(this.material_params_loc["shininess"], node.material.shininess);
-    gl.uniform1f(this.material_params_loc["transparency"], node.material.transparency);
-
-    // vertex/positions buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
-    gl.enableVertexAttribArray(this.pos_loc);
-    gl.vertexAttribPointer(this.pos_loc, 3, gl.FLOAT, false, 0, 0);
-
-    // norm buffer setup
-    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.norm_buff);
-    gl.enableVertexAttribArray(this.norm_loc);
-    gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
-
-    // color buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.color_buff);
-    gl.enableVertexAttribArray(this.color_loc);
-    gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
-
-    // index buffer for drawing as triangles
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
-    
-  } // end function
-
-  /**
-   * define how to draw with this shader.
-   */
-  draw(node, gl) {
-    // draw the node.
-    gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
-  } // end function
-
-  /**
-   * not sure this will stay this way, but for now, 
-   * process the light objects -> a flat float32array
-   */
-  process_lights(lights) {
-    const all_positions = [];
-    lights.forEach((l) => {
-      all_positions.push(...l.position);
-    });
-    console.log(all_positions.length)
-    return new Float32Array(all_positions);
-  } // end function
-
-} // end class
-
 /**
  * ==============================================
  * RENDERING WORKHORSE
@@ -485,15 +344,7 @@ export class Renderer {
   constructor(gl) {
     this.gl = gl;
     this.clear(); // first thing, clear
-
-    // want to cache all possible shaders for use 
-    // potential optimaization: group draw calls by shader so
-    // switching betweeen programs is not so whiplashy.
-    // TODO: this could come from a file that's easy to edit for all without
-    // destroying everything hehe
-    this.shader_map = {
-      "phong_V1": new PhongShader(gl) // right now just one to test with 
-    }
+    this.init_shader_map(); // initialize our shader map only once.
   }
 
   /**
@@ -542,6 +393,17 @@ export class Renderer {
       });
     } // end if
     
+  } // end function
+
+  /**
+   * go through all shader keys in the shader map and
+   * initialize the shaders.
+   */
+  init_shader_map() {
+    this.shader_map = {};
+    for (const [shader_id, ShaderClass] of Object.entries(SHADER_MAP)) {
+      this.shader_map[shader_id] = new ShaderClass(this.gl);
+    } // end loop
   } // end function
 
   /**
