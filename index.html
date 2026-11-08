@@ -45,14 +45,14 @@
 
     // example: keys.w = true on pressing
     window.addEventListener('keydown', (event) => {
-      keys[event.key] = true;
+      keys_pressed[event.key] = true;
     });
 
     // example: keys.w = false on not pressing
     window.addEventListener('keyup', (event) => {
-      keys[event.key] = false;
+      keys_pressed[event.key] = false;
     });
-
+    
   </script>
 
 
@@ -61,6 +61,8 @@
   <!-- ======================================================= -->
 
   <script type="module">
+    import { Renderer } from "./util/scene_graph.js";
+
     // WebGL context setup
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl2");
@@ -84,7 +86,7 @@
      * this is intended to be incredibly simple and should stay so.
      * any scene given to render(scene) should *just work*.
      */ 
-    const renderer = new SceneBuilder.Renderer(gl);
+    const renderer = new Renderer(gl);
     
     // going to set this as the default one being used for the moment:
     // (but uncomment and switch as needed, please be aware when pushing to main about this)
