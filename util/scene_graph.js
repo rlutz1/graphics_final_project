@@ -94,6 +94,7 @@ export class SceneNode {
 
     this.mesh = null; // mesh of the node, encompassing vertices, index mapping, norms, etc...
     this.material = null; // material of this node (ka, kd, ...)
+    this.texture = null; // texture specific to the node; then mesh's can be reused.
 
     this.shader_id = shader_id; // id corresponding to the shader i want to use for this node.
 
@@ -176,6 +177,14 @@ export class SceneNode {
     return this;
   } // end function
 
+  /**
+   * given a path to a texture, create the texture 
+   */
+  set_texture(texture) {
+    this.texture = texture;
+    return this;
+  } // end function
+
 } // end class
 
 /**
@@ -227,6 +236,149 @@ export class Mesh {
       gl.bindBuffer(type, buff);
       gl.bufferData(type, data, gl_hint);
       return buff
+  } // end function
+
+} // end class
+
+/**
+ * simple wrap around a texture so multiple nodes can
+ * use the same mesh with different textures. 
+ * avoids a lot of memory duplication.
+ */
+export class Texture {
+  constructor(gl, path) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 
+      0, 
+      gl.RGBA, 
+      1, 1, 0, 
+      gl.RGBA, 
+      gl.UNSIGNED_BYTE, 
+      new Uint8Array([128, 128, 255, 255])
+    );
+
+    const image = new Image();
+    image.onload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);  // images start at the top row, texture coordinates at the bottom
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    };
+    image.src = path;
+    this.texture_buff = texture;
+  }
+
+  /**
+   * use this or texture.texture_buff, just added as a convenience func.
+   */
+  get_texture() {
+    return this.texture_buff;
+  } // end function
+
+} // end class
+
+/**
+ * video texture that takes a path to a video and automatically
+ * updates the texture every time the video changes frame 
+ * via the callback requestVideoFrameCallback.
+ * https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback
+ */
+export class VideoTexture {
+  constructor(gl, path) {
+    this.gl = gl; // need to cache gl for this texture since updates occur within the texture class.
+    // note that if the gl context changes, anything using a video texture must update gl!
+
+    // make a new video :)
+    this.video = document.createElement("video");
+
+    // set a couple parameters up to play
+    this.video.playsInline = true; // for mobile at most, not needed for desktop browers. not tested on mobile atm.
+    this.video.muted = true;
+    this.video.loop = true;
+    this.video.autoplay = true;
+    this.video.src = path;
+
+    // bind callback to this instance
+    // js won't recognize "this" as being the texture once handed off.
+    // have to bind so this == this texture instance.
+    this.on_video_frame = this.on_video_frame.bind(this);
+
+    // create texture
+    this.texture_buff = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.texture_buff);
+    // init with placeholder
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        1, 1, 0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        new Uint8Array([128, 128, 255, 255])
+    );
+    
+    // param setting
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);  // images start at the top row, texture coordinates at the bottom
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); // clamp the wrap to edges of shape
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // switching to linear for video to 
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); // avoid generating mipmap each frame change.
+
+    // playyyy the video
+    this.video.play().catch(err => {
+        console.warn("Video playback failed:", err);
+    });
+
+    // wait for video to be ready before starting to load frames to buffers.
+    this.video.addEventListener("loadeddata", () => {
+        this.video.requestVideoFrameCallback(
+            this.on_video_frame
+        );
+      }, { once: true }
+    ); // only call once, looping below takes over once playing.
+  }
+
+  /**
+   * when video changes frame, this will get called automatically
+   * and update the texture to this current frame.
+   */
+  on_video_frame(time, metadata) {
+    // ensure to bind texture
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture_buff);
+    
+    // use the current frame of video as the image
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D, 
+      0, 
+      this.gl.RGBA, 
+      this.gl.RGBA, 
+      this.gl.UNSIGNED_BYTE, 
+      this.video
+    );
+
+    // repeat this setting. if this is not reset on every call,
+    // only the first frame wraps. resetting this enables the recall 
+    // of this callback function on every frame change, completing the loop
+    this.video.requestVideoFrameCallback(this.on_video_frame);
+  } // end function
+
+  /**
+   * if gl context changes, this MUST be changed if using this
+   * texture.
+   * here's a simple access, or set via texture.gl, but be aware of this limitation if used!
+   */
+  update_gl(gl) {
+    this.gl = gl;
+  } // end function
+
+  /**
+   * use this or texture.texture_buff, just added as a convenience func.
+   */
+  get_texture() {
+    return this.texture_buff;
   } // end function
 
 } // end class
@@ -419,9 +571,8 @@ export class Renderer {
   clear() {
     // clear things.
     this.gl.enable(this.gl.DEPTH_TEST);
-    this.gl.clearColor(0.5, 0.5, 0.5, 1);
+    this.gl.clearColor(0.2, 0.2, 0.2, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
   } // end function
 
 } // end class
-
