@@ -27,85 +27,57 @@
 
 
   <!-- ======================================================= -->
+  <!-- CUSTOM SCRIPTS                                          -->
+  <!-- ======================================================= -->
+  
+  <!-- keep track of pressed/unpressed/general tracking in a dict -->
+  <!-- passed to scene on render call. we can customize what's held -->
+  <!-- here as needed. -->
+  <script>
+    // adding some basic defaults at first, will dynamically add 
+    // as more things keydown/keyup.
+    const keys_pressed = {
+      "w": false,
+      "a": false,
+      "s": false,
+      "d": false
+    };
+
+    // example: keys.w = true on pressing
+    window.addEventListener('keydown', (event) => {
+      keys[event.key] = true;
+    });
+
+    // example: keys.w = false on not pressing
+    window.addEventListener('keyup', (event) => {
+      keys[event.key] = false;
+    });
+
+  </script>
+
+
+  <!-- ======================================================= -->
   <!-- MAIN RENDER LOOP                                        -->
   <!-- ======================================================= -->
 
   <script type="module">
-    // can use basic ES6 modules to "import" things so can
-    // modularize the code base a bit nicer.
-
-   
-    // WebGL setup
+    // WebGL context setup
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl2");
     if (!gl) alert("WebGL2 not supported");
 
+    let curr_scene = null; // the current scene to be rendered.
+    let next_scene = null; // next scene up in the queue to be rendered.
 
-    /**
-     * scene at highest level consists of global items:
-     * camera, lights, root nodes of node groups/hierarchies
-     */
-    const scene = new SceneBuilder.Scene(); // make a scene
-    // add a camera to the scene. (using camera defaults except aspect ratio jic)
-    scene.set_camera(new SceneBuilder.PerspectiveCamera({
-      "aspect": canvas.width / canvas.height, // since my canvas is not square
-    }))
+    // go ahead and grab any assets from any scene's needed here.
+    import * as OuterSpaceBuilder from "../outer_world/outer_space_scene.js";
+    import * as EarthBuilder from "../planetary_duck_hunt/earth_scene.js";
 
-    // add com light to the scene.
-    const light = new SceneBuilder.PointLight({"position": [0, 5, 5]});
-    const ya_light = new SceneBuilder.PointLight({"position": [-4, -5, 5]});
-    scene.add_light(light);
-    scene.add_light(ya_light);
+    // create an earth and space scene to start
+    const space = new OuterSpaceBuilder.OuterSpaceScene();
+    const earth = new EarthBuilder.EarthScene();
 
-    /**
-     * simple flow: initialize a node with mesh, material, set up the hierarchy however,
-     * add it to the scene.
-     * 
-     * note: texture_normal_mapping_basic can be used for the blue normal mapping pics if used.
-     */ 
-    const daddy = new SceneBuilder.SceneNode("daddy", "texture_bump_mapping_basic"); // set up a simple hierarchy
-    const child = new SceneBuilder.SceneNode("ya_sphere", "phong_basic");
-    const gchild = new SceneBuilder.SceneNode("ya_ya_sphere", "texture_bump_mapping_basic");
-    const rando_sphere = new SceneBuilder.SceneNode("rando", "phong_basic"); // just a lil rando in the back for testing
-
-    const mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_sphere_mesh()); // generate a basic sphere mesh
-    const material = new SceneBuilder.Material({ // create a material (this is the constants for silver)
-        "ka": [0.19225, 0.19225, 0.19225],
-        "kd": [0.50754, 0.50754, 0.50754],
-        "ks": [0.508273, 0.508273, 0.508273],
-        "shininess": 51.2,
-        "transparency": 1.0
-    });
-
-    // some example textures to show the new provided texture shader
-    const desert = new SceneBuilder.Texture(gl, "./textures/desert.jpg");
-    const cat = new SceneBuilder.VideoTexture(gl, "./textures/cat_mp4.mp4");
-
-    // add mesh and material to the spheres.
-    daddy.set_mesh(mesh).set_material(material).set_texture(cat);
-    child.set_mesh(mesh).set_material(material);
-    gchild.set_mesh(mesh).set_material(material).set_texture(desert);
-    rando_sphere.set_mesh(mesh).set_material(material);
-
-    // gonna add some initial positioning, scaling, etc, prior to render. 
-    // at a baseline, the generic node transformation matrix is:
-    // M_parent * (position * rotation * scale)
-    rando_sphere.position = [-4, 0, -20];
-    daddy.position = [0, 0, -10]; // note that these ones are in a hierarchy
-    child.position = [0, 1.5, 0];  // so the transformations carry through.
-    child.scale = [0.8, 0.8, 0.8]; // it is up to dev to consider this and manage.
-    gchild.position = [0, 1.5, 0];
-
-    // setup a basic hierarchy
-    daddy.add_child(child); // add child to the daddy
-    child.add_child(gchild); // and gchild -> child
-
-    // add root nodes to the scene (note the children of daddy
-    // are automatically carried through).
-    scene.add_node(daddy); 
-    scene.add_node(rando_sphere)
-    
-    /**
+     /**
      * rendering manager is a lightweight, simple
      * iteration to (1) update all nodes' transformation matrices
      * and (2) coordinate the correct shader for the node.
@@ -113,7 +85,18 @@
      * any scene given to render(scene) should *just work*.
      */ 
     const renderer = new SceneBuilder.Renderer(gl);
+    
+    // going to set this as the default one being used for the moment:
+    // (but uncomment and switch as needed, please be aware when pushing to main about this)
+    curr_scene = earth;
+    next_scene = space;
 
+    // for potential transition testing.
+    // curr_scene = space;
+    // next_scene = earth; 
+
+    curr_scene.init(renderer); // initialize the scene.
+    
     const start_time = Date.now() // start the clock 
     let delta_time;
 
@@ -121,15 +104,24 @@
      * render the scene.
      */
     function render() {
-      delta_time = (Date.now() - start_time) / 1000
-      const cos = Math.cos(delta_time); // for ease of writing
+      delta_time = (Date.now() - start_time) / 1000 // dt in seconds from front end
+      
+      // TODO: this could be a potential simple transition between scenes. 
+      // note that the curr_scene.initialized is there primarily for the space 
+      // scene: it's very likely we don't want to re-call that for that scene.
+      // a thought, but not required.
 
-      // feel free to fuck with this and let know if any glaring bugs in the meantime!
-      daddy.rotation = [0, delta_time, cos];
-      child.rotation = [0, 0, cos];
+      // if (curr_scene.is_over) { // some sort of switch to next flag set by game logic.
+      //   // transition outer -> planet or planet -> outer scenes
+      //   // goes here somehow some way.
+      //   curr_scene = next_scene;
+      //   next_scene = ???;
+      //   if (!curr_scene.initialized) {
+      //     curr_scene.init(renderer);
+      //   } // end if
+      // } // end if
 
-      // ultimate render call 
-      renderer.draw(scene);
+      curr_scene.render(keys_pressed);
     } // end render
 
     // Initialize when page loads

@@ -19,10 +19,12 @@ export class Scene {
    * constructor
    * --------------------------------------
    */
-  constructor() {
+  constructor(gl) {
     this.roots = []; // root objects in the scene.
     this.lights = []; // generally: lights in the scene. can be any kind of light.
     this.camera = null; // camera, meaning more specifically the perspective used.
+    this.renderer = null; // scene will have a reference to the renderer made.
+    this.initialized = false; // in case a flag is useful in transitioning.
   }
 
   /**
@@ -30,6 +32,28 @@ export class Scene {
    * functions
    * --------------------------------------
    */
+
+  /**
+   * empty at parent level, but to be customized on
+   * child inheriting classes. provided as a base signature.
+   * this is not called in cosntructor on PURPOSE in case you want to create
+   * a scene for use without loading up a bunch of stuff 
+   * until it will actually be used (boids in mind :) )
+   */
+  init(renderer=null) {
+    this.renderer = renderer;
+    this.initialized = true; // control if you want to not call this again in render.
+    // to implement further in children.
+  } // end function
+
+  render(keys_pressed={}) {
+    // yada yada, do whatever the scene needs to do at a global scale,
+    // such as run collision detection with player, did i hit a boid, etc.
+    // then, let dummy take over:
+    if (this.renderer) {
+      this.renderer.draw(this);
+    } // end if
+  } // end function
 
   /**
    * add an object to the scene.
