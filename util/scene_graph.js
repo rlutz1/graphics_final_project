@@ -212,6 +212,32 @@ export class SceneNode {
 } // end class
 
 /**
+ * dummy scene node to help group together many root nodes as
+ * a cohesive unit. instead of heaving 500000 boid root nodes in scene list, 
+ * can group together as a group of boids under single cohesive root node
+ * to enable some flexibility in removing nodes quicker than 
+ * traversing things that aren't pertinent (did i shoot a boid? i don't need
+ * to deal with everything on scene to remove, just the boids.)
+ */
+export class GroupSceneNode extends SceneNode {
+  constructor() {
+    super("grouper", ""); // construct with nothing. renderer will generally skip these.
+  }
+  
+  /**
+   * this here adds technically one extra bad computation, BUT
+   * only for this node. a dummy identity is the transformation here.
+   */
+  update_transformation_matrix(M_parent) {
+    // my local transformations
+    const M_local = mat4Identity();
+
+    // add my transformations to the world's
+    this.transformation_matrix = matMul(M_parent, M_local);
+  } // end function
+} // end class
+
+/**
  * ==============================================
  * MESH
  * 
@@ -567,9 +593,12 @@ export class Renderer {
    * traverse all nodes a tree and draw them with their shader
    */
   draw_nodes(node, camera, lights) {
-    const shader = this.shader_map[node.shader_id]; // grab this nodes shader
-    shader.load(node, camera, lights, this.gl); // load up the buffer locations
-    shader.draw(node, this.gl); // draw this node
+    if (!(parent instanceof GroupSceneNode)) { // skip over dummy groupers
+      const shader = this.shader_map[node.shader_id]; // grab this nodes shader
+      shader.load(node, camera, lights, this.gl); // load up the buffer locations
+      shader.draw(node, this.gl); // draw this node
+    } // end if
+    
     if (node.children) {
       node.children.forEach((c) => { // drill down the tree
         this.draw_nodes(c, camera, lights);
