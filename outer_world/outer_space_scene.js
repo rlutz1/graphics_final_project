@@ -3,4 +3,6 @@ import * as MeshBuilder from "../util/mesh_generators.js";
 
 export class OuterSpaceScene extends SceneBuilder.Scene {
   
-}
+  
+
+} // end class

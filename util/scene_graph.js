@@ -19,7 +19,7 @@ export class Scene {
    * constructor
    * --------------------------------------
    */
-  constructor(gl) {
+  constructor() {
     this.roots = []; // root objects in the scene.
     this.lights = []; // generally: lights in the scene. can be any kind of light.
     this.camera = null; // camera, meaning more specifically the perspective used.
@@ -46,8 +46,8 @@ export class Scene {
     // to implement further in children.
   } // end function
 
-  render(keys_pressed={}) {
-    // yada yada, do whatever the scene needs to do at a global scale,
+  render() {
+    // yada yada, do whatever the scene needs at a child level to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
     // then, let dummy take over:
     if (this.renderer) {
