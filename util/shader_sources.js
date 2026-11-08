@@ -48,7 +48,7 @@ export const phong_basic = {
         vPosition = p.xyz;
 
         // use model view and apply to given normal -- send to frag.
-        vNormal = mat3(uModelViewMatrix) * norm;
+        vNormal = transpose(inverse(mat3(uModelViewMatrix))) * norm;
 
         // set the actual positioning in the projection
         gl_Position = uProjectionMatrix * p;
