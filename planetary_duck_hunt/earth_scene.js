@@ -1,6 +1,10 @@
 import * as SceneBuilder from "../util/scene_graph.js";
+import * as MeshBuilder from "../util/mesh_generators.js";
 import { BoidSceneNode } from "./boid_scene_node.js";
 
+/**
+ * a basic earth scene.
+ */
 export class EarthScene extends SceneBuilder.Scene {
 
   constructor() {
@@ -8,13 +12,20 @@ export class EarthScene extends SceneBuilder.Scene {
 
     // do whatever y'all want here, but, like, this sorta shit. these are all the root nodes of a scene.
     // they can be a straight up scene node or group scene node, whatever makes more sense to yall.
-    this.boids = null;
+    this.boids = null; // this will end up being a dummy root node to hold all the boids. easier access here though than going through root node list.
     // this.player = null;
     // this.ground = null;
     // this.sky = null;
     // ...
   }
 
+  /**
+   * init call for the scene. this allows construction of the scene
+   * while deferring any heavy loading to the init call when the time
+   * comes to actually use the scene. 
+   * in this case, we're setting up the renderer through parent class,
+   * setting camera, adding a basic point light, and initializing some shitty boids.
+   */
   init(renderer=null, aspect=1) {
     super.init(renderer); // let the parent take care of basic bookeeping
 
@@ -43,10 +54,21 @@ export class EarthScene extends SceneBuilder.Scene {
     this.boids = new SceneBuilder.GroupSceneNode(); // grouper node to keep it a little more organized
     let boid;
 
+    // making these here because these can be shared amongst all boids in this group,
+    // avoiding buffer duplication
+    const boid_mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_cone_mesh()); // generate a basic cone mesh for now
+    const boid_material = new SceneBuilder.Material({ // create a material (this is the constants for silver as place holder)
+        "ka": [0.19225, 0.19225, 0.19225],
+        "kd": [0.50754, 0.50754, 0.50754],
+        "ks": [0.508273, 0.508273, 0.508273],
+        "shininess": 51.2,
+        "transparency": 1.0
+    }); 
+
     for (let i = 0; i < num_boids; i++) {
       // the id -> can map to idx from wasm module, but for now, using i to illustrate.
       boid = new BoidSceneNode(`${i}`, "phong_basic"); // set up a simple hierarchy
-      boid.init(this.renderer.gl); // need gl context for mesh sadly, so passing from the renderer for now.
+      boid.init(boid_mesh, boid_material, null); // init the nodes with their assets
       
       // below is a proof of concept of positioning. obv will be set by wasm shtuff.
       const x = (Math.random() * 5) - 1; // -1 -> 1
@@ -63,6 +85,11 @@ export class EarthScene extends SceneBuilder.Scene {
     this.add_node(this.boids); // add grouper node as a root node of the scene.
   } // end function
 
+  /**
+   * called once every rendering call from index.html.
+   * this is where any global game logic, scene component updates
+   * should be occurring that need per-render-call updates.
+   */
   render(keys_pressed={}) {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.

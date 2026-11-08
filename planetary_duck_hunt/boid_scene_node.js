@@ -1,5 +1,4 @@
 import * as SceneBuilder from "../util/scene_graph.js";
-import * as MeshBuilder from "../util/mesh_generators.js";
 import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
 
 
@@ -27,20 +26,12 @@ export class BoidSceneNode extends SceneBuilder.SceneNode {
 
   /**
    * change however you deem fit. can also set up a hierarchy here for wings or
-   * WHATEVER.
+   * WHATEVER. this is an arbitrary function, main point is to init the node
+   * with a mesh, material, texture at SOME point.
    */
-  init(gl) {
-    const boid_mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_cone_mesh()); // generate a basic cone mesh for now
-    const boid_material = new SceneBuilder.Material({ // create a material (this is the constants for silver as place holder)
-        "ka": [0.19225, 0.19225, 0.19225],
-        "kd": [0.50754, 0.50754, 0.50754],
-        "ks": [0.508273, 0.508273, 0.508273],
-        "shininess": 51.2,
-        "transparency": 1.0
-    }); 
-
+  init(mesh, material, texture) {
     // set my mesh and material.
-    this.set_mesh(boid_mesh).set_material(boid_material);
+    this.set_mesh(mesh).set_material(material).set_texture(texture);
   } // end function
 
   /**
