@@ -1,5 +1,7 @@
 import * as SceneBuilder from "../util/scene_graph.js";
 import * as MeshBuilder from "../util/mesh_generators.js";
+import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
+
 
 /**
  * this is basically the body of the boid. you could add wings as children
@@ -15,8 +17,6 @@ export class BoidSceneNode extends SceneBuilder.SceneNode {
     this.idx = null; // or this.idx = atoi(id), know what i mean?
     this.velocity = [0, 0, 0];
     this.acceleration = [0, 0, 0];
-
-    this.init(); // init myself a mesh, etc....
   } // end constructor
   
   /**
@@ -29,7 +29,7 @@ export class BoidSceneNode extends SceneBuilder.SceneNode {
    * change however you deem fit. can also set up a hierarchy here for wings or
    * WHATEVER.
    */
-  init() {
+  init(gl) {
     const boid_mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_cone_mesh()); // generate a basic cone mesh for now
     const boid_material = new SceneBuilder.Material({ // create a material (this is the constants for silver as place holder)
         "ka": [0.19225, 0.19225, 0.19225],

@@ -67,6 +67,7 @@
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl2");
     if (!gl) alert("WebGL2 not supported");
+        const aspect = canvas.width / canvas.height;
 
     let curr_scene = null; // the current scene to be rendered.
     let next_scene = null; // next scene up in the queue to be rendered.
@@ -97,7 +98,7 @@
     // curr_scene = space;
     // next_scene = earth; 
 
-    curr_scene.init(renderer); // initialize the scene.
+    curr_scene.init(renderer, aspect); // initialize the scene.
     
     const start_time = Date.now() // start the clock 
     let delta_time;

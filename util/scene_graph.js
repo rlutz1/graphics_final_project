@@ -223,7 +223,7 @@ export class GroupSceneNode extends SceneNode {
   constructor() {
     super("grouper", ""); // construct with nothing. renderer will generally skip these.
   }
-  
+
   /**
    * this here adds technically one extra bad computation, BUT
    * only for this node. a dummy identity is the transformation here.
@@ -593,7 +593,8 @@ export class Renderer {
    * traverse all nodes a tree and draw them with their shader
    */
   draw_nodes(node, camera, lights) {
-    if (!(parent instanceof GroupSceneNode)) { // skip over dummy groupers
+    if (!(node instanceof GroupSceneNode)) { // skip over dummy groupers
+      // console.log()
       const shader = this.shader_map[node.shader_id]; // grab this nodes shader
       shader.load(node, camera, lights, this.gl); // load up the buffer locations
       shader.draw(node, this.gl); // draw this node

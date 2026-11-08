@@ -15,13 +15,21 @@ export class EarthScene extends SceneBuilder.Scene {
     // ...
   }
 
-  init(renderer=null) {
+  init(renderer=null, aspect=1) {
+    super.init(renderer); // let the parent take care of basic bookeeping
+
+    // init some shitty basics, lights, camera
+    this.set_camera(new SceneBuilder.PerspectiveCamera({
+      "aspect": aspect, // since my canvas is not square
+    }))
+
+    // add some light to the scene.
+    this.add_light(new SceneBuilder.PointLight({"position": [0, 5, 5]}));
+
     // TODO: init wasm module here?
     // initialize all nodes, bookeeping, etc in the scene.
     // can give num boids -> comes from module?
     this.init_boids();
-
-    super.init(renderer); // let the parent take care of basic bookeeping
   } // end function
 
   /**
@@ -38,6 +46,17 @@ export class EarthScene extends SceneBuilder.Scene {
     for (let i = 0; i < num_boids; i++) {
       // the id -> can map to idx from wasm module, but for now, using i to illustrate.
       boid = new BoidSceneNode(`${i}`, "phong_basic"); // set up a simple hierarchy
+      boid.init(this.renderer.gl); // need gl context for mesh sadly, so passing from the renderer for now.
+      
+      // below is a proof of concept of positioning. obv will be set by wasm shtuff.
+      const x = (Math.random() * 5) - 1; // -1 -> 1
+      const y = (Math.random() * 5) - 1; // -1 -> 1
+      let z = (Math.random() * 2) - 1; // -1 -> 1
+      if (this.camera instanceof SceneBuilder.PerspectiveCamera) {
+        // shove back the boid a bit -- z dimension matters here, if at z=0 it'll look like nothing's there.
+        z = -(Math.random() * 10) - 10; // -10 -> -20
+      } // end if
+      boid.position = [x, y, z];
       this.boids.add_child(boid); // add boid as child of a dummy grouper node
     } // end loop
 
