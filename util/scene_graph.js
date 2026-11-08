@@ -23,6 +23,8 @@ export class Scene {
     this.roots = []; // root objects in the scene.
     this.lights = []; // generally: lights in the scene. can be any kind of light.
     this.camera = null; // camera, meaning more specifically the perspective used.
+    this.renderer = null; // scene will have a reference to the renderer made.
+    this.initialized = false; // in case a flag is useful in transitioning.
   }
 
   /**
@@ -30,6 +32,28 @@ export class Scene {
    * functions
    * --------------------------------------
    */
+
+  /**
+   * empty at parent level, but to be customized on
+   * child inheriting classes. provided as a base signature.
+   * this is not called in cosntructor on PURPOSE in case you want to create
+   * a scene for use without loading up a bunch of stuff 
+   * until it will actually be used (boids in mind :) )
+   */
+  init(renderer=null) {
+    this.renderer = renderer;
+    this.initialized = true; // control if you want to not call this again in render.
+    // to implement further in children.
+  } // end function
+
+  render() {
+    // yada yada, do whatever the scene needs at a child level to do at a global scale,
+    // such as run collision detection with player, did i hit a boid, etc.
+    // then, let dummy take over:
+    if (this.renderer) {
+      this.renderer.draw(this);
+    } // end if
+  } // end function
 
   /**
    * add an object to the scene.
@@ -185,6 +209,32 @@ export class SceneNode {
     return this;
   } // end function
 
+} // end class
+
+/**
+ * dummy scene node to help group together many root nodes as
+ * a cohesive unit. instead of heaving 500000 boid root nodes in scene list, 
+ * can group together as a group of boids under single cohesive root node
+ * to enable some flexibility in removing nodes quicker than 
+ * traversing things that aren't pertinent (did i shoot a boid? i don't need
+ * to deal with everything on scene to remove, just the boids.)
+ */
+export class GroupSceneNode extends SceneNode {
+  constructor() {
+    super("grouper", ""); // construct with nothing. renderer will generally skip these.
+  }
+
+  /**
+   * this here adds technically one extra bad computation, BUT
+   * only for this node. a dummy identity is the transformation here.
+   */
+  update_transformation_matrix(M_parent) {
+    // my local transformations
+    const M_local = mat4Identity();
+
+    // add my transformations to the world's
+    this.transformation_matrix = matMul(M_parent, M_local);
+  } // end function
 } // end class
 
 /**
@@ -543,9 +593,13 @@ export class Renderer {
    * traverse all nodes a tree and draw them with their shader
    */
   draw_nodes(node, camera, lights) {
-    const shader = this.shader_map[node.shader_id]; // grab this nodes shader
-    shader.load(node, camera, lights, this.gl); // load up the buffer locations
-    shader.draw(node, this.gl); // draw this node
+    if (!(node instanceof GroupSceneNode)) { // skip over dummy groupers
+      // console.log()
+      const shader = this.shader_map[node.shader_id]; // grab this nodes shader
+      shader.load(node, camera, lights, this.gl); // load up the buffer locations
+      shader.draw(node, this.gl); // draw this node
+    } // end if
+    
     if (node.children) {
       node.children.forEach((c) => { // drill down the tree
         this.draw_nodes(c, camera, lights);
