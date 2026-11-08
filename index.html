@@ -47,8 +47,11 @@
      * camera, lights, root nodes of node groups/hierarchies
      */
     const scene = new SceneBuilder.Scene(); // make a scene
-    // add a camera to the scene. (using camera defaults here)
-    scene.set_camera(new SceneBuilder.PerspectiveCamera())
+    // add a camera to the scene. (using camera defaults except aspect ratio jic)
+    scene.set_camera(new SceneBuilder.PerspectiveCamera({
+      "aspect": canvas.width / canvas.height, // since my canvas is not square
+    }))
+
     // add com light to the scene.
     const light = new SceneBuilder.PointLight({"position": [0, 5, 5]});
     const ya_light = new SceneBuilder.PointLight({"position": [-4, -5, 5]});
@@ -58,6 +61,8 @@
     /**
      * simple flow: initialize a node with mesh, material, set up the hierarchy however,
      * add it to the scene.
+     * 
+     * note: texture_normal_mapping_basic can be used for the blue normal mapping pics if used.
      */ 
     const daddy = new SceneBuilder.SceneNode("daddy", "texture_bump_mapping_basic"); // set up a simple hierarchy
     const child = new SceneBuilder.SceneNode("ya_sphere", "phong_basic");
