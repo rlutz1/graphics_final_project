@@ -13,6 +13,9 @@ export class EarthScene extends SceneBuilder.Scene {
     // do whatever y'all want here, but, like, this sorta shit. these are all the root nodes of a scene.
     // they can be a straight up scene node or group scene node, whatever makes more sense to yall.
     this.boids = null; // this will end up being a dummy root node to hold all the boids. easier access here though than going through root node list.
+    // makes killing boids easier and also makes easy access to boid positions
+    this.boidNodes = []
+    this.lastFrameTime = null;
     // this.player = null;
     // this.ground = null;
     // this.sky = null;
@@ -26,7 +29,8 @@ export class EarthScene extends SceneBuilder.Scene {
    * in this case, we're setting up the renderer through parent class,
    * setting camera, adding a basic point light, and initializing some shitty boids.
    */
-  init(renderer=null, aspect=1) {
+  // MUST BE ASYNCHRONOUS FOR LOADING WASM
+  async init(renderer=null, aspect=1) {
     super.init(renderer); // let the parent take care of basic bookeeping
 
     // init some shitty basics, lights, camera
@@ -37,10 +41,15 @@ export class EarthScene extends SceneBuilder.Scene {
     // add some light to the scene.
     this.add_light(new SceneBuilder.PointLight({"position": [0, 5, 5]}));
 
-    // TODO: init wasm module here?
+    this.Module = await createWASMModule();
+    this.Module._initializeBoids();
+    let numBoids = this.Module._getNumBoids();
     // initialize all nodes, bookeeping, etc in the scene.
-    // can give num boids -> comes from module?
-    this.init_boids();
+    this.boidDim = this.Module._getDim();
+    const numPositions = numBoids * this.boidDim;
+    this.boidPositions = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidPositions(), numPositions);
+    this.boidVelocities = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidVelocities(), numPositions);
+    this.init_boids(numBoids);
   } // end function
 
   /**
@@ -50,7 +59,7 @@ export class EarthScene extends SceneBuilder.Scene {
    * and customize, go wild -- it's very possible this will be needed to 
    * do more interesting things in the update_transformation_matrix which by default just does a TRS.
    */
-  init_boids(num_boids=5) {
+  init_boids(num_boids) {
     this.boids = new SceneBuilder.GroupSceneNode(); // grouper node to keep it a little more organized
     let boid;
 
@@ -71,14 +80,18 @@ export class EarthScene extends SceneBuilder.Scene {
       boid.init(boid_mesh, boid_material, null); // init the nodes with their assets
       
       // below is a proof of concept of positioning. obv will be set by wasm shtuff.
-      const x = (Math.random() * 5) - 1; // -1 -> 1
-      const y = (Math.random() * 5) - 1; // -1 -> 1
-      let z = (Math.random() * 2) - 1; // -1 -> 1
+      const x = this.boidPositions[(i * this.boidDim)];
+      const y = this.boidPositions[(i * this.boidDim) + 1];
+      const z = this.boidPositions[(i * this.boidDim) + 2];
+
+      /* GONNA HAVE TO ADDRESS THIS LATER AS IT INTERFERES WITH SIMUALATION
       if (this.camera instanceof SceneBuilder.PerspectiveCamera) {
         // shove back the boid a bit -- z dimension matters here, if at z=0 it'll look like nothing's there.
         z = -(Math.random() * 10) - 10; // -10 -> -20
-      } // end if
+      } // end if */
+
       boid.position = [x, y, z];
+      this.boidNodes.push(boid);
       this.boids.add_child(boid); // add boid as child of a dummy grouper node
     } // end loop
 
@@ -91,10 +104,33 @@ export class EarthScene extends SceneBuilder.Scene {
    * should be occurring that need per-render-call updates.
    */
   render(keys_pressed={}) {
+    console.log("EarthScene render called");
+    const now = performance.now();
+
+    if (this.lastFrameTime !== null) {
+      console.log(this.boidPositions.slice(0, 3));
+      const delT = (now - this.lastFrameTime) / 1000.0;
+      console.log(this.boidPositions.slice(0, 3));
+      this.Module._advanceBoids(delT);
+      this.update_boids();
+    }
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
-   
+    this.lastFrameTime = now;
     super.render();  // let the renderer do it's draw thing
   } // end function
+
+  // just grab new coordinates
+  update_boids() {
+    for (let i = 0; i < this.boidNodes.length; i++) {
+      const offset = i * this.boidDim;
+
+      this.boidNodes[i].position = [
+        this.boidPositions[offset],
+        this.boidPositions[offset + 1],
+        this.boidPositions[offset + 2]
+      ];
+    }
+}
 
 } // end class

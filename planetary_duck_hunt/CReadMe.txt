@@ -1,0 +1,1 @@
+Yo, if you need to compile some C, gonna need the emscripten compiler. To activate it outside of the emsdk directory, run source ~/emsdk/emsdk_env.sh.

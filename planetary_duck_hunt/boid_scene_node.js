@@ -1,7 +1,6 @@
 import * as SceneBuilder from "../util/scene_graph.js";
 import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
 
-
 /**
  * this is basically the body of the boid. you could add wings as children
  * or something (BoidWingSceneNode, for example), but this would be the base. 

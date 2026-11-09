@@ -29,6 +29,7 @@
   <!-- ======================================================= -->
   <!-- CUSTOM SCRIPTS                                          -->
   <!-- ======================================================= -->
+   <script src="./planetary_duck_hunt/Cbuild/boidRunner.js"></script>
   
   <!-- keep track of pressed/unpressed/general tracking in a dict -->
   <!-- passed to scene on render call. we can customize what's held -->
@@ -98,7 +99,8 @@
     // curr_scene = space;
     // next_scene = earth; 
 
-    curr_scene.init(renderer, aspect); // initialize the scene.
+    // MUST BE ASYNCHRONOUS TO LOAD WASM
+    await curr_scene.init(renderer, aspect); // initialize the scene.
     
     const start_time = Date.now() // start the clock 
     let delta_time;
@@ -124,13 +126,13 @@
       //   } // end if
       // } // end if
 
+      // might be nice to pass delta_time to render
       curr_scene.render(keys_pressed);
     } // end render
 
-    // Initialize when page loads
-    window.onload = function () {
-      setInterval(render, 30); // execute this code with a 30 ms delay on each call
-    }
+    // can remove window.onload due to asynchronous function in curr_scene.init(). 
+    // May not be true of space scene unless we load a wasm module there or make it asynchronous otherwise
+    setInterval(render, 30);
 
   </script>
 </body>
