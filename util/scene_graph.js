@@ -458,7 +458,7 @@ export class VideoTexture {
  */
 export class Material {
   constructor({
-    color=[1, 1, 1],
+    color=[1, 1, 1], // usually comes from mesh, but can use this if for whatever reason needs it in the Shader
     ka=[0.2, 0.2, 0.2],
     kd=[0.8, 0.8, 0.8],
     ks=[0.5, 0.5, 0.5],
@@ -481,7 +481,7 @@ export class Material {
  */
 export class PlanetMaterial extends Material {
   constructor ({
-    color=[1, 1, 1],
+    color=[1, 1, 1], // usually comes from mesh, but can use this if for whatever reason needs it in the Shader
     ka=0, 
     kd=0, 
     ks=0, 
@@ -491,15 +491,12 @@ export class PlanetMaterial extends Material {
     flat=false,
     transparency=1
   }={}) {
-    this.color = new Float32Array(color);
-    this.ka = new Float32Array(ka);
-    this.kd = new Float32Array(kd);
-    this.ks = new Float32Array(ks);
-    this.shininess = shininess;
+    super({color, ka, kd, ks, shininess, transparency}); // init via super
+
+    // custom things for planet materials
     this.metallic = metallic;
     this.emissive = emissive;
     this.flat = flat;
-    this.transparency = transparency; // in case it ever comes up
   }
 } // end class
 
