@@ -262,7 +262,7 @@ export class Mesh {
     tangents=null,
     texels=null,
     mapping=null
-  }) {
+  }={}) {
     this.vertices = vertices;
     this.indices = indices;
     this.colors = colors;
@@ -270,14 +270,24 @@ export class Mesh {
     this.tangents = tangents;
     this.texels = texels;
     this.mapping = mapping;
+    
+  //   console.log({
+  //   vertices,
+  //   indices,
+  //   colors,
+  //   normals,
+  //   tangents,
+  //   texels,
+  //   mapping
+  // })
 
     // initialize whatever we have into a grabable buffer
-    if (vertices) this.vert_buff = this.init_buffer(vertices, gl);
-    if (indices) this.ind_buff = this.init_buffer(indices, gl, gl.ELEMENT_ARRAY_BUFFER);
-    if (normals) this.norm_buff = this.init_buffer(normals, gl);
-    if (colors) this.color_buff = this.init_buffer(colors, gl);
-    if (tangents) this.tangent_buff = this.init_buffer(tangents, gl);
-    if (texels) this.tex_buff = this.init_buffer(texels, gl);
+    if (vertices) {this.vert_buff = this.init_buffer(vertices, gl); console.log("askjdnas")}
+    if (indices) {this.ind_buff = this.init_buffer(indices, gl, gl.ELEMENT_ARRAY_BUFFER);}
+    if (normals) {this.norm_buff = this.init_buffer(normals, gl);}
+    if (colors) {this.color_buff = this.init_buffer(colors, gl);}
+    if (tangents) {this.tangent_buff = this.init_buffer(tangents, gl);}
+    if (texels) {this.tex_buff = this.init_buffer(texels, gl);}
   }
 
   /**
@@ -569,7 +579,7 @@ export class SunLight extends PointLight {
     super({"position": position, "color": color}); // does nothign rn
     this.intensity = intensity;
     this.falloff = falloff;
-    this.on = true;
+    this.on = on;
   }
 }
 
@@ -586,7 +596,7 @@ export class FillLight extends DirectionalLight {
   }={}) {
     super({"color": color});
     this.intensity = intensity;
-    this.on = true;
+    this.on = on;
     this.azimuth = azimuth;
     this.elevation = elevation;
     this.fill_dir = this.calc_fill_dir(); // if you don't change those values, can just use this

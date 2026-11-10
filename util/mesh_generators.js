@@ -527,7 +527,7 @@ export function gen_pyramid_mesh(color=[0.5, 0.5, 0.5]) {
  * adapted directly from's liz's planet mesh in planet.js.
  * using directly for now in order to adapt.
  */
-export function gen_planet_mesh(r, vSteps, uSteps, color = [0.2, 0.4, 0.9], mapping = 0, uRepeat = 1, vRepeat = 1) {
+export function gen_planet_mesh(r, vSteps, uSteps, color=[0.2, 0.4, 0.9], mapping=0, uRepeat=1, vRepeat=1) {
   const positions = [];
   const colors = [];
   const indices = [];
@@ -582,6 +582,7 @@ export function gen_planet_mesh(r, vSteps, uSteps, color = [0.2, 0.4, 0.9], mapp
           indices.push(k2, k2 + 1, k1 + 1); // lower right triangle
       }
   }
+
   return {
       "vertices": new Float32Array(positions),
       "colors": new Float32Array(colors),
@@ -591,6 +592,8 @@ export function gen_planet_mesh(r, vSteps, uSteps, color = [0.2, 0.4, 0.9], mapp
       "texels": new Float32Array(textureCoors),
       "mapping": mapping // this is added with liz's shader in mind. better idea than what i did hehe
   };
+
+  
 } // end function
 
 

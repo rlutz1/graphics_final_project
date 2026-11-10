@@ -288,9 +288,9 @@ export const planet_basic = {
     out vec4 fragColor; 
 
     struct Material {
-        float ka;            // ambient
-        float kd;            // diffuse
-        float ks;            // specular
+        vec3 ka;             // ambient
+        vec3 kd;             // diffuse
+        vec3 ks;             // specular      
         float shininess;     // phong exp
         float metallic;      // 
         float emissive;      // 
