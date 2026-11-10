@@ -110,23 +110,58 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     
     */
     init_solar_system() {
-      // TODO
-      this.solar_system = {};
-      // TODO: SET TEXTURES
+      this.solar_system = {}; // for readability -- to actually render, add root nodes/hierarchy
 
+      // init sun and planets
       const sun = this.init_sun();
+      const planets = this.init_planets();
      
-
       this.solar_system.sun = sun; // for easy access more than anything
-      this.add_node(sun); // add as a root rn
+      this.solar_system.planets = planets; // can make this more specific if needed
 
+      this.add_node(sun); // add as a root so that it behaves as the "origin" of this scene
+      planets.forEach((p) => {
+        // add all planets as children of the sun for positioning to carry through when moving scene.
+        sun.add_child(p);
+      });
+
+    } // end function
+
+    init_planets() {
+      const planets = [];
+
+      // for now, same mesh and material for all.
+      const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
+          1, // radius -- placeholder!
+          30, 30, // vSteps, uSteps
+        )); // generate a basic planet mesh
+        const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
+            "ka": [0.2, 0.2, 0.2], 
+            "kd": [0.5, 0.5, 0.5],
+            "ks": [0.8, 0.8, 0.8], 
+            "shininess": 1, 
+            "metallic": 0,
+            "emissive": 1.0, 
+            "flat": false
+        });
+
+      for (const [planet, data] of Object.entries(PlanetBuilder.PLANET_DATA)) {
+        const new_planet = new PlanetBuilder.PlanetSceneNode(planet.name, "planet_basic", data);        
+        new_planet.set_mesh(mesh).set_material(material); // TODO: texture set here.
+        planets.push(new_planet);
+      } // end loop
+      return planets;
     } // end function
 
     /**
      * initialize the sun specifically
      */
     init_sun() {
-      const sun = new PlanetBuilder.PlanetSceneNode("sun", "planet_basic");
+      const sun = new PlanetBuilder.SunSceneNode(
+        "Sun", 
+        "planet_basic", 
+        PlanetBuilder.SUN_DATA.sun
+      );
       const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
         2.5, // radius (pulled from liz's stuff)
         30, 30, // vSteps, uSteps
