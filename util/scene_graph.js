@@ -293,6 +293,15 @@ export class Mesh {
 } // end class
 
 /**
+ * ==============================================
+ * TEXTURE
+ * 
+ * Texture -> image textures
+ * VideoTexture -> video textures
+ * ==============================================
+ */
+
+/**
  * simple wrap around a texture so multiple nodes can
  * use the same mesh with different textures. 
  * avoids a lot of memory duplication.
@@ -463,6 +472,35 @@ export class Material {
     this.shininess = shininess;
     this.transparency = transparency;
   } 
+} // end class
+
+/**
+ * wrapper around's liz's specific wording
+ * and things she needs for planet material stuff as
+ * it currently stands.
+ */
+export class PlanetMaterial extends Material {
+  constructor ({
+    color=[1, 1, 1],
+    ka=0, 
+    kd=0, 
+    ks=0, 
+    shininess=1, 
+    metallic=0,
+    emissive=0.45,
+    flat=false,
+    transparency=1
+  }={}) {
+    this.color = new Float32Array(color);
+    this.ka = new Float32Array(ka);
+    this.kd = new Float32Array(kd);
+    this.ks = new Float32Array(ks);
+    this.shininess = shininess;
+    this.metallic = metallic;
+    this.emissive = emissive;
+    this.flat = flat;
+    this.transparency = transparency; // in case it ever comes up
+  }
 } // end class
 
 /**
