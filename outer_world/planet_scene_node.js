@@ -36,6 +36,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     this.orbit_rotation = [0, 0, 0];
 
     this.data = data; // grab the general data pack.
+    this.delta_time = 0; // time since last frame
   } // end constructor
 
 
@@ -48,6 +49,11 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
   planetMatrix = mat4Translate(planetMatrix, [displayDistance(planet.data), 0, 0]);
   planetMatrices.push(planetMatrix);
   */
+
+  update_orbit(day=0) {
+    const angle = (day / this.data.orbit_period) * 2 * Math.PI;
+    this.orbit_rotation = [0, angle, 0]; // y rotation around the sun
+  } // end function 
 
   /**
    * update my transformation dumbly, simply calculate:

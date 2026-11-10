@@ -185,7 +185,7 @@
      */
     function render() {
       delta_time = (Date.now() - start_time) / 1000 // dt in seconds from front end
-      frontend_data.dt = delta_time; // make sure this is passed to the scenes, likely will be needed.
+      frontend_data.delta_time = delta_time; // make sure this is passed to the scenes, likely will be needed.
       
       // TODO: this could be a potential simple transition between scenes. 
       // note that the curr_scene.initialized is there primarily for the space 

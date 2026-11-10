@@ -8,6 +8,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       super(); // takes care of base initialization fields.
       // WIP
       this.solar_system = null; // the solar system in an accessible way.
+      this.day = 0; // days passing.
+      this.days_per_second = 30; // how to register how many days occur in a second for planet orbits
     }
   
     /**
@@ -182,6 +184,14 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     render(frontend_data={}) {
       // yada yada, do whatever the scene needs to do at a global scale,
       // such as run collision detection with player, did i hit a boid, etc.
+
+      // update the time on all planets so rotations can be udpated correctly
+      if (frontend_data.delta_time) {
+        this.day = (frontend_data.delta_time * this.days_per_second);
+        this.solar_system.planets.forEach((p) => {
+          p.update_orbit(this.day);
+        });
+      } // end if
      
       super.render();  // let the renderer do it's draw thing
     } // end function
