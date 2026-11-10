@@ -90,7 +90,7 @@ export class EarthScene extends SceneBuilder.Scene {
    * this is where any global game logic, scene component updates
    * should be occurring that need per-render-call updates.
    */
-  render(keys_pressed={}) {
+  render(frontend_data={}) {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
    

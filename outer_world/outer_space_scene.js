@@ -170,7 +170,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       });
 
       sun.set_mesh(mesh).set_material(material); // TODO: texture set here.
-      sun.position = [0, 0, -100]; // set an initial position
+      sun.position = [0, 0, -50]; // set an initial position
       return sun;
     } // end function
   
@@ -179,7 +179,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
      * this is where any global game logic, scene component updates
      * should be occurring that need per-render-call updates.
      */
-    render(keys_pressed={}) {
+    render(frontend_data={}) {
       // yada yada, do whatever the scene needs to do at a global scale,
       // such as run collision detection with player, did i hit a boid, etc.
      

@@ -1,5 +1,5 @@
 import * as SceneBuilder from "../util/scene_graph.js";
-import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
+import { mat4Identity, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
 
 /**
  * just a small wrapper
@@ -31,9 +31,8 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     super(id, shader_id); // takes care of some baseline stuff for now.
 
     // default super call sets up: this.position = [0, 0, 0]
+    // override with a smaller distance ratio
     this.position = [data.distance_km / 10000000, 0, data.distance_km / 10000000];
-    // this.velocity = [0, 0, 0];
-    // this.acceleration = [0, 0, 0];
     this.orbit_rotation = [0, 0, 0];
 
     this.data = data; // grab the general data pack.
@@ -55,17 +54,14 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
    * M_world_child = M_world_parent * M_local_child.
    * if want to change, extend the SceneNode and override, but you MUST
    * set the transformation_matrix, otherwise nothing will happen/
-   * incorrect renderiing.
+   * incorrect rendering.
    */
   update_transformation_matrix(M_parent) {
     // change any trajectory via this.
-    // this is where you could have conditional
-    // "if velocity is -x do this kind of rotation"
-    // sort of things. 
-    const translation = translate(this.position);
-    const rotation_axis = rotate(this.rotation);
-    const rotation_orbit = rotate(this.orbit_rotation);
-    const scale_mtx = scale(this.scale);
+    const rotation_orbit = rotate(this.orbit_rotation); // the rotation around the sun
+    const translation = translate(this.position); // my position relative to the sun as origin
+    const rotation_axis = rotate(this.rotation); // my rotation on my axis
+    const scale_mtx = scale(this.scale); // any scaling (TODO: size based on radius)
 
     // my local transformations
     const M_local = matMul(rotation_orbit, translation, rotation_axis, scale_mtx);
