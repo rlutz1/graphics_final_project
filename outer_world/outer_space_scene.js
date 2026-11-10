@@ -36,6 +36,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   
       // add sun point light and directional light.
       this.add_light(new SceneBuilder.SunLight({"position": this.solar_system.sun.position}));
+      // this.add_light(new SceneBuilder.SunLight({"position": [0, 5, 20]})); // testing
       this.add_light(new SceneBuilder.FillLight());
     } // end function
 
@@ -100,12 +101,14 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // tester: 
       const sun = new SceneBuilder.SceneNode("sun", "planet_basic");
       const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
-        2.5, 30, 30
+        2.5, // radius (pulled from liz's stuff)
+        30, 30, // vSteps, uSteps
+        [0.8, 0.8, 0.8]
       )); // generate a basic planet mesh
       const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
           "ka": [0.2, 0.2, 0.2], 
-          "kd": [0.2, 0.2, 0.2],
-          "ks": [0.2, 0.2, 0.2], 
+          "kd": [0.5, 0.5, 0.5],
+          "ks": [0.8, 0.8, 0.8], 
           "shininess": 1, 
           "metallic": 0,
           "emissive": 1.0, 
@@ -113,7 +116,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       });
 
       sun.set_mesh(mesh).set_material(material);
-      sun.position = [0, 0, -10]; // set an initial position
+      sun.position = [0, 0, -20]; // set an initial position
 
       this.solar_system.sun = sun; // for easy access more than anything
       console.log(material);

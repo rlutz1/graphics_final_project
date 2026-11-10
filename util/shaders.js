@@ -390,6 +390,9 @@ export class PlanetShader extends Shader {
     const sun_light = lights[0];
     const fill_light = lights[1];
 
+    // console.log(sun_light);
+    // console.log(fill_light);
+
     const s = sun_light.on ? sun_light.intensity : 0;    // "off" = zero brightness
     const f = fill_light.on ? fill_light.intensity : 0;
 
