@@ -241,6 +241,177 @@ export const texture_basic = {
 } // end src
 
 /**
+ * this is imported from Liz's HW6 work, including all lighting
+ * effects, along with texture mapping.
+ */
+export const planet_basic = {
+  "vertex_shader": `#version 300 es
+    in vec3 aPosition; 
+    in vec3 aColor; 
+    in vec3 aNormal; // surface normal in shapes 
+    in vec3 aTangent;
+    in vec2 aTextureCoor;
+    
+    uniform float uTime; //time in sec 
+    uniform mat4 uModelViewMatrix; 
+    uniform mat4 uProjectionMatrix; 
+    uniform mat4 uModelTransformationMatrix; 
+    uniform mat3 uNormalMatrix;
+    
+    out vec3 vColor;
+    out vec3 vLensPosition;
+    out vec3 vNormalLens;
+    out vec3 vTangent;
+    out vec2 vTextureCoor;
+    
+    void main() { 
+        // position matrix of the view point
+        vec4 posLens = uModelViewMatrix * uModelTransformationMatrix * vec4(aPosition,1.0); 
+        vLensPosition = posLens.xyz; // drop the last val
+        vNormalLens = normalize(uNormalMatrix * aNormal);
+
+        
+        vTangent = mat3(uModelViewMatrix * uModelTransformationMatrix) * aTangent;
+        vTextureCoor = aTextureCoor;
+
+        gl_Position = uProjectionMatrix * posLens; 
+        vColor = aColor;
+    }`,
+  "fragment_shader": `#version 300 es 
+    precision highp float; 
+    
+    in vec3 vColor; 
+    in vec3 vLensPosition;
+    in vec3 vNormalLens;
+    in vec3 vTangent;
+    in vec2 vTextureCoor;
+    out vec4 fragColor; 
+
+    struct Material {
+        float ka;            // ambient
+        float kd;            // diffuse
+        float ks;            // specular
+        float shininess;     // phong exp
+        float metallic;      // 
+        float emissive;      // 
+    };
+
+    uniform Material uMaterial;
+    uniform bool uFlatShading;
+
+    uniform sampler2D uTexture;
+    uniform int uMapping; // numerical indicator from scene 
+
+    const float bumbSize = 3.0;
+
+    // brightnes & hieght relation
+    float height(vec2 uv) {
+        vec3 c = texture(uTexture, uv).rgb;
+        return 1.0 - dot(c, vec3(0.299, 0.587, 0.114));
+    }
+
+    // lights -- in view (lens) coordinates
+    const int NUM_LIGHTS = 2;
+    uniform vec4 uLightPos[NUM_LIGHTS];   // w = 1 point light, w = 0 parallel (direction toward light)
+    uniform vec3 uLightColor[NUM_LIGHTS]; // I_L, color * intensity
+    uniform vec3 uLightAtt[NUM_LIGHTS];   // (a, b, c) -> f_att = 1 / (a + b d + c d^2)
+    uniform vec3 uAmbient;                // I_a
+
+    // diffuse + specular for one light
+    vec3 calculateLight(vec4 lightPos, vec3 lightColor, vec3 att,
+                        vec3 normal, vec3 viewDir, vec3 base, vec3 specColor) {
+        vec3 lightDir;   // l, toward the light
+        float fAtt = 1.0;
+        if (lightPos.w == 0.0) {
+            lightDir = normalize(lightPos.xyz);                 // parallel light
+        } else {
+            vec3 toLight = lightPos.xyz - vLensPosition;        // point light
+            float d = length(toLight);
+            lightDir = toLight / d;
+            fAtt = 1.0 / (att.x + att.y * d + att.z * d * d);  // attenuation
+        }
+
+        // diffuse: Kd * max(0, n . l)
+        float cosTheta = max(dot(normal, lightDir), 0.0);
+        vec3 diffuse = uMaterial.kd * cosTheta * base;
+
+        // specular: Ks * max(0, v . r)^alpha,  r = 2(l . n)n - l
+        vec3 specular = vec3(0.0);
+        if (cosTheta > 0.0) {
+            vec3 reflectDir = -reflect(lightDir, normal);
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), uMaterial.shininess);
+            specular = uMaterial.ks * spec * specColor;
+        }
+
+        return fAtt * lightColor * (diffuse + specular);
+    }
+    
+    void main() { 
+        // normal -- flat uses the triangle's face normal, smooth uses interpolated normal
+        vec3 normal;
+        if (uFlatShading) {
+            normal = normalize(cross(dFdx(vLensPosition), dFdy(vLensPosition)));
+        } else {
+            normal = normalize(vNormalLens);
+        }
+
+        vec3 base = vColor;
+
+        // texture mapping 
+        if (uMapping == 3) {
+            base = texture(uTexture, vTextureCoor).rgb;
+        }
+
+        // bump / normal mapping
+        if (uMapping == 0 || uMapping == 1) {
+            // tangent frame (T, B, N): T and B lie in the surface, N sticks out.
+            // gram-schmidt makes T exactly perpendicular to N after interpolation.
+            vec3 N = normal;
+            vec3 T = normalize(vTangent - dot(vTangent, N) * N);
+            vec3 B = cross(N, T);
+            mat3 TBN = mat3(T, B, N);  
+
+            vec3 n;  
+            if (uMapping == 0) {
+
+                // bump mapping
+                vec2 texel = 1.0 / vec2(textureSize(uTexture, 0));
+                vec2 du = vec2(texel.x, 0.0);
+                vec2 dv = vec2(0.0, texel.y);
+                float dhdu = (height(vTextureCoor + du) - height(vTextureCoor - du)) * 0.5;
+                float dhdv = (height(vTextureCoor + dv) - height(vTextureCoor - dv)) * 0.5;
+                n = normalize(vec3(-bumbSize * dhdu, -bumbSize * dhdv, 1.0));
+                base = texture(uTexture, vTextureCoor).rgb;   
+            } else {
+                // normal mapping
+                n = normalize(texture(uTexture, vTextureCoor).rgb * 2.0 - 1.0);
+            }
+
+            normal = normalize(TBN * n);
+        }
+
+        // ortho camera -> view direction is +z everywhere
+        vec3 viewDir = vec3(0.0, 0.0, 1.0);
+
+        vec3 specColor = mix(vec3(1.0), base, uMaterial.metallic);
+
+        vec3 emissive = uMaterial.emissive * base;      // sun + orbits glow
+        vec3 ambient = uMaterial.ka * uAmbient * base;  // I_a * Ka
+
+        // I_final = I_a Ka + sum of each light
+        vec3 result = emissive + ambient;
+        for (int i = 0; i < NUM_LIGHTS; i++) {
+            result += calculateLight(uLightPos[i], uLightColor[i], uLightAtt[i],
+                                      normal, viewDir, base, specColor);
+        }
+
+        fragColor = vec4(result,1.0); 
+    }`
+} // end src
+
+
+
+/**
  * TODO
  * need to have the transformation be single matrix
  * need to have the non-uniform scaling fix on all
