@@ -527,7 +527,7 @@ export function gen_pyramid_mesh(color=[0.5, 0.5, 0.5]) {
  * adapted directly from's liz's planet mesh in planet.js.
  * using directly for now in order to adapt.
  */
-export function gen_planet_mesh(r, vSteps, uSteps, color = [0.2, 0.4, 0.9], uRepeat = 1, vRepeat = 1, mapping = 0) {
+export function gen_planet_mesh(r, vSteps, uSteps, color = [0.2, 0.4, 0.9], mapping = 0, uRepeat = 1, vRepeat = 1) {
   const positions = [];
   const colors = [];
   const indices = [];

@@ -438,42 +438,6 @@ export class PlanetShader extends Shader {
     gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
   } // end function
 
-  // FOR THE MESH
-  // function to place shapes 
-  // function makeShapeBuffers(shape, mode = gl.TRIANGLES) {
-  //     const vbo = gl.createBuffer();
-  //     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-  //     gl.bufferData(gl.ARRAY_BUFFER, shape.positions, gl.STATIC_DRAW);
-
-  //     const cbo = gl.createBuffer();
-  //     gl.bindBuffer(gl.ARRAY_BUFFER, cbo);
-  //     gl.bufferData(gl.ARRAY_BUFFER, shape.colors, gl.STATIC_DRAW);
-
-  //     const ibo = gl.createBuffer();
-  //     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
-  //     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, shape.indices, gl.STATIC_DRAW);
-
-  //     const nbo = gl.createBuffer();
-  //     gl.bindBuffer(gl.ARRAY_BUFFER, nbo);
-  //     gl.bufferData(gl.ARRAY_BUFFER, shape.normals, gl.STATIC_DRAW);
-
-  //     // only spheres have tangents + texture coordinates;
-  //     // orbits and satellite prisms stay null!!!
-  //     let tbo = null, tcbo = null;
-  //     if (shape.tangents) {
-  //         tbo = gl.createBuffer();
-  //         gl.bindBuffer(gl.ARRAY_BUFFER, tbo);
-  //         gl.bufferData(gl.ARRAY_BUFFER, shape.tangents, gl.STATIC_DRAW);
-  //     }
-  //     if (shape.textureCoors) {
-  //         tcbo = gl.createBuffer();
-  //         gl.bindBuffer(gl.ARRAY_BUFFER, tcbo);
-  //         gl.bufferData(gl.ARRAY_BUFFER, shape.textureCoors, gl.STATIC_DRAW);
-  //     }
-
-  //     return { vbo, cbo, ibo, nbo, tbo, tcbo, count: shape.indices.length, mode : mode};
-  // }
-
   /**
    * encapsulating function to set the material uniforms.
    */
@@ -501,6 +465,7 @@ export class PlanetShader extends Shader {
 
 export const SHADER_MAP = {
   "phong_basic": PhongShader,
-  "texture_bump_mapping_basic": TextureBumpMappingShader,
-  "texture_normal_mapping_basic": TextureNormalMappingShader
+  "texture_bump_mapping_basic": TextureBumpMappingShader, // TODO: collapse these and use the mesh setter
+  "texture_normal_mapping_basic": TextureNormalMappingShader, 
+  "planet_basic": PlanetShader // for ya planets
 } // end shader map
