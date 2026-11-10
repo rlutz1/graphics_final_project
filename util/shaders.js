@@ -411,7 +411,12 @@ export class PlanetShader extends Shader {
     } // end if
 
     // select mapping
-    gl.uniform1i(this.uMappingLoc, node.mesh.mapping);
+    try {
+      gl.uniform1i(this.uMappingLoc, node.mesh.mapping);
+    } catch (err) {
+      console.log(err); // just log it, mostly to see if the mapping set in mesh.
+    } // end try 
+    
     if (node.texture) {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, node.texture.get_texture());

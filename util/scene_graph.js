@@ -261,6 +261,7 @@ export class Mesh {
     normals=null,
     tangents=null,
     texels=null,
+    mapping=null
   }) {
     this.vertices = vertices;
     this.indices = indices;
@@ -268,6 +269,7 @@ export class Mesh {
     this.normals = normals;
     this.tangents = tangents;
     this.texels = texels;
+    this.mapping = mapping;
 
     // initialize whatever we have into a grabable buffer
     if (vertices) this.vert_buff = this.init_buffer(vertices, gl);
