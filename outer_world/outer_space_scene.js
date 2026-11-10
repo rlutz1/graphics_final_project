@@ -10,8 +10,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // they can be a straight up scene node or group scene node, whatever makes more sense to yall.
 
       // WIP
-      this.sun = null;
-      this.earth = null; 
+      this.solar_system = null; // the root
+      // this.planets = null; 
       // this.
      
     }
@@ -26,10 +26,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     init(renderer=null, aspect=1) {
       super.init(renderer); // let the parent take care of basic bookeeping
   
-      // // init some shitty basics, lights, camera
-      // this.set_camera(new SceneBuilder.PerspectiveCamera({
-      //   "aspect": aspect, // since my canvas is not square
-      // }))
+      // init some shitty basics, lights, camera
+      this.set_camera(new SceneBuilder.PerspectiveCamera({
+        "aspect": aspect, // since my canvas is not square
+      }))
   
       // // add some light to the scene.
       // this.add_light(new SceneBuilder.PointLight({"position": [0, 5, 5]}));

@@ -341,27 +341,27 @@ export class PlanetShader extends Shader {
     super(SourceDicts.planet_basic.vertex_shader, SourceDicts.planet_basic.fragment_shader, gl);
 
     // grabbing all locations
-    this.posLoc = gl.getAttribLocation(program, "aPosition");
-    this.colorLoc = gl.getAttribLocation(program, "aColor");
-    this.timeLoc = gl.getUniformLocation(program, "uTime");
-    this.uMVM = gl.getUniformLocation(program, "uModelViewMatrix");
-    this.uPM = gl.getUniformLocation(program, "uProjectionMatrix");
-    this.uMTM = gl.getUniformLocation(program, "uModelTransformationMatrix");
-    this.normalLoc = gl.getAttribLocation(program, "aNormal");
-    this.uNM = gl.getUniformLocation(program, "uNormalMatrix");
-    this.uFlat = gl.getUniformLocation(program, "uFlatShading");
-    this.uLightPosLoc = gl.getUniformLocation(program, "uLightPos");
-    this.uLightColorLoc = gl.getUniformLocation(program, "uLightColor");
-    this.uLightAttLoc = gl.getUniformLocation(program, "uLightAtt");
-    this.uAmbientLoc = gl.getUniformLocation(program, "uAmbient");
+    this.posLoc = gl.getAttribLocation(this.program, "aPosition");
+    this.colorLoc = gl.getAttribLocation(this.program, "aColor");
+    this.timeLoc = gl.getUniformLocation(this.program, "uTime");
+    this.uMVM = gl.getUniformLocation(this.program, "uModelViewMatrix");
+    this.uPM = gl.getUniformLocation(this.program, "uProjectionMatrix");
+    this.uMTM = gl.getUniformLocation(this.program, "uModelTransformationMatrix");
+    this.normalLoc = gl.getAttribLocation(this.program, "aNormal");
+    this.uNM = gl.getUniformLocation(this.program, "uNormalMatrix");
+    this.uFlat = gl.getUniformLocation(this.program, "uFlatShading");
+    this.uLightPosLoc = gl.getUniformLocation(this.program, "uLightPos");
+    this.uLightColorLoc = gl.getUniformLocation(this.program, "uLightColor");
+    this.uLightAttLoc = gl.getUniformLocation(this.program, "uLightAtt");
+    this.uAmbientLoc = gl.getUniformLocation(this.program, "uAmbient");
     this.uMat = {};
     for (const field of ["ka", "kd", "ks", "shininess", "metallic", "emissive"]) {
-        this.uMat[field] = gl.getUniformLocation(program, "uMaterial." + field);
+        this.uMat[field] = gl.getUniformLocation(this.program, "uMaterial." + field);
     }
-    this.tangentLoc = gl.getAttribLocation(program, "aTangent");
-    this.texCoordLoc = gl.getAttribLocation(program, "aTextureCoor");
-    this.uMappingLoc = gl.getUniformLocation(program, "uMapping");
-    this.uTextureLoc = gl.getUniformLocation(program, "uTexture");
+    this.tangentLoc = gl.getAttribLocation(this.program, "aTangent");
+    this.texCoordLoc = gl.getAttribLocation(this.program, "aTextureCoor");
+    this.uMappingLoc = gl.getUniformLocation(this.program, "uMapping");
+    this.uTextureLoc = gl.getUniformLocation(this.program, "uTexture");
   }
 
   /**
