@@ -6,15 +6,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   
   constructor() {
       super(); // takes care of base initialization fields.
-  
-      // do whatever y'all want here, but, like, this sorta shit. these are all the root nodes of a scene.
-      // they can be a straight up scene node or group scene node, whatever makes more sense to yall.
-
       // WIP
-      this.solar_system = null; // the root
-      // this.planets = null; 
-      // this.
-     
+      this.solar_system = null; // the solar system in an accessible way.
     }
   
     /**
@@ -177,7 +170,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       });
 
       sun.set_mesh(mesh).set_material(material); // TODO: texture set here.
-      sun.position = [0, 0, -20]; // set an initial position
+      sun.position = [0, 0, -100]; // set an initial position
       return sun;
     } // end function
   

@@ -1,4 +1,5 @@
 import * as SceneBuilder from "../util/scene_graph.js";
+import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
 
 /**
  * just a small wrapper
@@ -30,8 +31,10 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     super(id, shader_id); // takes care of some baseline stuff for now.
 
     // default super call sets up: this.position = [0, 0, 0]
+    this.position = [data.distance_km / 10000000, 0, data.distance_km / 10000000];
     // this.velocity = [0, 0, 0];
     // this.acceleration = [0, 0, 0];
+    this.orbit_rotation = [0, 0, 0];
 
     this.data = data; // grab the general data pack.
   } // end constructor
@@ -47,6 +50,30 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
   planetMatrices.push(planetMatrix);
   */
 
+  /**
+   * update my transformation dumbly, simply calculate:
+   * M_world_child = M_world_parent * M_local_child.
+   * if want to change, extend the SceneNode and override, but you MUST
+   * set the transformation_matrix, otherwise nothing will happen/
+   * incorrect renderiing.
+   */
+  update_transformation_matrix(M_parent) {
+    // change any trajectory via this.
+    // this is where you could have conditional
+    // "if velocity is -x do this kind of rotation"
+    // sort of things. 
+    const translation = translate(this.position);
+    const rotation_axis = rotate(this.rotation);
+    const rotation_orbit = rotate(this.orbit_rotation);
+    const scale_mtx = scale(this.scale);
+
+    // my local transformations
+    const M_local = matMul(rotation_orbit, translation, rotation_axis, scale_mtx);
+
+    // add my transformations to the world's
+    this.transformation_matrix = matMul(M_parent, M_local);
+  } // end function
+  
 } // end class
 
 export class SunSceneNode extends SceneBuilder.SceneNode {
