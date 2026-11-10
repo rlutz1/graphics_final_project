@@ -373,6 +373,10 @@ export class PlanetShader extends Shader {
     // from object
     gl.useProgram(this.program);
 
+    // set gl attributes for the camera_matrices
+    gl.uniformMatrix4fv(this.uPM, false, camera.get_projection_matrix());
+    gl.uniformMatrix4fv(this.uMVM, false, camera.get_view_matrix());
+
     gl.uniformMatrix4fv(this.uMTM, false, node.transformation_matrix);
 
     const mv = multiplyMat4(camera.get_view_matrix(), node.transformation_matrix);
@@ -408,18 +412,18 @@ export class PlanetShader extends Shader {
 
     // vertex/positions buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
-    gl.enableVertexAttribArray(this.pos_loc);
-    gl.vertexAttribPointer(this.pos_loc, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(this.posLoc);
+    gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 0, 0);
 
     // norm buffer setup
     gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.norm_buff);
-    gl.enableVertexAttribArray(this.norm_loc);
-    gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(this.normalLoc);
+    gl.vertexAttribPointer(this.normalLoc, 3, gl.FLOAT, false, 0, 0);
 
     // color buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.color_buff);
-    gl.enableVertexAttribArray(this.color_loc);
-    gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(this.colorLoc);
+    gl.vertexAttribPointer(this.colorLoc, 3, gl.FLOAT, false, 0, 0);
     
     // tangent and textures 
     if (node.mesh.tangent_buff) {
@@ -452,7 +456,7 @@ export class PlanetShader extends Shader {
         // index buffer for drawing as triangles
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
 
-    gl.uniform1i(this.uTextureLoc, 0);
+    gl.uniform1i(this.uTextureLoc, 0);  // TODO: ?
   } // end function
 
   /**
