@@ -513,19 +513,94 @@ export class PlanetMaterial extends Material {
  */
 export class Light {
   constructor ({
-    position=[3, 4, 5],
     color=[1, 1, 1]
   }={}) {
-    this.position = position;
     this.color = color;
   }
 } // end class
 
 /**
- * a point light
- * TODO: anything to add beyond parent class above?
+ * a point light -- has a position and color at baseline
  */
-export class PointLight extends Light { }
+export class PointLight extends Light {
+  constructor ({
+    position=[3, 4, 5],
+    color=[1, 1, 1]
+  }={}) {
+    super({"color": color}); // pass on the color init
+    this.position = position;
+  }
+} // end class
+
+/**
+ * placeholder really for clarity.
+ * i have not personally done this, but putting in 
+ * for liz's lighting specifications.
+ * can be added to for generalization!
+ */
+export class DirectionalLight extends Light { 
+  constructor ({
+    color=[1, 1, 1]
+  }={}) {
+    super({"color": color}); // pass on the color init
+  }
+} // end class
+
+
+/*
+const lights = {
+            sun:  { on: true, color: [1.0, 0.94, 0.82], intensity: 1.2, falloff: 0.0008 },
+            fill: { on: true, color: [0.55, 0.68, 1.0], intensity: 0.3, azimuth: -40, elevation: 30 },
+            ambient: 0.25,
+        };
+*/
+
+// Light 1 — the Sun: a POINT light (w = 1) at the Sun's center.
+// It's attached to the scene, so push its center through the Sun's
+// TODO: override the position of this--see if that works
+export class SunLight extends PointLight {
+   constructor({
+    position=[0, 0, 0],
+    color=[0.55, 0.68, 1.0],
+    intensity=1.2,
+    falloff=0.0008,
+    on=true
+  }={}) {
+    super({"position": position, "color": color}); // does nothign rn
+    this.intensity = intensity;
+    this.falloff = falloff;
+    this.on = true;
+  }
+}
+
+// Light 2 — fill: a DIRECTIONAL light (w = 0) given straight in eye
+// space, so it's attached to the camera. Azimuth/elevation -> unit vector.
+export class FillLight extends DirectionalLight {
+
+  constructor({
+    color=[0.55, 0.68, 1.0],
+    azimuth=-40,
+    elevation=30,
+    intensity=0.3,
+    on=true
+  }={}) {
+    super({"color": color});
+    this.intensity = intensity;
+    this.on = true;
+    this.azimuth = azimuth;
+    this.elevation = elevation;
+    this.fill_dir = calc_fill_dir(); // if you don't change those values, can just use this
+  }
+
+  /**
+   * convenience wrap of this math.
+   */
+  calc_fill_dir() {
+    const az = this.azimuth * Math.PI / 180;
+    const el = this.elevation * Math.PI / 180;
+    return [Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az)];
+  } // end function
+} // end class
 
 
 /**

@@ -373,13 +373,41 @@ export class PlanetShader extends Shader {
     // from object
     gl.useProgram(this.program);
 
-    gl.uniformMatrix4fv(uMTM, false, node.transformation_matrix);
+    gl.uniformMatrix4fv(this.uMTM, false, node.transformation_matrix);
 
     const mv = multiplyMat4(camera.get_view_matrix(), node.transformation_matrix);
     gl.uniformMatrix3fv(this.uNM, false, normalMat(mv));
     setMaterial(node.material);
 
     setMaterial(node.material, gl); // set up the material parameters
+
+
+    // lighting setup
+
+    // TODO real bad, but for TESTING currently positional:
+    const sun_light = lights[0];
+    const fill_light = lights[1];
+
+    const s = sun_light.on ? sun_light.intensity : 0;    // "off" = zero brightness
+    const f = fill_light.on ? fill_light.intensity : 0;
+
+    gl.uniform4fv(this.uLightPosLoc, [
+        ...sun_light.position, 1,
+        ...fill_light.fill_dir, 0,
+    ]);
+
+    gl.uniform3fv(this.uLightColorLoc, [
+        ...(sun_light.color.map(num => num * s)),
+        ...(fill_light.color.map(num => num * f))
+    ]);
+
+    // f_att = 1 / (a + b d + c d^2): sun uses a = 1, b = 0, c = falloff slider; fill light: none
+    gl.uniform3fv(this.uLightAttLoc, [1, 0, sun_light.falloff, 1, 0, 0]);
+    gl.uniform3f(this.uAmbientLoc, 0.25, 0.25,  0.25); // TODO shouldn't hard set this here, but again, testing.
+
+
+    /// =================================================================
+
 
      // vertex/positions buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
