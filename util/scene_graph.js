@@ -557,21 +557,13 @@ export class DirectionalLight extends Light {
 } // end class
 
 
-/*
-const lights = {
-            sun:  { on: true, color: [1.0, 0.94, 0.82], intensity: 1.2, falloff: 0.0008 },
-            fill: { on: true, color: [0.55, 0.68, 1.0], intensity: 0.3, azimuth: -40, elevation: 30 },
-            ambient: 0.25,
-        };
-*/
-
 // Light 1 — the Sun: a POINT light (w = 1) at the Sun's center.
 // It's attached to the scene, so push its center through the Sun's
 // TODO: override the position of this--see if that works
 export class SunLight extends PointLight {
    constructor({
     position=[0, 0, 0],
-    color=[0.55, 0.68, 1.0],
+    color=[1.0, 0.94, 0.82],
     intensity=1.2,
     falloff=0.0008,
     on=true

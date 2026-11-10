@@ -1,5 +1,6 @@
 import * as SceneBuilder from "../util/scene_graph.js";
 import * as MeshBuilder from "../util/mesh_generators.js";
+import * as PlanetBuilder from "./planet_scene_node.js";
 
 export class OuterSpaceScene extends SceneBuilder.Scene {
   
@@ -94,10 +95,24 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
  
     // return data structures 
     return {sun, planets, satBody, satPanel, orbitMaterial, satBodyMaterial, satPanelMaterial, sunGif, panelTexture  };
+
+
+    // stored data need for the sun and planets
+    // data from these websites 
+    // https://rgbcolorpicker.com/0-1
+    // https://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html
+    // https://solarsystem.nasa.gov/planet-compare/
+
+    // textures from : https://www.solarsystemscope.com/textures/
+
+    const SUN = { name: "Sun", radiusKm: 695700, color: [0.949, 0.686, 0.169] };
+    
+    
     */
     init_solar_system() {
       // TODO
       this.solar_system = {};
+      // TODO: SET TEXTURES
 
       const sun = this.init_sun();
      
@@ -111,8 +126,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
      * initialize the sun specifically
      */
     init_sun() {
-       // tester: 
-      const sun = new SceneBuilder.SceneNode("sun", "planet_basic");
+      const sun = new PlanetBuilder.PlanetSceneNode("sun", "planet_basic");
       const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
         2.5, // radius (pulled from liz's stuff)
         30, 30, // vSteps, uSteps
@@ -127,9 +141,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           "flat": false
       });
 
-      sun.set_mesh(mesh).set_material(material);
+      sun.set_mesh(mesh).set_material(material); // TODO: texture set here.
       sun.position = [0, 0, -20]; // set an initial position
-
       return sun;
     } // end function
   
