@@ -178,6 +178,12 @@ export function deg_to_rad(degrees) {
 } // end method
 
 
+// M_S = (M^(-1))^T
+export function normalMat(modelView){
+    return mat3Transpose(mat3Inverse(mat3FromMat4(modelView)));
+} // end function
+
+
 /**
  * ========================================================
  * TRANSFORMATIONS OF OBJECT

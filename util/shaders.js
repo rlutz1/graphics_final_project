@@ -1,4 +1,5 @@
 import * as SourceDicts from './shader_sources.js';
+import { normalMat } from './transitions.js';
 
 /**
  * this file is to contain a mapping of id -> shader (BOTTOM OF FILE). 
@@ -15,7 +16,7 @@ import * as SourceDicts from './shader_sources.js';
  * 
  * process: 
  * + have a vertex_shader and fragment_shader string defined in shader_sources.js
- * + implement an extending shader.
+ * + implement an extending shader -- implement load() and draw()
  * + add shader class name to the shader map at the bottom
  * + if want to use in node: node.shader_id = the id in shader map.
  */
@@ -329,6 +330,155 @@ export class TextureNormalMappingShader extends TextureBumpMappingShader {
     gl.uniform1i(this.mapping_loc, 1);
   } // end function
 
+} // end class
+
+/**
+ * adapting liz's shaders to a shader wrapper to be used
+ * in the current render pipeline for the planets
+ */
+export class PlanetShader extends Shader {
+  constructor(gl) {
+    super(SourceDicts.planet_basic.vertex_shader, SourceDicts.planet_basic.fragment_shader, gl);
+
+    // grabbing all locations
+    this.posLoc = gl.getAttribLocation(program, "aPosition");
+    this.colorLoc = gl.getAttribLocation(program, "aColor");
+    this.timeLoc = gl.getUniformLocation(program, "uTime");
+    this.uMVM = gl.getUniformLocation(program, "uModelViewMatrix");
+    this.uPM = gl.getUniformLocation(program, "uProjectionMatrix");
+    this.uMTM = gl.getUniformLocation(program, "uModelTransformationMatrix");
+    this.normalLoc = gl.getAttribLocation(program, "aNormal");
+    this.uNM = gl.getUniformLocation(program, "uNormalMatrix");
+    this.uFlat = gl.getUniformLocation(program, "uFlatShading");
+    this.uLightPosLoc = gl.getUniformLocation(program, "uLightPos");
+    this.uLightColorLoc = gl.getUniformLocation(program, "uLightColor");
+    this.uLightAttLoc = gl.getUniformLocation(program, "uLightAtt");
+    this.uAmbientLoc = gl.getUniformLocation(program, "uAmbient");
+    this.uMat = {};
+    for (const field of ["ka", "kd", "ks", "shininess", "metallic", "emissive"]) {
+        this.uMat[field] = gl.getUniformLocation(program, "uMaterial." + field);
+    }
+    this.tangentLoc = gl.getAttribLocation(program, "aTangent");
+    this.texCoordLoc = gl.getAttribLocation(program, "aTextureCoor");
+    this.uMappingLoc = gl.getUniformLocation(program, "uMapping");
+    this.uTextureLoc = gl.getUniformLocation(program, "uTexture");
+  }
+
+  /**
+   * defining how to load up buffer locations with this shader.
+   * TODO
+   * the lights information needs to be set!
+   */
+  load(node, camera, lights, gl) {
+    // from object
+    gl.useProgram(this.program);
+
+    gl.uniformMatrix4fv(uMTM, false, node.transformation_matrix);
+
+    const mv = multiplyMat4(camera.get_view_matrix(), node.transformation_matrix);
+    gl.uniformMatrix3fv(this.uNM, false, normalMat(mv));
+    setMaterial(node.material);
+
+     // vertex/positions buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
+    gl.enableVertexAttribArray(this.pos_loc);
+    gl.vertexAttribPointer(this.pos_loc, 3, gl.FLOAT, false, 0, 0);
+
+    // norm buffer setup
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.norm_buff);
+    gl.enableVertexAttribArray(this.norm_loc);
+    gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
+
+    // color buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.color_buff);
+    gl.enableVertexAttribArray(this.color_loc);
+    gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
+    
+    // tangent and textures 
+    if (node.mesh.tangent_buff) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.tangent_buff);
+        gl.enableVertexAttribArray(this.tangentLoc);
+        gl.vertexAttribPointer(this.tangentLoc, 3, gl.FLOAT, false, 0, 0);
+    } else {
+        gl.disableVertexAttribArray(this.tangentLoc);
+    } // end if
+    if (node.mesh.tex_buff) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.tex_buff);
+        gl.enableVertexAttribArray(this.texCoordLoc);
+        gl.vertexAttribPointer(this.texCoordLoc, 2, gl.FLOAT, false, 0, 0);
+    } else {
+        gl.disableVertexAttribArray(this.texCoordLoc);
+    } // end if
+
+    // select mapping
+    gl.uniform1i(this.uMappingLoc, node.mesh.mapping);
+    if (node.texture) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, node.texture.get_texture());
+    } // end if
+
+        // index buffer for drawing as triangles
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
+
+    gl.uniform1i(this.uTextureLoc, 0);
+  } // end function
+
+  /**
+   * defining how to draw with this shader.
+   */
+  draw(node, gl) {
+    // draw the node.
+    gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
+  } // end function
+
+  // FOR THE MESH
+  // function to place shapes 
+  // function makeShapeBuffers(shape, mode = gl.TRIANGLES) {
+  //     const vbo = gl.createBuffer();
+  //     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+  //     gl.bufferData(gl.ARRAY_BUFFER, shape.positions, gl.STATIC_DRAW);
+
+  //     const cbo = gl.createBuffer();
+  //     gl.bindBuffer(gl.ARRAY_BUFFER, cbo);
+  //     gl.bufferData(gl.ARRAY_BUFFER, shape.colors, gl.STATIC_DRAW);
+
+  //     const ibo = gl.createBuffer();
+  //     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+  //     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, shape.indices, gl.STATIC_DRAW);
+
+  //     const nbo = gl.createBuffer();
+  //     gl.bindBuffer(gl.ARRAY_BUFFER, nbo);
+  //     gl.bufferData(gl.ARRAY_BUFFER, shape.normals, gl.STATIC_DRAW);
+
+  //     // only spheres have tangents + texture coordinates;
+  //     // orbits and satellite prisms stay null!!!
+  //     let tbo = null, tcbo = null;
+  //     if (shape.tangents) {
+  //         tbo = gl.createBuffer();
+  //         gl.bindBuffer(gl.ARRAY_BUFFER, tbo);
+  //         gl.bufferData(gl.ARRAY_BUFFER, shape.tangents, gl.STATIC_DRAW);
+  //     }
+  //     if (shape.textureCoors) {
+  //         tcbo = gl.createBuffer();
+  //         gl.bindBuffer(gl.ARRAY_BUFFER, tcbo);
+  //         gl.bufferData(gl.ARRAY_BUFFER, shape.textureCoors, gl.STATIC_DRAW);
+  //     }
+
+  //     return { vbo, cbo, ibo, nbo, tbo, tcbo, count: shape.indices.length, mode : mode};
+  // }
+
+  /**
+   * encapsulating function to set the material uniforms.
+   */
+  setMaterial(m, gl) {
+    gl.uniform1f(this.uMat.ka, m.ka);
+    gl.uniform1f(this.uMat.kd, m.kd);
+    gl.uniform1f(this.uMat.ks, m.ks);
+    gl.uniform1f(this.uMat.shininess, m.shininess);
+    gl.uniform1f(this.uMat.metallic, m.metallic);
+    gl.uniform1f(this.uMat.emissive, m.emissive);
+    gl.uniform1i(this.uFlat, m.flat ? 1 : 0);
+  }
 } // end class
 
 
