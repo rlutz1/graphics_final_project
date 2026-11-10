@@ -379,6 +379,8 @@ export class PlanetShader extends Shader {
     gl.uniformMatrix3fv(this.uNM, false, normalMat(mv));
     setMaterial(node.material);
 
+    setMaterial(node.material, gl); // set up the material parameters
+
      // vertex/positions buffer
     gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
     gl.enableVertexAttribArray(this.pos_loc);
@@ -483,7 +485,7 @@ export class PlanetShader extends Shader {
     gl.uniform1f(this.uMat.metallic, m.metallic);
     gl.uniform1f(this.uMat.emissive, m.emissive);
     gl.uniform1i(this.uFlat, m.flat ? 1 : 0);
-  }
+  } // end function
 } // end class
 
 
