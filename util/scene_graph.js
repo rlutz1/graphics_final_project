@@ -589,7 +589,7 @@ export class FillLight extends DirectionalLight {
     this.on = true;
     this.azimuth = azimuth;
     this.elevation = elevation;
-    this.fill_dir = calc_fill_dir(); // if you don't change those values, can just use this
+    this.fill_dir = this.calc_fill_dir(); // if you don't change those values, can just use this
   }
 
   /**

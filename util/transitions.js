@@ -178,6 +178,40 @@ export function deg_to_rad(degrees) {
 } // end method
 
 
+// drop translations
+function mat3FromMat4(matrix){
+    return new Float32Array([matrix[0], matrix[1], matrix[2],
+                             matrix[4], matrix[5], matrix[6],
+                             matrix[8], matrix[9], matrix[10],]);
+}
+
+// 3x3 transpose
+function mat3Transpose(matrix){
+    return new Float32Array([matrix[0], matrix[3], matrix[6],
+                             matrix[1], matrix[4], matrix[7],
+                             matrix[2], matrix[5], matrix[8],]);
+}
+
+// 3x3 inverse 
+function mat3Inverse(matrix){
+    // make variables
+    const a = matrix[0], b = matrix[1], c = matrix[2];
+    const d = matrix[3], e = matrix[4], f = matrix[5];
+    const g = matrix[6], h = matrix[7], i = matrix[8];
+
+    // minors
+    const A = (e*i - f*h), B = (d*i - f*g), C = (d*h - e*g);
+    const D = (b*i - c*h), E = (a*i - c*g), F = (a*h - b*g);
+    const G = (b*f - c*e), H = (a*f - c*d), I = (a*e - b*d);
+
+    const det = a * A- b * B + c * C;
+
+    return new Float32Array([A/det, -D/det, G/det,
+                             -B/det, E/det, -H/det,
+                             C/det, -F/det, I/det,]);
+
+}
+
 // M_S = (M^(-1))^T
 export function normalMat(modelView){
     return mat3Transpose(mat3Inverse(mat3FromMat4(modelView)));

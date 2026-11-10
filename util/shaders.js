@@ -1,5 +1,5 @@
 import * as SourceDicts from './shader_sources.js';
-import { normalMat } from './transitions.js';
+import { normalMat, multiplyMat4 } from './transitions.js';
 
 /**
  * this file is to contain a mapping of id -> shader (BOTTOM OF FILE). 
@@ -377,10 +377,8 @@ export class PlanetShader extends Shader {
 
     const mv = multiplyMat4(camera.get_view_matrix(), node.transformation_matrix);
     gl.uniformMatrix3fv(this.uNM, false, normalMat(mv));
-    setMaterial(node.material);
 
-    setMaterial(node.material, gl); // set up the material parameters
-
+    this.setMaterial(node.material, gl); // set up the material parameters
 
     // lighting setup
 

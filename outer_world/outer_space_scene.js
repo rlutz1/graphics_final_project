@@ -26,18 +26,45 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     init(renderer=null, aspect=1) {
       super.init(renderer); // let the parent take care of basic bookeeping
   
+      // initialize the solar system
+      this.init_solar_system();
+
       // init some shitty basics, lights, camera
       this.set_camera(new SceneBuilder.PerspectiveCamera({
         "aspect": aspect, // since my canvas is not square
       }))
   
-      // // add some light to the scene.
-      // this.add_light(new SceneBuilder.PointLight({"position": [0, 5, 5]}));
-  
-      // // TODO: init wasm module here?
-      // // initialize all nodes, bookeeping, etc in the scene.
-      // // can give num boids -> comes from module?
-      // this.init_boids();
+      // add sun point light and directional light.
+      this.add_light(new SceneBuilder.SunLight({"position": this.solar_system.sun.position}));
+      this.add_light(new SceneBuilder.FillLight());
+    } // end function
+
+    /**
+     * 
+     */
+    init_solar_system() {
+      // TODO
+      this.solar_system = {};
+      // tester: 
+      const sun = new SceneBuilder.SceneNode("sun", "planet_basic");
+      const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh()); // generate a basic planet mesh
+      const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
+          "ka": 0, 
+          "kd": 0,
+          "ks": 0, 
+          "shininess": 1, 
+          "metallic": 0,
+          "emissive": 1.0, 
+          "flat": false
+      });
+
+      sun.set_mesh(mesh).set_material(material);
+      sun.position = [0, 0, -10]; // set an initial position
+
+
+      this.solar_system.sun = sun; // for easy access more than anything
+      this.add_node(sun); // add as a root rn
+
     } // end function
   
     /**
@@ -48,6 +75,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     render(keys_pressed={}) {
       // yada yada, do whatever the scene needs to do at a global scale,
       // such as run collision detection with player, did i hit a boid, etc.
+      console.log(this.roots)
      
       super.render();  // let the renderer do it's draw thing
     } // end function
