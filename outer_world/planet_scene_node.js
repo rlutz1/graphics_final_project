@@ -31,12 +31,13 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     super(id, shader_id); // takes care of some baseline stuff for now.
 
     // default super call sets up: this.position = [0, 0, 0]
-    // override with a smaller distance ratio
-    this.position = [data.distance_km / 10000000, 0, data.distance_km / 10000000];
+    console.log(this.position)
     this.orbit_rotation = [0, 0, 0];
 
     this.data = data; // grab the general data pack.
     this.delta_time = 0; // time since last frame
+    this.display_distance = 0; // distance from the sun, normalized for viewing.
+    this.radius_distance = 0; // the radius of this planet, normalized for viewing.
   } // end constructor
 
 
@@ -64,6 +65,9 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
    */
   update_transformation_matrix(M_parent) {
     // change any trajectory via this.
+    this.position = [this.display_distance, 0, this.display_distance]; // be sure to update this by scene init
+    this.scale = [this.display_radius, this.display_radius, this.display_radius]; // scale by norm radius
+
     const rotation_orbit = rotate(this.orbit_rotation); // the rotation around the sun
     const translation = translate(this.position); // my position relative to the sun as origin
     const rotation_axis = rotate(this.rotation); // my rotation on my axis
