@@ -109,10 +109,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     init_planets() {
       const planets = [];
 
+      // TODO: may switch to diff mesh for all so that colors can be diff, but
+      // if texture mapping, color shouldn't matter, so same mesh is fine!
+      
       // for now, same mesh and material for all.
       const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
           1, // radius -- placeholder!
           30, 30, // vSteps, uSteps
+          [0.2, 0.4, 0.9], 
+          2 // color for now! texture later TODO
         )); // generate a basic planet mesh
         const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
             "ka": [0.2, 0.2, 0.2], 
@@ -144,6 +149,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
         2.5, // radius (pulled from liz's stuff)
         30, 30, // vSteps, uSteps
+        PlanetBuilder.SUN_DATA.sun.color, 
+        2 // color for now, texture later! TODO
       )); // generate a basic planet mesh
       const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
           "ka": [0.2, 0.2, 0.2], 

@@ -31,8 +31,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     super(id, shader_id); // takes care of some baseline stuff for now.
 
     // default super call sets up: this.position = [0, 0, 0]
-    console.log(this.position)
-    this.orbit_rotation = [0, 0, 0];
+    this.orbit_rotation = [0, 0, 0]; // special for rotation around sun.
 
     this.data = data; // grab the general data pack.
     this.delta_time = 0; // time since last frame
@@ -40,17 +39,10 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     this.radius_distance = 0; // the radius of this planet, normalized for viewing.
   } // end constructor
 
-
-  /*
-  // create planet orbiting 
-  const angle = (day / planet.data.orbitPeriod) * 2 * Math.PI;
-  let planetMatrix = mat4RotateY(objectRotation, angle);
-
-  // translate planet by distance scaling and draw
-  planetMatrix = mat4Translate(planetMatrix, [displayDistance(planet.data), 0, 0]);
-  planetMatrices.push(planetMatrix);
-  */
-
+  /**
+   * access point to give the day and therefore update the orbit_rotation
+   * amount.
+   */
   update_orbit(day=0) {
     const angle = (day / this.data.orbit_period) * 2 * Math.PI;
     this.orbit_rotation = [0, angle, 0]; // y rotation around the sun
