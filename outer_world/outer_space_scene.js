@@ -111,7 +111,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
       // TODO: may switch to diff mesh for all so that colors can be diff, but
       // if texture mapping, color shouldn't matter, so same mesh is fine!
-      
+
       // for now, same mesh and material for all.
       const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
           1, // radius -- placeholder!
@@ -163,7 +163,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       });
 
       sun.set_mesh(mesh).set_material(material); // TODO: texture set here.
-      sun.position = [0, 0, -50]; // set an initial position
       return sun;
     } // end function
   
