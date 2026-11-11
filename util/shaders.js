@@ -458,8 +458,6 @@ export class PlanetShader extends Shader {
 
         // index buffer for drawing as triangles
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
-
-    gl.uniform1i(this.uTextureLoc, 0);  // TODO: ?
   } // end function
 
   /**

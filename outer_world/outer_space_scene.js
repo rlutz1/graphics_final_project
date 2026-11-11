@@ -117,7 +117,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           1, // radius -- placeholder!
           30, 30, // vSteps, uSteps
           [0.2, 0.4, 0.9], 
-          2 // color for now! texture later TODO
+          0 // adding a texture bump mapping to these
         )); // generate a basic planet mesh
         const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
             "ka": [0.2, 0.2, 0.2], 
@@ -130,8 +130,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         });
 
       for (const [planet, data] of Object.entries(PlanetBuilder.PLANET_DATA)) {
+        // console.log(planet)
+        const texture = new SceneBuilder.Texture(this.renderer.gl, data.texture_path);
         const new_planet = new PlanetBuilder.PlanetSceneNode(planet.name, "planet_basic", data);        
-        new_planet.set_mesh(mesh).set_material(material); // TODO: texture set here.
+        new_planet.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
+        console.log(new_planet)
         planets.push(new_planet);
       } // end loop
       return planets;
