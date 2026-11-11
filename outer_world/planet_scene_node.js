@@ -11,7 +11,7 @@ export class PlanetData {
     distance_km=57909227,   
     color=[0.651, 0.557, 0.380], 
     orbit_period=88, 
-    texture="./textures/mercury.jpg"
+    texture_path="./textures/mercury.jpg"
     }={}
   ) {
     this.name = name;
@@ -19,7 +19,7 @@ export class PlanetData {
     this.distance_km = distance_km;
     this.color = color;
     this.orbit_period = orbit_period;
-    this.texture = texture;
+    this.texture_path = texture_path;
   }
 } // end class
 
@@ -34,7 +34,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     this.orbit_rotation = [0, 0, 0]; // special for rotation around sun.
 
     this.data = data; // grab the general data pack.
-    this.delta_time = 0; // time since last frame
+    // this.delta_time = 0; // time since last frame
     this.display_distance = 0; // distance from the sun, normalized for viewing.
     this.radius_distance = 0; // the radius of this planet, normalized for viewing.
   } // end constructor

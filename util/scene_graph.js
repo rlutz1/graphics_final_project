@@ -565,25 +565,24 @@ export class SunLight extends PointLight {
     position=[0, 0, 0],
     color=[1.0, 0.94, 0.82],
     intensity=1.2,
-    falloff=0.0008,
+    falloff=0.008,
     on=true
   }={}) {
-    super({"position": position, "color": color}); // does nothign rn
+    super({"position": position, "color": color}); 
     this.intensity = intensity;
     this.falloff = falloff;
     this.on = on;
   }
-}
+} // end class
 
 // Light 2 — fill: a DIRECTIONAL light (w = 0) given straight in eye
 // space, so it's attached to the camera. Azimuth/elevation -> unit vector.
 export class FillLight extends DirectionalLight {
-
   constructor({
     color=[0.55, 0.68, 1.0],
     azimuth=-40,
     elevation=30,
-    intensity=0.3,
+    intensity=0.2,
     on=true
   }={}) {
     super({"color": color});
