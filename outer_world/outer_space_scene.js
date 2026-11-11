@@ -130,11 +130,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         });
 
       for (const [planet, data] of Object.entries(PlanetBuilder.PLANET_DATA)) {
-        // console.log(planet)
         const texture = new SceneBuilder.Texture(this.renderer.gl, data.texture_path);
         const new_planet = new PlanetBuilder.PlanetSceneNode(planet.name, "planet_basic", data);        
         new_planet.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
-        console.log(new_planet)
         planets.push(new_planet);
       } // end loop
       return planets;
@@ -153,7 +151,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         2.5, // radius (pulled from liz's stuff)
         30, 30, // vSteps, uSteps
         PlanetBuilder.SUN_DATA.sun.color, 
-        2 // color for now, texture later! TODO
+        0 // color for now, texture later! TODO
       )); // generate a basic planet mesh
       const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
           "ka": [0.2, 0.2, 0.2], 
@@ -164,8 +162,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           "emissive": 1.0, 
           "flat": false
       });
+      const texture = new SceneBuilder.VideoTexture(this.renderer.gl, PlanetBuilder.SUN_DATA.sun.texture_path);
 
-      sun.set_mesh(mesh).set_material(material); // TODO: texture set here.
+      sun.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
       return sun;
     } // end function
   
@@ -186,7 +185,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         });
       } // end if
      
-      super.render();  // let the renderer do it's draw thing
+      super.render([0, 0, 0]);  // let the renderer do it's draw thing
     } // end function
 
 

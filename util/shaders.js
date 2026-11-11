@@ -446,13 +446,14 @@ export class PlanetShader extends Shader {
 
     // select mapping
     try {
-      gl.uniform1i(this.uMappingLoc, node.mesh.mapping);
+      gl.uniform1i(this.uMappingLoc, node.mesh.mapping); // TODO hold in texture?
     } catch (err) {
       console.log(err); // just log it, mostly to see if the mapping set in mesh.
     } // end try 
     
     if (node.texture) {
         gl.activeTexture(gl.TEXTURE0);
+        // console.log(node.texture)
         gl.bindTexture(gl.TEXTURE_2D, node.texture.get_texture());
     } // end if
 
@@ -472,9 +473,6 @@ export class PlanetShader extends Shader {
    * encapsulating function to set the material uniforms.
    */
   setMaterial(m, gl) {
-    // gl.uniform1f(this.uMat.ka, m.ka);
-    // gl.uniform1f(this.uMat.kd, m.kd);
-    // gl.uniform1f(this.uMat.ks, m.ks);
     gl.uniform3fv(this.uMat.ka, m.ka);
     gl.uniform3fv(this.uMat.kd, m.kd);
     gl.uniform3fv(this.uMat.ks, m.ks);

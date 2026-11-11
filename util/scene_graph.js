@@ -46,12 +46,12 @@ export class Scene {
     // to implement further in children.
   } // end function
 
-  render() {
+  render(clear_color=[0.2, 0.2, 0.2]) {
     // yada yada, do whatever the scene needs at a child level to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
     // then, let dummy take over:
     if (this.renderer) {
-      this.renderer.draw(this);
+      this.renderer.draw(this, clear_color);
     } // end if
   } // end function
 
@@ -270,16 +270,7 @@ export class Mesh {
     this.tangents = tangents;
     this.texels = texels;
     this.mapping = mapping;
-    
-  //   console.log({
-  //   vertices,
-  //   indices,
-  //   colors,
-  //   normals,
-  //   tangents,
-  //   texels,
-  //   mapping
-  // })
+
 
     // initialize whatever we have into a grabable buffer
     if (vertices) {this.vert_buff = this.init_buffer(vertices, gl); console.log("askjdnas")}
@@ -377,27 +368,7 @@ export class VideoTexture {
     // have to bind so this == this texture instance.
     this.on_video_frame = this.on_video_frame.bind(this);
 
-    // create texture
-    this.texture_buff = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, this.texture_buff);
-    // init with placeholder
-    gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        1, 1, 0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        new Uint8Array([128, 128, 255, 255])
-    );
     
-    // param setting
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);  // images start at the top row, texture coordinates at the bottom
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); // clamp the wrap to edges of shape
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // switching to linear for video to 
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); // avoid generating mipmap each frame change.
-
     // playyyy the video
     this.video.play().catch(err => {
         console.warn("Video playback failed:", err);
@@ -405,6 +376,30 @@ export class VideoTexture {
 
     // wait for video to be ready before starting to load frames to buffers.
     this.video.addEventListener("loadeddata", () => {
+      // create texture
+        this.texture_buff = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.texture_buff);
+
+        // init with placeholder
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          this.video.videoWidth,
+          this.video.videoHeight,
+          0,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          null
+        );
+
+        // param setting
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);  // images start at the top row, texture coordinates at the bottom
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); // clamp the wrap to edges of shape
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // switching to linear for video to 
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); // avoid generating mipmap each frame change.
+
         this.video.requestVideoFrameCallback(
             this.on_video_frame
         );
@@ -420,15 +415,19 @@ export class VideoTexture {
     // ensure to bind texture
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture_buff);
     
-    // use the current frame of video as the image
-    this.gl.texImage2D(
-      this.gl.TEXTURE_2D, 
-      0, 
-      this.gl.RGBA, 
-      this.gl.RGBA, 
-      this.gl.UNSIGNED_BYTE, 
+    // use the current frame of video as the image.
+    // redefine the buffer, but don't reallocate to save on time.
+    this.gl.texSubImage2D(
+      this.gl.TEXTURE_2D,
+      0,
+      0,
+      0,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
       this.video
     );
+  // } // end if
+   
 
     // repeat this setting. if this is not reset on every call,
     // only the first frame wraps. resetting this enables the recall 
@@ -673,8 +672,8 @@ export class Renderer {
   /**
    * main draw function
    */
-  draw(scene) {
-    this.clear(); // clear out (?)
+  draw(scene, clear_color=[0.2, 0.2, 0.2]) {
+    this.clear(clear_color); // clear out (?)
 
     scene.roots.forEach((r) => {
       // setup any new transformation matrices first in the hierarchy
@@ -735,10 +734,10 @@ export class Renderer {
   /**
    * clear out gl, should be used on every render call.
    */
-  clear() {
+  clear(clear_color=[0.2, 0.2, 0.2]) {
     // clear things.
     this.gl.enable(this.gl.DEPTH_TEST);
-    this.gl.clearColor(0.2, 0.2, 0.2, 1);
+    this.gl.clearColor(...clear_color, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
   } // end function
 
