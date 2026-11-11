@@ -1,4 +1,5 @@
 import * as SourceDicts from './shader_sources.js';
+import { normalMat, multiplyMat4 } from './transitions.js';
 
 /**
  * this file is to contain a mapping of id -> shader (BOTTOM OF FILE). 
@@ -15,7 +16,7 @@ import * as SourceDicts from './shader_sources.js';
  * 
  * process: 
  * + have a vertex_shader and fragment_shader string defined in shader_sources.js
- * + implement an extending shader.
+ * + implement an extending shader -- implement load() and draw()
  * + add shader class name to the shader map at the bottom
  * + if want to use in node: node.shader_id = the id in shader map.
  */
@@ -331,6 +332,157 @@ export class TextureNormalMappingShader extends TextureBumpMappingShader {
 
 } // end class
 
+/**
+ * adapting liz's shaders to a shader wrapper to be used
+ * in the current render pipeline for the planets
+ */
+export class PlanetShader extends Shader {
+  constructor(gl) {
+    super(SourceDicts.planet_basic.vertex_shader, SourceDicts.planet_basic.fragment_shader, gl);
+
+    // grabbing all locations
+    this.posLoc = gl.getAttribLocation(this.program, "aPosition");
+    this.colorLoc = gl.getAttribLocation(this.program, "aColor");
+    this.timeLoc = gl.getUniformLocation(this.program, "uTime");
+    this.uMVM = gl.getUniformLocation(this.program, "uModelViewMatrix");
+    this.uPM = gl.getUniformLocation(this.program, "uProjectionMatrix");
+    this.uMTM = gl.getUniformLocation(this.program, "uModelTransformationMatrix");
+    this.normalLoc = gl.getAttribLocation(this.program, "aNormal");
+    this.uNM = gl.getUniformLocation(this.program, "uNormalMatrix");
+    this.uFlat = gl.getUniformLocation(this.program, "uFlatShading");
+    this.uLightPosLoc = gl.getUniformLocation(this.program, "uLightPos");
+    this.uLightColorLoc = gl.getUniformLocation(this.program, "uLightColor");
+    this.uLightAttLoc = gl.getUniformLocation(this.program, "uLightAtt");
+    this.uAmbientLoc = gl.getUniformLocation(this.program, "uAmbient");
+    this.uMat = {};
+    for (const field of ["ka", "kd", "ks", "shininess", "metallic", "emissive"]) {
+        this.uMat[field] = gl.getUniformLocation(this.program, "uMaterial." + field);
+    }
+    this.tangentLoc = gl.getAttribLocation(this.program, "aTangent");
+    this.texCoordLoc = gl.getAttribLocation(this.program, "aTextureCoor");
+    this.uMappingLoc = gl.getUniformLocation(this.program, "uMapping");
+    this.uTextureLoc = gl.getUniformLocation(this.program, "uTexture");
+  }
+
+  /**
+   * defining how to load up buffer locations with this shader.
+   * TODO
+   * the lights information needs to be set!
+   */
+  load(node, camera, lights, gl) {
+    // from object
+    gl.useProgram(this.program);
+
+    // set gl attributes for the camera_matrices
+    gl.uniformMatrix4fv(this.uPM, false, camera.get_projection_matrix());
+    gl.uniformMatrix4fv(this.uMVM, false, camera.get_view_matrix());
+
+    gl.uniformMatrix4fv(this.uMTM, false, node.transformation_matrix);
+
+    const mv = multiplyMat4(camera.get_view_matrix(), node.transformation_matrix);
+    gl.uniformMatrix3fv(this.uNM, false, normalMat(mv));
+
+    this.setMaterial(node.material, gl); // set up the material parameters
+
+    // lighting setup
+
+    // TODO real bad, but for TESTING currently positional:
+    const sun_light = lights[0];
+    const fill_light = lights[1];
+
+    // console.log(sun_light);
+    // console.log(fill_light);
+
+    const s = sun_light.on ? sun_light.intensity : 0;    // "off" = zero brightness
+    const f = fill_light.on ? fill_light.intensity : 0;
+
+    gl.uniform4fv(this.uLightPosLoc, [
+        ...sun_light.position, 1,
+        ...fill_light.fill_dir, 0,
+    ]);
+
+    gl.uniform3fv(this.uLightColorLoc, [
+        ...(sun_light.color.map(num => num * s)),
+        ...(fill_light.color.map(num => num * f))
+    ]);
+
+    // f_att = 1 / (a + b d + c d^2): sun uses a = 1, b = 0, c = falloff slider; fill light: none
+    gl.uniform3fv(this.uLightAttLoc, [1, 0, sun_light.falloff, 1, 0, 0]);
+    gl.uniform3f(this.uAmbientLoc, 0.25, 0.25,  0.25); // TODO shouldn't hard set this here, but again, testing.
+
+
+    /// =================================================================
+
+    // vertex/positions buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
+    gl.enableVertexAttribArray(this.posLoc);
+    gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 0, 0);
+
+    // norm buffer setup
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.norm_buff);
+    gl.enableVertexAttribArray(this.normalLoc);
+    gl.vertexAttribPointer(this.normalLoc, 3, gl.FLOAT, false, 0, 0);
+
+    // color buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.color_buff);
+    gl.enableVertexAttribArray(this.colorLoc);
+    gl.vertexAttribPointer(this.colorLoc, 3, gl.FLOAT, false, 0, 0);
+    
+    // tangent and textures 
+    if (node.mesh.tangent_buff) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.tangent_buff);
+        gl.enableVertexAttribArray(this.tangentLoc);
+        gl.vertexAttribPointer(this.tangentLoc, 3, gl.FLOAT, false, 0, 0);
+    } else {
+        gl.disableVertexAttribArray(this.tangentLoc);
+    } // end if
+    if (node.mesh.tex_buff) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.tex_buff);
+        gl.enableVertexAttribArray(this.texCoordLoc);
+        gl.vertexAttribPointer(this.texCoordLoc, 2, gl.FLOAT, false, 0, 0);
+    } else {
+        gl.disableVertexAttribArray(this.texCoordLoc);
+    } // end if
+
+    // select mapping
+    try {
+      gl.uniform1i(this.uMappingLoc, node.mesh.mapping); // TODO hold in texture?
+    } catch (err) {
+      console.log(err); // just log it, mostly to see if the mapping set in mesh.
+    } // end try 
+    
+    if (node.texture) {
+        gl.activeTexture(gl.TEXTURE0);
+        // console.log(node.texture)
+        gl.bindTexture(gl.TEXTURE_2D, node.texture.get_texture());
+    } // end if
+
+        // index buffer for drawing as triangles
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
+  } // end function
+
+  /**
+   * defining how to draw with this shader.
+   */
+  draw(node, gl) {
+    // draw the node.
+    gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
+  } // end function
+
+  /**
+   * encapsulating function to set the material uniforms.
+   */
+  setMaterial(m, gl) {
+    gl.uniform3fv(this.uMat.ka, m.ka);
+    gl.uniform3fv(this.uMat.kd, m.kd);
+    gl.uniform3fv(this.uMat.ks, m.ks);
+    gl.uniform1f(this.uMat.shininess, m.shininess);
+    gl.uniform1f(this.uMat.metallic, m.metallic);
+    gl.uniform1f(this.uMat.emissive, m.emissive);
+    gl.uniform1i(this.uFlat, m.flat ? 1 : 0);
+  } // end function
+} // end class
+
 
 // ==============================================
 // SHADER MAP
@@ -344,6 +496,7 @@ export class TextureNormalMappingShader extends TextureBumpMappingShader {
 
 export const SHADER_MAP = {
   "phong_basic": PhongShader,
-  "texture_bump_mapping_basic": TextureBumpMappingShader,
-  "texture_normal_mapping_basic": TextureNormalMappingShader
+  "texture_bump_mapping_basic": TextureBumpMappingShader, // TODO: collapse these and use the mesh setter
+  "texture_normal_mapping_basic": TextureNormalMappingShader, 
+  "planet_basic": PlanetShader // for ya planets
 } // end shader map

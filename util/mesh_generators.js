@@ -10,7 +10,8 @@
 export function gen_sphere_mesh(
   r=1.0, // radius
   h_step=0.1, // horizontal "resolution"
-  v_step=0.1 // vertical "resolution"
+  v_step=0.1, // vertical "resolution"
+  color=[0.5, 0.5, 0.5]
 ) {
   // how many steps we are taking in that range.
   let h_steps = Math.round((2 * Math.PI) / h_step)
@@ -31,7 +32,7 @@ export function gen_sphere_mesh(
   normals.push(0, 1, 0); // pointing straight up
   tangents.push(-1, 0, 0); // push the tangent at that point
   texels.push(0.5, 0.5); // grab the conversion to the texture map
-  colors.push(0.5, 0.5, 0.5); // baseline color
+  colors.push(...color); // baseline color
 
   // generate the bands of the sphere
   for (let v_i = 1; v_i < v_steps; v_i++) { // for each vertical step
@@ -52,7 +53,7 @@ export function gen_sphere_mesh(
       normals.push(x, y, z); // norm is just the point here 
       tangents.push(-z, 0, x); // basic tangent for this points
       texels.push(h_i / h_steps, v_i / v_steps); // do a very basic mapping pull
-      colors.push(0.5, 0.5, 0.5); // baseline color
+      colors.push(...color); // baseline color
     } // end loop
   } // end loop
 
@@ -60,7 +61,7 @@ export function gen_sphere_mesh(
   normals.push(0, -1, 0); // pointing straight down
   tangents.push(1, 0, 0); // push the tangent at that point
   texels.push(0.5, 0.5); // grab the conversion to the texture map
-  colors.push(0.5, 0.5, 0.5); // baseline color
+  colors.push(...color); // baseline color
 
   // ==================================
   //  GENERATE INDICES
@@ -127,6 +128,7 @@ export function gen_cylinder_mesh(
   r=0.5, // radius of the cylinder
   h_step=0.1, // horizontal step interval (u)
   v_step=0.1, // vertical step interval (v)
+  color=[0.5, 0.5, 0.5]
 ) {
 
   // how many steps we are taking in that range.
@@ -158,7 +160,7 @@ export function gen_cylinder_mesh(
     } // end if
     tangents.push(1, 0, 0); // pointing to the side
     texels.push(0.5, 0.5); // pick the halfway texel
-    colors.push(0.5, 0.5, 0.5); // basic color
+    colors.push(...color); // basic color
 
     for (let h_i = 0; h_i < h_steps; h_i++) {
       // get our current h, which is the h in (h, v)
@@ -179,7 +181,7 @@ export function gen_cylinder_mesh(
       tangents.push(1, 0, 0); // push the tangent at that point
       // texels.push(0.5 + r * Math.cos(tex_theta), 0.5 + r * Math.sin(tex_theta)); // TODO: grab the conversion to the texture max
       texels.push((cos_h + 1) * 0.5, (sin_h + 1) * 0.5); 
-      colors.push(0.5, 0.5, 0.5); // basic color
+      colors.push(...color); // basic color
     } // end loop
   } // end loop
   
@@ -217,7 +219,7 @@ export function gen_cylinder_mesh(
       normals.push(x, 0, z); // pointing straight out to sides of x, z, but no y value
       tangents.push(z, 0, -x); // push the tangent at that point
       texels.push((h_i / h_steps) * Math.PI, y); // grab the conversion to the texture map
-      colors.push(0.5, 0.5, 0.5); // basic color
+      colors.push(...color); // basic color
     } // end loop
   } // end loop
 
@@ -261,7 +263,8 @@ export function gen_cylinder_mesh(
 export function gen_cone_mesh(
   r=0.5,       // radius of the base
   h_step=0.1, // horizontal "resolution"
-  v_step=0.1 // vertical "resolution"
+  v_step=0.1, // vertical "resolution"
+  color=[0.5, 0.5, 0.5]
 ) {
 
   // how many steps we are taking in that range.
@@ -290,7 +293,7 @@ export function gen_cone_mesh(
   normals.push(0, -1, 0);
   tangents.push(1, 0, 0);
   texels.push(0.5, 0.5);
-  colors.push(0.5, 0.5, 0.5);
+  colors.push(...color);
 
   // the base circle perimeter
   for (let h_i = 0; h_i < h_steps; h_i++) {
@@ -307,7 +310,7 @@ export function gen_cone_mesh(
     normals.push(0, -1, 0);
     tangents.push(1, 0, 0);
     texels.push(0.5 + 0.5 * cos_h, 0.5 + 0.5 * sin_h); // planar texture mapping
-    colors.push(0.5, 0.5, 0.5); // base coloring
+    colors.push(...color); // base coloring
   } // end loop
 
   // now onto the sides
@@ -336,7 +339,7 @@ export function gen_cone_mesh(
       normals.push(x, 0, z); // pointing straight out to sides of x, z, but no y value
       tangents.push(z, 0, -x); // push the tangent at that point
       texels.push(h_i / h_steps, v); // basic selection, choose from segmented u and v as height
-      colors.push(0.5, 0.5, 0.5); 
+      colors.push(...color); 
     } // end loop
   } // end loop
 
@@ -404,7 +407,7 @@ export function gen_cone_mesh(
 /**
  * make a basic cube mesh
  */
-export function gen_cube_mesh() {
+export function gen_cube_mesh(color=[0.5, 0.5, 0.5]) {
   const vertices = [
     -1, -1,  1,   1, -1,  1,   1,  1,  1,  -1,  1,  1,   // front
      1, -1, -1,  -1, -1, -1,  -1,  1, -1,   1,  1, -1,   // back
@@ -448,7 +451,7 @@ export function gen_cube_mesh() {
 
   const colors = []
   for (let i = 0; i < vertices.length; i += 3) {
-    colors.push(0.5, 0.5, 0.5);
+    colors.push(...color);
   } // end loop
   
   return {
@@ -464,7 +467,7 @@ export function gen_cube_mesh() {
 /**
  * a basic pyramid.
  */
-export function gen_pyramid_mesh() {
+export function gen_pyramid_mesh(color=[0.5, 0.5, 0.5]) {
   const vertices = [
     -1, 0, -1, -1, 0, 1, 1, 0, 1, 1, 0, -1, // base
     -1, 0, -1, -1, 0, 1, 0, 1, 0, // left face
@@ -507,7 +510,7 @@ export function gen_pyramid_mesh() {
 
   const colors = []
   for (let i = 0; i < vertices.length; i += 3) {
-    colors.push(0.5, 0.5, 0.5);
+    colors.push(...color);
   } // end loop
 
   return {
@@ -519,3 +522,79 @@ export function gen_pyramid_mesh() {
     "colors": new Float32Array(colors)
   };
 } // end function
+
+/**
+ * adapted directly from's liz's planet mesh in planet.js.
+ * using directly for now in order to adapt.
+ */
+export function gen_planet_mesh(r, vSteps, uSteps, color=[0.2, 0.4, 0.9], mapping=0, uRepeat=1, vRepeat=1) {
+  const positions = [];
+  const colors = [];
+  const indices = [];
+  const normals = [];
+
+    // for texture
+  const tangents = [];
+  const textureCoors = [];
+
+  /* 
+  phi -> 0 - pi
+  loop through each step of v 
+  v = ratio of place in total v steps by pi
+  */
+  for (let i = 0; i <= vSteps; i++) {
+      const v = i * Math.PI / vSteps;
+      const sinV = Math.sin(v);
+      const cosV = Math.cos(v);
+
+      /*
+      theta -> 0 - 2pi
+      */
+      for (let j = 0; j <= uSteps; j++) {
+          const u = j * 2 * Math.PI / uSteps;
+          const sinU = Math.sin(u);
+          const cosU = Math.cos(u);
+
+          // convert from spherical to cartesian 
+          const x = cosU * sinV;
+          const y = cosV;
+          const z = sinU * sinV;
+
+          // multiply by the radius, r, and push verticies 
+          positions.push(r * x, r * y, r * z);
+
+          // normal vector is just center pointed to x, y, z --> nature of sphere
+          normals.push(x, y, z);
+
+          colors.push(color[0], color[1], color[2]);
+
+          // map the texture coordinates 
+          textureCoors.push(uRepeat * (1 - j / uSteps), vRepeat * (1 - i / vSteps));
+          tangents.push(sinU, 0, -cosU); 
+      }
+
+  }
+  for (let i = 0; i < vSteps; i++) {
+      for (let j = 0; j < uSteps; j++) {
+          const k1 = (i * (uSteps + 1)) + j;
+          const k2 = k1 + uSteps + 1;
+          indices.push(k1, k2, k1 + 1); // upper left triangle
+          indices.push(k2, k2 + 1, k1 + 1); // lower right triangle
+      }
+  }
+
+  return {
+      "vertices": new Float32Array(positions),
+      "colors": new Float32Array(colors),
+      "indices": new Uint16Array(indices),
+      "normals": new Float32Array(normals),
+      "tangents": new Float32Array(tangents),
+      "texels": new Float32Array(textureCoors),
+      "mapping": mapping // this is added with liz's shader in mind. better idea than what i did hehe
+  };
+
+  
+} // end function
+
+
+

@@ -12,12 +12,17 @@
   <!-- ======================================================= -->
   <!-- PRIMARY HTML PAGE                                       -->
   <!-- ======================================================= -->
+  
+  <!-- justify-content: center; /* Centers horizontally */
+  align-items: center;     /* Centers vertically */
+  height: 100vh;     -->
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <h1>Space Duck Hunt: The Birdening</h1>
+  </div>
 
-  <h1>Space Duck Hunt: The Birdening</h1>
-
-  <div style="display: flex; gap: 10px; align-items: flex-start;">
+  <div style="display: flex; justify-content: center; align-items: center;">
     <div style="display: flex; flex-direction: column; gap: 10px;">
-      <canvas id="glcanvas" width="600" height="600"></canvas>
+      <canvas id="glcanvas" width="1200" height="600"></canvas>
     </div>
   </div>
 
@@ -36,7 +41,7 @@
   <script>
     // adding some basic defaults at first, will dynamically add 
     // as more things keydown/keyup.
-    const keys_pressed = {
+    const frontend_data = {
       "w": false,
       "a": false,
       "s": false,
@@ -45,12 +50,12 @@
 
     // example: keys.w = true on pressing
     window.addEventListener('keydown', (event) => {
-      keys_pressed[event.key] = true;
+      frontend_data[event.key] = true;
     });
 
     // example: keys.w = false on not pressing
     window.addEventListener('keyup', (event) => {
-      keys_pressed[event.key] = false;
+      frontend_data[event.key] = false;
     });
     
   </script>
@@ -100,14 +105,16 @@
 
     curr_scene.init(renderer, aspect); // initialize the scene.
     
-    const start_time = Date.now() // start the clock 
+    let start_time = null;
     let delta_time;
 
     /**
      * render the scene.
      */
-    function render() {
-      delta_time = (Date.now() - start_time) / 1000 // dt in seconds from front end
+    function render(timestep) {
+      if (!start_time) { start_time = timestep; }
+      delta_time = (timestep - start_time) / 1000 // dt in seconds from front end
+      frontend_data.delta_time = delta_time; // make sure this is passed to the scenes, likely will be needed.
       
       // TODO: this could be a potential simple transition between scenes. 
       // note that the curr_scene.initialized is there primarily for the space 
@@ -124,15 +131,17 @@
       //   } // end if
       // } // end if
 
-      curr_scene.render(keys_pressed);
+      curr_scene.render(frontend_data);
+      requestAnimationFrame(render);
     } // end render
 
     // Initialize when page loads
     window.onload = function () {
-      setInterval(render, 30); // execute this code with a 30 ms delay on each call
+      requestAnimationFrame(render);
     }
 
   </script>
+
 </body>
 
 </html>

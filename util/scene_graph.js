@@ -46,12 +46,12 @@ export class Scene {
     // to implement further in children.
   } // end function
 
-  render() {
+  render(clear_color=[0.2, 0.2, 0.2]) {
     // yada yada, do whatever the scene needs at a child level to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
     // then, let dummy take over:
     if (this.renderer) {
-      this.renderer.draw(this);
+      this.renderer.draw(this, clear_color);
     } // end if
   } // end function
 
@@ -261,21 +261,24 @@ export class Mesh {
     normals=null,
     tangents=null,
     texels=null,
-  }) {
+    mapping=null
+  }={}) {
     this.vertices = vertices;
     this.indices = indices;
     this.colors = colors;
     this.normals = normals;
     this.tangents = tangents;
     this.texels = texels;
+    this.mapping = mapping;
+
 
     // initialize whatever we have into a grabable buffer
-    if (vertices) this.vert_buff = this.init_buffer(vertices, gl);
-    if (indices) this.ind_buff = this.init_buffer(indices, gl, gl.ELEMENT_ARRAY_BUFFER);
-    if (normals) this.norm_buff = this.init_buffer(normals, gl);
-    if (colors) this.color_buff = this.init_buffer(colors, gl);
-    if (tangents) this.tangent_buff = this.init_buffer(tangents, gl);
-    if (texels) this.tex_buff = this.init_buffer(texels, gl);
+    if (vertices) {this.vert_buff = this.init_buffer(vertices, gl); console.log("askjdnas")}
+    if (indices) {this.ind_buff = this.init_buffer(indices, gl, gl.ELEMENT_ARRAY_BUFFER);}
+    if (normals) {this.norm_buff = this.init_buffer(normals, gl);}
+    if (colors) {this.color_buff = this.init_buffer(colors, gl);}
+    if (tangents) {this.tangent_buff = this.init_buffer(tangents, gl);}
+    if (texels) {this.tex_buff = this.init_buffer(texels, gl);}
   }
 
   /**
@@ -289,6 +292,15 @@ export class Mesh {
   } // end function
 
 } // end class
+
+/**
+ * ==============================================
+ * TEXTURE
+ * 
+ * Texture -> image textures
+ * VideoTexture -> video textures
+ * ==============================================
+ */
 
 /**
  * simple wrap around a texture so multiple nodes can
@@ -356,27 +368,7 @@ export class VideoTexture {
     // have to bind so this == this texture instance.
     this.on_video_frame = this.on_video_frame.bind(this);
 
-    // create texture
-    this.texture_buff = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, this.texture_buff);
-    // init with placeholder
-    gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        1, 1, 0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        new Uint8Array([128, 128, 255, 255])
-    );
     
-    // param setting
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);  // images start at the top row, texture coordinates at the bottom
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); // clamp the wrap to edges of shape
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // switching to linear for video to 
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); // avoid generating mipmap each frame change.
-
     // playyyy the video
     this.video.play().catch(err => {
         console.warn("Video playback failed:", err);
@@ -384,6 +376,30 @@ export class VideoTexture {
 
     // wait for video to be ready before starting to load frames to buffers.
     this.video.addEventListener("loadeddata", () => {
+      // create texture
+        this.texture_buff = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.texture_buff);
+
+        // init with placeholder
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          this.video.videoWidth,
+          this.video.videoHeight,
+          0,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          null
+        );
+
+        // param setting
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);  // images start at the top row, texture coordinates at the bottom
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); // clamp the wrap to edges of shape
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); // switching to linear for video to 
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); // avoid generating mipmap each frame change.
+
         this.video.requestVideoFrameCallback(
             this.on_video_frame
         );
@@ -399,15 +415,19 @@ export class VideoTexture {
     // ensure to bind texture
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture_buff);
     
-    // use the current frame of video as the image
-    this.gl.texImage2D(
-      this.gl.TEXTURE_2D, 
-      0, 
-      this.gl.RGBA, 
-      this.gl.RGBA, 
-      this.gl.UNSIGNED_BYTE, 
+    // use the current frame of video as the image.
+    // redefine the buffer, but don't reallocate to save on time.
+    this.gl.texSubImage2D(
+      this.gl.TEXTURE_2D,
+      0,
+      0,
+      0,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
       this.video
     );
+  // } // end if
+   
 
     // repeat this setting. if this is not reset on every call,
     // only the first frame wraps. resetting this enables the recall 
@@ -447,7 +467,7 @@ export class VideoTexture {
  */
 export class Material {
   constructor({
-    color=[1, 1, 1],
+    color=[1, 1, 1], // usually comes from mesh, but can use this if for whatever reason needs it in the Shader
     ka=[0.2, 0.2, 0.2],
     kd=[0.8, 0.8, 0.8],
     ks=[0.5, 0.5, 0.5],
@@ -464,6 +484,32 @@ export class Material {
 } // end class
 
 /**
+ * wrapper around's liz's specific wording
+ * and things she needs for planet material stuff as
+ * it currently stands.
+ */
+export class PlanetMaterial extends Material {
+  constructor ({
+    color=[1, 1, 1], // usually comes from mesh, but can use this if for whatever reason needs it in the Shader
+    ka=0, 
+    kd=0, 
+    ks=0, 
+    shininess=1, 
+    metallic=0,
+    emissive=0.45,
+    flat=false,
+    transparency=1
+  }={}) {
+    super({color, ka, kd, ks, shininess, transparency}); // init via super
+
+    // custom things for planet materials
+    this.metallic = metallic;
+    this.emissive = emissive;
+    this.flat = flat;
+  }
+} // end class
+
+/**
  * ==============================================
  * LIGHT
  * ==============================================
@@ -476,19 +522,85 @@ export class Material {
  */
 export class Light {
   constructor ({
-    position=[3, 4, 5],
     color=[1, 1, 1]
   }={}) {
-    this.position = position;
     this.color = color;
   }
 } // end class
 
 /**
- * a point light
- * TODO: anything to add beyond parent class above?
+ * a point light -- has a position and color at baseline
  */
-export class PointLight extends Light { }
+export class PointLight extends Light {
+  constructor ({
+    position=[3, 4, 5],
+    color=[1, 1, 1]
+  }={}) {
+    super({"color": color}); // pass on the color init
+    this.position = position;
+  }
+} // end class
+
+/**
+ * placeholder really for clarity.
+ * i have not personally done this, but putting in 
+ * for liz's lighting specifications.
+ * can be added to for generalization!
+ */
+export class DirectionalLight extends Light { 
+  constructor ({
+    color=[1, 1, 1]
+  }={}) {
+    super({"color": color}); // pass on the color init
+  }
+} // end class
+
+
+// Light 1 — the Sun: a POINT light (w = 1) at the Sun's center.
+// It's attached to the scene, so push its center through the Sun's
+// TODO: override the position of this--see if that works
+export class SunLight extends PointLight {
+   constructor({
+    position=[0, 0, 0],
+    color=[1.0, 0.94, 0.82],
+    intensity=1.2,
+    falloff=0.008,
+    on=true
+  }={}) {
+    super({"position": position, "color": color}); 
+    this.intensity = intensity;
+    this.falloff = falloff;
+    this.on = on;
+  }
+} // end class
+
+// Light 2 — fill: a DIRECTIONAL light (w = 0) given straight in eye
+// space, so it's attached to the camera. Azimuth/elevation -> unit vector.
+export class FillLight extends DirectionalLight {
+  constructor({
+    color=[0.55, 0.68, 1.0],
+    azimuth=-40,
+    elevation=30,
+    intensity=0.2,
+    on=true
+  }={}) {
+    super({"color": color});
+    this.intensity = intensity;
+    this.on = on;
+    this.azimuth = azimuth;
+    this.elevation = elevation;
+    this.fill_dir = this.calc_fill_dir(); // if you don't change those values, can just use this
+  }
+
+  /**
+   * convenience wrap of this math.
+   */
+  calc_fill_dir() {
+    const az = this.azimuth * Math.PI / 180;
+    const el = this.elevation * Math.PI / 180;
+    return [Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az)];
+  } // end function
+} // end class
 
 
 /**
@@ -560,8 +672,8 @@ export class Renderer {
   /**
    * main draw function
    */
-  draw(scene) {
-    this.clear(); // clear out (?)
+  draw(scene, clear_color=[0.2, 0.2, 0.2]) {
+    this.clear(clear_color); // clear out (?)
 
     scene.roots.forEach((r) => {
       // setup any new transformation matrices first in the hierarchy
@@ -622,10 +734,10 @@ export class Renderer {
   /**
    * clear out gl, should be used on every render call.
    */
-  clear() {
+  clear(clear_color=[0.2, 0.2, 0.2]) {
     // clear things.
     this.gl.enable(this.gl.DEPTH_TEST);
-    this.gl.clearColor(0.2, 0.2, 0.2, 1);
+    this.gl.clearColor(...clear_color, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
   } // end function
 
