@@ -63,6 +63,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     } // end function
 
+    /**
+     * grab from liz: normalize the distance from sun of each 
+     * planet with respect to the max distance so she looks much better.
+     */
     normalize_distance() {
       let max_distance = 0;
       for(let i = 0; i < this.solar_system.planets.length; i++){
@@ -78,6 +82,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       });
     } // end function
 
+    /**
+     * grab from liz: normalize the radius's of the planets with
+     * respect to the largest one, leaving the sun always largest with
+     * radius 2.
+     */
     normalize_radii() {
       let max_radius = 0;
       for(let i = 0; i < this.solar_system.planets.length; i++){

@@ -66,7 +66,10 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
   update_transformation_matrix(M_parent) {
     // change any trajectory via this.
     this.position = [this.display_distance, 0, this.display_distance]; // be sure to update this by scene init
-    this.scale = [this.display_radius, this.display_radius, this.display_radius]; // scale by norm radius
+    // NOTE: this is done because the initial planet mesh has a radius 1.
+    // so, scaling all points down by display radius is equivalent to shrinking the radius
+    // to that number.
+    this.scale = [this.display_radius, this.display_radius, this.display_radius]; // scale by norm radius for now
 
     const rotation_orbit = rotate(this.orbit_rotation); // the rotation around the sun
     const translation = translate(this.position); // my position relative to the sun as origin
