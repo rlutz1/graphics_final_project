@@ -120,12 +120,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           0 // adding a texture bump mapping to these
         )); // generate a basic planet mesh
         const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-            "ka": [0.2, 0.2, 0.2], 
-            "kd": [0.5, 0.5, 0.5],
-            "ks": [0.8, 0.8, 0.8], 
-            "shininess": 1, 
+            "ka": [0.3, 0.3, 0.3], 
+            "kd": [0.85, 0.85, 0.85],
+            "ks": [0.5, 0.5, 0.5], 
+            "shininess": 40, 
             "metallic": 0,
-            "emissive": 1.0, 
+            "emissive": 0, 
             "flat": false
         });
 
@@ -154,9 +154,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         0 // color for now, texture later! TODO
       )); // generate a basic planet mesh
       const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-          "ka": [0.2, 0.2, 0.2], 
-          "kd": [0.5, 0.5, 0.5],
-          "ks": [0.8, 0.8, 0.8], 
+          "ka": [0.0, 0.0, 0.0], 
+          "kd": [0.0, 0.0, 0.0],
+          "ks": [0.0, 0.0, 0.0], 
           "shininess": 1, 
           "metallic": 0,
           "emissive": 1.0, 
