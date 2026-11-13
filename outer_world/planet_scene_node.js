@@ -83,6 +83,7 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
     this.data = data; // can hand off a data pack as well
     // this.position = [-((0.5 * 600) / 30), -((0.5 * 300) / 30), -30]; // shove her back
     this.position = [0, 0, -30];
+    // this.relative_position = this.position; // for the light position updates to be simple...
   } // end constructor
 } // end class
 

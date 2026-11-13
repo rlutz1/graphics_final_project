@@ -188,54 +188,64 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         });
       } // end if
 
-      // NOTE THIS SHOULD BE THE CAMERA MODEL VIEW, NOT HERE!! JUST DICKING AROUND!!!
+      // TODO: the light position that goes with sun needs to be bound to the sun's new position!!!!!!!!!
+      
       /**
        * w will always move you -z direction,
        * which effectively moves all things in space in pos z.
        */
       if (frontend_data.w) {
-        // z += 0.1
         const theta = this.camera.rotate[1]; // amount in deg that i've rotated the scene
-        const sin = Math.sin(theta);
+        // i have rotated theta degrees around the y axis.
+        // if i want to move forward, it should be relative to
+        // how much i have rotated.
+        // so i need to move sin(theta)*speed in appropriate x direction
+        // and cos(theta)*speed in appropriate z direction, 
+        // (trust, have some basic trig skills lol),
+        // so the roots in scene should move the opposite directions
+        const sin = Math.sin(theta); 
         const cos = Math.cos(theta);  
         this.camera.translate = [
-          this.camera.translate[0] - (0.1 * sin),
+          this.camera.translate[0] - (0.1 * sin), // move things opposing x directio
           this.camera.translate[1],
-          this.camera.translate[2] + (0.1 * cos)
+          this.camera.translate[2] + (0.1 * cos) // move things "backward"
         ]
-      }
+      } // end if
 
-      // if (frontend_data.s) {
-      //   // z += 0.1
-      //   this.camera.translate = [
-      //     this.camera.translate[0],
-      //     this.camera.translate[1],
-      //     this.camera.translate[2] - 0.1
-      //   ]
-      // }
+      if (frontend_data.s) {
+        // same as above but opposite
+        const theta = this.camera.rotate[1]; // amount in deg that i've rotated the scene
+        const sin = Math.sin(theta); 
+        const cos = Math.cos(theta);  
+        this.camera.translate = [
+          this.camera.translate[0] + (0.1 * sin), // move things opposing x directio
+          this.camera.translate[1],
+          this.camera.translate[2] - (0.1 * cos) // move things "backward"
+        ]
+      } // end if
 
       /**
        * a and s can rotate the camera around y axis,
        * which effectively is rotating things the opposite 
        * direction around y
+       * 
+       * TODO: this should wrap -- potential for overflow technically.
        */
       if (frontend_data.a) {
-        // z += 0.1
         this.camera.rotate = [
           this.camera.rotate[0],
-          this.camera.rotate[1] - 0.01,
+          (this.camera.rotate[1] - 0.05) % (2 * Math.PI),
           this.camera.rotate[2]
         ]
-      }
+      } // end if
 
       if (frontend_data.d) {
-        // z += 0.1
         this.camera.rotate = [
           this.camera.rotate[0],
-          this.camera.rotate[1] + 0.01,
+          (this.camera.rotate[1] + 0.05) % (2 * Math.PI),
           this.camera.rotate[2]
         ]
-      }
+      } // end if
 
 
       /**
