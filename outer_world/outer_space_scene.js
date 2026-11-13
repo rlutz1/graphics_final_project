@@ -197,8 +197,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         //   z
         // ]
         this.solar_system.sun.position = [
-          (((2 * frontend_data.mouse_x) / w - 1) * (w / 2)) / Math.abs(z),
-          (((2 * frontend_data.mouse_y) / h - 1) * (h / 2)) / Math.abs(z),
+          -(((2 * frontend_data.mouse_x) / w - 1) * (w / 2)) / Math.abs(z),
+          -(((2 * frontend_data.mouse_y) / h - 1) * (h / 2)) / Math.abs(z),
           z
         ]
         console.log(this.solar_system.sun.position)
