@@ -12,6 +12,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       this.days_per_second = 30; // how to register how many days occur in a second for planet orbits
       this.distance_const = 35; // a constant used in distance normalization.
       this.old_x = 0; // TESTING
+      this.old_y = 0; // TESTING
     }
   
     /**
@@ -198,38 +199,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
        */
 
 
-      if (frontend_data.w) {
-        const theta = this.camera.rotate[1]; // amount in deg that i've rotated the scene
-        // i have rotated theta degrees around the y axis.
-        // if i want to move forward, it should be relative to
-        // how much i have rotated.
-        // so i need to move sin(theta)*speed in appropriate x direction
-        // and cos(theta)*speed in appropriate z direction, 
-        // (trust, have some basic trig skills lol),
-        // so the roots in scene should move the opposite directions
-        const sin = Math.sin(theta); 
-        const cos = Math.cos(theta);  
-
-        
-
-        this.camera.translate = [
-          this.camera.translate[0] - (0.1 * sin), // move things opposing x directio
-          this.camera.translate[1],
-          this.camera.translate[2] + (0.1 * cos) // move things "backward"
-        ]
-      } // end if
-
-      if (frontend_data.s) {
-        // same as above but opposite
-        const theta = this.camera.rotate[1]; // amount in deg that i've rotated the scene
-        const sin = Math.sin(theta); 
-        const cos = Math.cos(theta);  
-        this.camera.translate = [
-          this.camera.translate[0] + (0.1 * sin), // move things opposing x directio
-          this.camera.translate[1],
-          this.camera.translate[2] - (0.1 * cos) // move things "backward"
-        ]
-      } // end if
+      
 
       /**
        * a and s can rotate the camera around y axis,
@@ -271,7 +241,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // first movement
       if (frontend_data.mouse_x) { // have registered mouse movement
         const h = 600; const w = 1200; // hardcoded for a moment.
-        new_x = (((2 * frontend_data.mouse_x) / w - 1)) * 0.5;
+        new_x = (((2 * frontend_data.mouse_x) / w - 1)) * (Math.PI / 2);
       } // end if
 
       // if there is a difference between the two values (we moved the mouse)
@@ -290,7 +260,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.rotate = [
           this.camera.rotate[0],
           // -half_theta,
-          this.camera.rotate[1] + dr, // sends things spinning
+          this.camera.rotate[1] + dr, 
           // norm_x * 0.5,
           this.camera.rotate[2]
         ]
@@ -300,6 +270,80 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
 
 
+
+
+
+
+      let new_y = 0;
+      let old_y = this.old_y;
+
+      // let last_mouse_y = this.last_mouse_y;
+      // let curr_mouse_x = null; let curr_mouse_y = null;
+      // first movement
+      if (frontend_data.mouse_y) { // have registered mouse movement
+        const h = 600; const w = 1200; // hardcoded for a moment.
+        new_y = -(((2 * frontend_data.mouse_y) / h - 1)) * (Math.PI / 2);
+      } // end if
+
+      // if there is a difference between the two values (we moved the mouse)
+      if (Math.abs(new_y - old_y) > 0.001) {
+        let dr = 0;
+        if ((new_y >= 0 && old_y >= 0) || (new_y < 0 && old_y < 0)) {
+          // both positive or negative
+          dr = new_y - old_y;
+        } else { // signs are changing
+          dr = (-old_y) + new_y;
+        }
+        // // little more of a y rotation
+        // const theta = Math.atan(norm_x/norm_y);
+        // const half_theta = theta / 2;
+        this.camera.rotate = [
+          this.camera.rotate[0] + dr,
+          this.camera.rotate[1], 
+          this.camera.rotate[2]
+        ]
+      } 
+
+      this.old_y = new_y;
+
+
+    if (frontend_data.w) {
+        const theta_xz = this.camera.rotate[1]; // amount in deg that i've rotated the scene around y axis -> xz motion
+        const theta_yz = this.camera.rotate[0]; // amount in deg i've rotated te scene around the x axis -> yz motion
+
+        // i have rotated theta degrees around the y axis.
+        // if i want to move forward, it should be relative to
+        // how much i have rotated.
+        // so i need to move sin(theta)*speed in appropriate x direction
+        // and cos(theta)*speed in appropriate z direction, 
+        // (trust, have some basic trig skills lol),
+        // so the roots in scene should move the opposite directions
+        const sin_xz = Math.sin(theta_xz); 
+        const cos_xz = Math.cos(theta_xz);  
+
+        // now, consider the up motion angle
+        const sin_yz = Math.sin(theta_yz)
+
+        this.camera.translate = [
+          this.camera.translate[0] - (0.1 * sin_xz), // move things opposing x direction
+          this.camera.translate[1] - (0.1 * sin_yz), // move things in opposing y direction
+          this.camera.translate[2] + (0.1 * cos_xz) // move things "backward"
+        ]
+      } // end if
+
+      if (frontend_data.s) {
+        // same as above but opposite
+        const theta_xz = this.camera.rotate[1]; // amount in deg that i've rotated the scene
+        const theta_yz = this.camera.rotate[0]; // amount in deg i've rotated te scene around the x axis -> yz motion
+        const sin_yz = Math.sin(theta_yz)
+        const sin_xz = Math.sin(theta_xz); 
+        const cos_xz = Math.cos(theta_xz);  
+        this.camera.translate = [
+          this.camera.translate[0] + (0.1 * sin_xz), // move things opposing x directio
+          this.camera.translate[1] + (0.1 * sin_yz),
+          this.camera.translate[2] - (0.1 * cos_xz) // move things "backward"
+        ]
+      } // end if
 
 
       /**
