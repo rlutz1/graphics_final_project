@@ -184,7 +184,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           p.update_orbit(this.day);
         });
       } // end if
-
+// NOTE THIS SHOULD BE THE CAMERA MODEL VIEW, NOT HERE!! JUST DICKING AROUND!!!
       let z = this.solar_system.sun.position[2];
       if (frontend_data.w) {z += 0.1}
 
