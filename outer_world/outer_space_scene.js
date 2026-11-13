@@ -195,6 +195,33 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
        * w will always move you -z direction,
        * which effectively moves all things in space in pos z.
        */
+
+      if (frontend_data.mouse_x && frontend_data.mouse_y) {
+        const h = 600; const w = 1200; // hardcoded for a moment.
+        // const norm_x = -(((2 * frontend_data.mouse_x) / w - 1) * (w / 2)) / Math.abs(z);
+        // const norm_y =  -(((2 * frontend_data.mouse_y) / h - 1) * (h / 2)) / Math.abs(z);
+        let norm_x = (((2 * frontend_data.mouse_x) / w - 1));
+        let norm_y =  -(((2 * frontend_data.mouse_y) / h - 1));
+        console.log(norm_x, norm_y)
+        if (norm_x < 0 && norm_y < 0) norm_y = -norm_y
+        
+        // little more of a y rotation
+        const theta = Math.atan(norm_x/norm_y);
+        const half_theta = theta / 2;
+        this.camera.rotate = [
+          this.camera.rotate[0],
+          // -half_theta,
+          norm_x * 0.5,
+          this.camera.rotate[2]
+        ]
+
+        // this.camera.translate = [
+        //   norm_x, // move things opposing x direction
+        //   norm_y, // move things opposing y direction
+        //   this.camera.translate[2] 
+        // ]
+      } 
+
       if (frontend_data.w) {
         const theta = this.camera.rotate[1]; // amount in deg that i've rotated the scene
         // i have rotated theta degrees around the y axis.
@@ -206,6 +233,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         // so the roots in scene should move the opposite directions
         const sin = Math.sin(theta); 
         const cos = Math.cos(theta);  
+
+        
+
         this.camera.translate = [
           this.camera.translate[0] - (0.1 * sin), // move things opposing x directio
           this.camera.translate[1],
@@ -235,7 +265,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (frontend_data.a) {
         this.camera.rotate = [
           this.camera.rotate[0],
-          (this.camera.rotate[1] - 0.05) % (2 * Math.PI),
+          (this.camera.rotate[1] - 0.03) % (2 * Math.PI),
           this.camera.rotate[2]
         ]
       } // end if
@@ -243,16 +273,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (frontend_data.d) {
         this.camera.rotate = [
           this.camera.rotate[0],
-          (this.camera.rotate[1] + 0.05) % (2 * Math.PI),
+          (this.camera.rotate[1] + 0.03) % (2 * Math.PI),
           this.camera.rotate[2]
         ]
       } // end if
 
-
       /**
-       * 
+       * moving things in and out of scene to mimic
+       * the movement of the camera to a different angular direction.
        */
-
       // if (frontend_data.mouse_x && frontend_data.mouse_y) {
       //   const h = 600; const w = 1200;
       //   // const z = this.solar_system.sun.position[2];
