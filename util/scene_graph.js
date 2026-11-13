@@ -646,6 +646,34 @@ export class PerspectiveCamera extends Camera {
   }
 } // end class
 
+/**
+ * splitting this off for testing so 
+ * nothing is fucked on any other scene.
+ */
+export class SpaceCamera extends PerspectiveCamera {
+  constructor(camera_setup) {
+    super(camera_setup);
+    this.translate = [0, 0, 0];
+    this.rotate = [0, 0, 0];
+  }
+
+  /**
+   * to handle the setting of translation and
+   * rotation from the scene in the correct order.
+   */
+  get_view_matrix() {
+    // set by the scene in reaction to user interaction.
+    // see render()
+    const translation = translate(this.translate);
+    const rotation = rotate(this.rotate);
+
+    // potentially needs to be opposite of typical
+    // TR ordering here. testing.
+    return matMul(rotation, translation);
+  }
+
+}
+
 
 /**
  * split up the cameras this way. perspective camera.

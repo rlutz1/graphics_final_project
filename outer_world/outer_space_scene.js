@@ -27,7 +27,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       this.init_solar_system();
 
       // init some shitty basics, lights, camera
-      this.set_camera(new SceneBuilder.PerspectiveCamera({
+      // this.set_camera(new SceneBuilder.PerspectiveCamera({
+      //   "aspect": aspect, // since my canvas is not square
+      // }))
+      this.set_camera(new SceneBuilder.SpaceCamera({
         "aspect": aspect, // since my canvas is not square
       }))
   
@@ -184,31 +187,57 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           p.update_orbit(this.day);
         });
       } // end if
-// NOTE THIS SHOULD BE THE CAMERA MODEL VIEW, NOT HERE!! JUST DICKING AROUND!!!
-      let z = this.solar_system.sun.position[2];
-      if (frontend_data.w) {z += 0.1}
 
-      if (frontend_data.mouse_x && frontend_data.mouse_y) {
-        const h = 600; const w = 1200;
-        // const z = this.solar_system.sun.position[2];
-        // this.solar_system.sun.position = [
-        //   ((frontend_data.mouse_x / (w * w)) - (w / 2)) / z,
-        //   ((frontend_data.mouse_y / (h * h)) - (h / 2)) / z,
-        //   z
-        // ]
-        this.solar_system.sun.position = [
-          -(((2 * frontend_data.mouse_x) / w - 1) * (w / 2)) / Math.abs(z),
-          -(((2 * frontend_data.mouse_y) / h - 1) * (h / 2)) / Math.abs(z),
-          z
-        ]
-        console.log(this.solar_system.sun.position)
-      } else {
-        this.solar_system.sun.position = [
-          this.solar_system.sun.position[0],
-          this.solar_system.sun.position[1],
-          z
+      // NOTE THIS SHOULD BE THE CAMERA MODEL VIEW, NOT HERE!! JUST DICKING AROUND!!!
+      /**
+       * w will always move you -z direction,
+       * which effectively moves all things in space in pos z.
+       */
+      if (frontend_data.w) {
+        // z += 0.1
+        this.camera.translate = [
+          this.camera.translate[0],
+          this.camera.translate[1],
+          this.camera.translate[2] + 0.1
         ]
       }
+
+      if (frontend_data.s) {
+        // z += 0.1
+        this.camera.translate = [
+          this.camera.translate[0],
+          this.camera.translate[1],
+          this.camera.translate[2] - 0.1
+        ]
+      }
+
+
+
+      /**
+       * 
+       */
+
+      // if (frontend_data.mouse_x && frontend_data.mouse_y) {
+      //   const h = 600; const w = 1200;
+      //   // const z = this.solar_system.sun.position[2];
+      //   // this.solar_system.sun.position = [
+      //   //   ((frontend_data.mouse_x / (w * w)) - (w / 2)) / z,
+      //   //   ((frontend_data.mouse_y / (h * h)) - (h / 2)) / z,
+      //   //   z
+      //   // ]
+      //   this.solar_system.sun.position = [
+      //     -(((2 * frontend_data.mouse_x) / w - 1) * (w / 2)) / Math.abs(z),
+      //     -(((2 * frontend_data.mouse_y) / h - 1) * (h / 2)) / Math.abs(z),
+      //     z
+      //   ]
+      //   console.log(this.solar_system.sun.position)
+      // } else {
+      //   this.solar_system.sun.position = [
+      //     this.solar_system.sun.position[0],
+      //     this.solar_system.sun.position[1],
+      //     z
+      //   ]
+      // }
       
 
      
