@@ -192,11 +192,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
       // TODO: the light position that goes with sun needs to be bound to the sun's new position!!!!!!!!!
       // TODO: everything needs to have some sort of relative position tracking for collision detection (ASSUMEDLY)
-      
-      /**
-       * w will always move you -z direction,
-       * which effectively moves all things in space in pos z.
-       */
 
       /**
        * a and s can rotate the camera around y axis,
@@ -207,7 +202,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (frontend_data.a) {
         this.camera.rotate = [
           this.camera.rotate[0],
-          (this.camera.rotate[1] - 0.03) % (2 * Math.PI),
+          (this.camera.rotate[1] + 0.03) % (2 * Math.PI),
           this.camera.rotate[2]
         ]
       } // end if
@@ -216,36 +211,29 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (frontend_data.d) {
         this.camera.rotate = [
           this.camera.rotate[0],
-          (this.camera.rotate[1] + 0.03) % (2 * Math.PI),
+          (this.camera.rotate[1] - 0.03) % (2 * Math.PI),
           this.camera.rotate[2]
         ]
       } // end if
 
-      // set the pitch angle to an angle that is specified by the y coordinate
+      // set the pitch angle to an angle that is specified by the y coordinate of the mouse
       if (frontend_data.mouse_y !== undefined) {
-        const h = 600;
-        const normalized_y = (2 * frontend_data.mouse_y / h) - 1;
-        const max_pitch = Math.PI / 2 - 0.01;
-        this.camera.rotate[0] = -normalized_y * max_pitch;
+        const h = 600; // hardcoded: current height of canvas
+        const normalized_y = (2 * frontend_data.mouse_y / h) - 1; // normalize to [-1, 1]
+        const max_pitch = Math.PI / 2 - 0.01; // - 0.01 to avoid a wrap around
+        this.camera.rotate[0] = -normalized_y * max_pitch; // flip y so pos moves down, neg moves up, make a degree in radians
       } // end if
 
+      const yaw = this.camera.rotate[1]; // the rotation around the y axis
+      const pitch = this.camera.rotate[0]; // the rotation around the x axis
 
-      // const yaw = this.camera.rotate[1]; // the rotation around the 
-      // const pitch = this.camera.rotate[0];
-
-      // // forward calculations with angular direction in mind.
-      // const forward_x = -Math.sin(yaw) * Math.cos(pitch);
-      // const forward_y = Math.sin(pitch);
-      // const forward_z = Math.cos(yaw) * Math.cos(pitch);
-
-      const yaw = this.camera.rotate[1];
-      const pitch = this.camera.rotate[0];
-
+      // the calculations of how to move forward considering the direction of
+      // my camera view at this moment.
       const forward_x = Math.sin(yaw) * Math.cos(pitch);
       const forward_y = -Math.sin(pitch);
       const forward_z = Math.cos(yaw) * Math.cos(pitch);
 
-      // forward motion
+      // forward motion -- 0.1 is speed
       if (frontend_data.w) {
         this.camera.translate = [
           this.camera.translate[0] - (0.1 * forward_x),
@@ -254,7 +242,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         ];
       } // end if
 
-      // backward motion
+      // backward motion -- 0.1 is speed
       if (frontend_data.s) {
         this.camera.translate = [
           this.camera.translate[0] + (0.1 * forward_x),
