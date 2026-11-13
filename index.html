@@ -74,11 +74,25 @@
     if (!gl) alert("WebGL2 not supported");
         const aspect = canvas.width / canvas.height;
 
+    //////////////////////////////////////////////////////////////
+    function getMousePosition(canvas, event) {
+            let rect = canvas.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+            // console.log("Coordinate x: " + x,
+            //     "Coordinate y: " + y);
+            return {x: x, y: y}
+    }
+
     // testing
     canvas.addEventListener('mousemove', (event) => {
-      // const pos = getMousePos(canvas, event);
-      console.log(`X: ${pos.x}, Y: ${pos.y}`);
+      const pos = getMousePosition(canvas, event);
+      // console.log(`X: ${pos.x}, Y: ${pos.y}`);
+
+      frontend_data.mouse_x = pos.x;
+      frontend_data.mouse_y = pos.y;
     });
+    //////////////////////////////////////////////////////////////
 
     let curr_scene = null; // the current scene to be rendered.
     let next_scene = null; // next scene up in the queue to be rendered.
@@ -121,7 +135,7 @@
       if (!start_time) { start_time = timestep; }
       delta_time = (timestep - start_time) / 1000 // dt in seconds from front end
       frontend_data.delta_time = delta_time; // make sure this is passed to the scenes, likely will be needed.
-      
+      console.log(frontend_data)
       // TODO: this could be a potential simple transition between scenes. 
       // note that the curr_scene.initialized is there primarily for the space 
       // scene: it's very likely we don't want to re-call that for that scene.

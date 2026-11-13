@@ -81,7 +81,8 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
   constructor(id="sun", shader_id="planet_basic", data=null) {
     super(id, shader_id); // takes care of some baseline stuff for now.
     this.data = data; // can hand off a data pack as well
-    this.position = [0, 0, -30]; // shove her back
+    // this.position = [-((0.5 * 600) / 30), -((0.5 * 300) / 30), -30]; // shove her back
+    this.position = [0, 0, -30];
   } // end constructor
 } // end class
 
