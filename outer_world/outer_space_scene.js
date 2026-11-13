@@ -189,6 +189,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       } // end if
 
       // TODO: the light position that goes with sun needs to be bound to the sun's new position!!!!!!!!!
+      // TODO: everything needs to have some sort of relative position tracking for collision detection (ASSUMEDLY)
       
       /**
        * w will always move you -z direction,
