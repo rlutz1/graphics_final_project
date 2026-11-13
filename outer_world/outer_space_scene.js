@@ -195,21 +195,24 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
        */
       if (frontend_data.w) {
         // z += 0.1
+        const theta = this.camera.rotate[1]; // amount in deg that i've rotated the scene
+        const sin = Math.sin(theta);
+        const cos = Math.cos(theta);  
         this.camera.translate = [
-          this.camera.translate[0],
+          this.camera.translate[0] - (0.1 * sin),
           this.camera.translate[1],
-          this.camera.translate[2] + 0.1
+          this.camera.translate[2] + (0.1 * cos)
         ]
       }
 
-      if (frontend_data.s) {
-        // z += 0.1
-        this.camera.translate = [
-          this.camera.translate[0],
-          this.camera.translate[1],
-          this.camera.translate[2] - 0.1
-        ]
-      }
+      // if (frontend_data.s) {
+      //   // z += 0.1
+      //   this.camera.translate = [
+      //     this.camera.translate[0],
+      //     this.camera.translate[1],
+      //     this.camera.translate[2] - 0.1
+      //   ]
+      // }
 
       /**
        * a and s can rotate the camera around y axis,
