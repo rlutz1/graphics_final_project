@@ -202,7 +202,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (frontend_data.a) {
         this.camera.rotate = [
           this.camera.rotate[0],
-          (this.camera.rotate[1] + 0.03) % (2 * Math.PI),
+          (this.camera.rotate[1] - 0.03) % (2 * Math.PI), 
           this.camera.rotate[2]
         ]
       } // end if
@@ -211,7 +211,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (frontend_data.d) {
         this.camera.rotate = [
           this.camera.rotate[0],
-          (this.camera.rotate[1] - 0.03) % (2 * Math.PI),
+          (this.camera.rotate[1] + 0.03) % (2 * Math.PI),
           this.camera.rotate[2]
         ]
       } // end if
@@ -221,7 +221,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         const h = 600; // hardcoded: current height of canvas
         const normalized_y = (2 * frontend_data.mouse_y / h) - 1; // normalize to [-1, 1]
         const max_pitch = Math.PI / 2 - 0.01; // - 0.01 to avoid a wrap around
-        this.camera.rotate[0] = -normalized_y * max_pitch; // flip y so pos moves down, neg moves up, make a degree in radians
+        this.camera.rotate[0] = normalized_y * max_pitch; // flip y so pos moves down, neg moves up, make a degree in radians
       } // end if
 
       const yaw = this.camera.rotate[1]; // the rotation around the y axis
@@ -229,25 +229,31 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
       // the calculations of how to move forward considering the direction of
       // my camera view at this moment.
-      const forward_x = Math.sin(yaw) * Math.cos(pitch);
-      const forward_y = -Math.sin(pitch);
+      // includes up/down direction in the motion
+      const forward_x = -Math.sin(yaw) * Math.cos(pitch);
+      const forward_y = Math.sin(pitch);
       const forward_z = Math.cos(yaw) * Math.cos(pitch);
+
+      // FOR IF YOU'RE GROUNDED ON A PLANE -- great for planet probably
+      // const forward_x = -Math.sin(yaw);
+      // const forward_y = 0;
+      // const forward_z = Math.cos(yaw);
 
       // forward motion -- 0.1 is speed
       if (frontend_data.w) {
         this.camera.translate = [
-          this.camera.translate[0] - (0.1 * forward_x),
-          this.camera.translate[1] - (0.1 * forward_y),
-          this.camera.translate[2] - (0.1 * forward_z)
+          this.camera.translate[0] + (0.1 * forward_x),
+          this.camera.translate[1] + (0.1 * forward_y),
+          this.camera.translate[2] + (0.1 * forward_z)
         ];
       } // end if
 
       // backward motion -- 0.1 is speed
       if (frontend_data.s) {
         this.camera.translate = [
-          this.camera.translate[0] + (0.1 * forward_x),
-          this.camera.translate[1] + (0.1 * forward_y),
-          this.camera.translate[2] + (0.1 * forward_z)
+          this.camera.translate[0] - (0.1 * forward_x),
+          this.camera.translate[1] - (0.1 * forward_y),
+          this.camera.translate[2] - (0.1 * forward_z)
         ];
       } // end if
         
