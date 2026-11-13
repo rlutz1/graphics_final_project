@@ -11,6 +11,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       this.day = 0; // days passing.
       this.days_per_second = 30; // how to register how many days occur in a second for planet orbits
       this.distance_const = 35; // a constant used in distance normalization.
+      this.old_x = 0; // TESTING
     }
   
     /**
@@ -196,31 +197,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
        * which effectively moves all things in space in pos z.
        */
 
-      if (frontend_data.mouse_x && frontend_data.mouse_y) {
-        const h = 600; const w = 1200; // hardcoded for a moment.
-        // const norm_x = -(((2 * frontend_data.mouse_x) / w - 1) * (w / 2)) / Math.abs(z);
-        // const norm_y =  -(((2 * frontend_data.mouse_y) / h - 1) * (h / 2)) / Math.abs(z);
-        let norm_x = (((2 * frontend_data.mouse_x) / w - 1));
-        let norm_y =  -(((2 * frontend_data.mouse_y) / h - 1));
-        console.log(norm_x, norm_y)
-        if (norm_x < 0 && norm_y < 0) norm_y = -norm_y
-        
-        // little more of a y rotation
-        const theta = Math.atan(norm_x/norm_y);
-        const half_theta = theta / 2;
-        this.camera.rotate = [
-          this.camera.rotate[0],
-          // -half_theta,
-          norm_x * 0.5,
-          this.camera.rotate[2]
-        ]
-
-        // this.camera.translate = [
-        //   norm_x, // move things opposing x direction
-        //   norm_y, // move things opposing y direction
-        //   this.camera.translate[2] 
-        // ]
-      } 
 
       if (frontend_data.w) {
         const theta = this.camera.rotate[1]; // amount in deg that i've rotated the scene
@@ -277,6 +253,54 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           this.camera.rotate[2]
         ]
       } // end if
+
+
+
+
+
+
+
+
+
+      
+      let new_x = 0;
+      let old_x = this.old_x;
+
+      // let last_mouse_y = this.last_mouse_y;
+      // let curr_mouse_x = null; let curr_mouse_y = null;
+      // first movement
+      if (frontend_data.mouse_x) { // have registered mouse movement
+        const h = 600; const w = 1200; // hardcoded for a moment.
+        new_x = (((2 * frontend_data.mouse_x) / w - 1)) * 0.5;
+      } // end if
+
+      // if there is a difference between the two values (we moved the mouse)
+      if (Math.abs(new_x - old_x) > 0.001) {
+        let dr = 0;
+        const r = this.camera.rotate[1];
+        if ((new_x >= 0 && old_x >= 0) || (new_x < 0 && old_x < 0)) {
+          // both positive or negative
+          dr = new_x - old_x;
+        } else { // signs are changing
+          dr = (-old_x) + new_x;
+        }
+        // // little more of a y rotation
+        // const theta = Math.atan(norm_x/norm_y);
+        // const half_theta = theta / 2;
+        this.camera.rotate = [
+          this.camera.rotate[0],
+          // -half_theta,
+          this.camera.rotate[1] + dr, // sends things spinning
+          // norm_x * 0.5,
+          this.camera.rotate[2]
+        ]
+      } 
+
+      this.old_x = new_x;
+
+
+
+
 
       /**
        * moving things in and out of scene to mimic
