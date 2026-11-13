@@ -662,14 +662,33 @@ export class SpaceCamera extends PerspectiveCamera {
    * rotation from the scene in the correct order.
    */
   get_view_matrix() {
-    // set by the scene in reaction to user interaction.
-    // see render()
-    const translation = translate(this.translate);
-    const rotation = rotate(this.rotate);
+    // // set by the scene in reaction to user interaction.
+    // // see render()
+    // const translation = translate(this.translate);
+    // const rotation = rotate(this.rotate);
 
-    // potentially needs to be opposite of typical
-    // TR ordering here. testing.
-    return matMul(rotation, translation);
+    // // potentially needs to be opposite of typical
+    // // TR ordering here. testing.
+    // return matMul(rotation, translation);
+
+    const pitch = this.rotate[0];
+    const yaw = this.rotate[1];
+
+    // typically: R(y)R(x)
+    // need to calculate R(-1)(x) * R(-1)(y)
+    // for correct motion
+    const inverse_rotation = matMul(
+        rotate([-pitch, 0, 0]), 
+        rotate([0, -yaw, 0])
+    );
+
+    const inverse_translation = translate([
+        -this.translate[0],
+        -this.translate[1],
+        -this.translate[2]
+    ]);
+
+    return matMul(inverse_rotation, inverse_translation);
   }
 
 }

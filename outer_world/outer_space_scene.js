@@ -198,16 +198,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
        * which effectively moves all things in space in pos z.
        */
 
-
-      
-
       /**
        * a and s can rotate the camera around y axis,
        * which effectively is rotating things the opposite 
        * direction around y
-       * 
-       * TODO: this should wrap -- potential for overflow technically.
        */
+      // left rotate
       if (frontend_data.a) {
         this.camera.rotate = [
           this.camera.rotate[0],
@@ -216,6 +212,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         ]
       } // end if
 
+      // right rotate
       if (frontend_data.d) {
         this.camera.rotate = [
           this.camera.rotate[0],
@@ -224,156 +221,49 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         ]
       } // end if
 
-
-
-
-
-
-
-
-
-      
-      let new_x = 0;
-      let old_x = this.old_x;
-
-      // let last_mouse_y = this.last_mouse_y;
-      // let curr_mouse_x = null; let curr_mouse_y = null;
-      // first movement
-      if (frontend_data.mouse_x) { // have registered mouse movement
-        const h = 600; const w = 1200; // hardcoded for a moment.
-        new_x = (((2 * frontend_data.mouse_x) / w - 1)) * (Math.PI / 2);
+      // set the pitch angle to an angle that is specified by the y coordinate
+      if (frontend_data.mouse_y !== undefined) {
+        const h = 600;
+        const normalized_y = (2 * frontend_data.mouse_y / h) - 1;
+        const max_pitch = Math.PI / 2 - 0.01;
+        this.camera.rotate[0] = -normalized_y * max_pitch;
       } // end if
 
-      // if there is a difference between the two values (we moved the mouse)
-      if (Math.abs(new_x - old_x) > 0.001) {
-        let dr = 0;
-        const r = this.camera.rotate[1];
-        if ((new_x >= 0 && old_x >= 0) || (new_x < 0 && old_x < 0)) {
-          // both positive or negative
-          dr = new_x - old_x;
-        } else { // signs are changing
-          dr = (-old_x) + new_x;
-        }
-        // // little more of a y rotation
-        // const theta = Math.atan(norm_x/norm_y);
-        // const half_theta = theta / 2;
-        this.camera.rotate = [
-          this.camera.rotate[0],
-          // -half_theta,
-          this.camera.rotate[1] + dr, 
-          // norm_x * 0.5,
-          this.camera.rotate[2]
-        ]
-      } 
 
-      this.old_x = new_x;
+      // const yaw = this.camera.rotate[1]; // the rotation around the 
+      // const pitch = this.camera.rotate[0];
 
+      // // forward calculations with angular direction in mind.
+      // const forward_x = -Math.sin(yaw) * Math.cos(pitch);
+      // const forward_y = Math.sin(pitch);
+      // const forward_z = Math.cos(yaw) * Math.cos(pitch);
 
+      const yaw = this.camera.rotate[1];
+      const pitch = this.camera.rotate[0];
 
+      const forward_x = Math.sin(yaw) * Math.cos(pitch);
+      const forward_y = -Math.sin(pitch);
+      const forward_z = Math.cos(yaw) * Math.cos(pitch);
 
-
-
-
-      let new_y = 0;
-      let old_y = this.old_y;
-
-      // let last_mouse_y = this.last_mouse_y;
-      // let curr_mouse_x = null; let curr_mouse_y = null;
-      // first movement
-      if (frontend_data.mouse_y) { // have registered mouse movement
-        const h = 600; const w = 1200; // hardcoded for a moment.
-        new_y = -(((2 * frontend_data.mouse_y) / h - 1)) * (Math.PI / 2);
-      } // end if
-
-      // if there is a difference between the two values (we moved the mouse)
-      if (Math.abs(new_y - old_y) > 0.001) {
-        let dr = 0;
-        if ((new_y >= 0 && old_y >= 0) || (new_y < 0 && old_y < 0)) {
-          // both positive or negative
-          dr = new_y - old_y;
-        } else { // signs are changing
-          dr = (-old_y) + new_y;
-        }
-        // // little more of a y rotation
-        // const theta = Math.atan(norm_x/norm_y);
-        // const half_theta = theta / 2;
-        this.camera.rotate = [
-          this.camera.rotate[0] + dr,
-          this.camera.rotate[1], 
-          this.camera.rotate[2]
-        ]
-      } 
-
-      this.old_y = new_y;
-
-
-    if (frontend_data.w) {
-        const theta_xz = this.camera.rotate[1]; // amount in deg that i've rotated the scene around y axis -> xz motion
-        const theta_yz = this.camera.rotate[0]; // amount in deg i've rotated te scene around the x axis -> yz motion
-
-        // i have rotated theta degrees around the y axis.
-        // if i want to move forward, it should be relative to
-        // how much i have rotated.
-        // so i need to move sin(theta)*speed in appropriate x direction
-        // and cos(theta)*speed in appropriate z direction, 
-        // (trust, have some basic trig skills lol),
-        // so the roots in scene should move the opposite directions
-        const sin_xz = Math.sin(theta_xz); 
-        const cos_xz = Math.cos(theta_xz);  
-
-        // now, consider the up motion angle
-        const sin_yz = Math.sin(theta_yz)
-
+      // forward motion
+      if (frontend_data.w) {
         this.camera.translate = [
-          this.camera.translate[0] - (0.1 * sin_xz), // move things opposing x direction
-          this.camera.translate[1] - (0.1 * sin_yz), // move things in opposing y direction
-          this.camera.translate[2] + (0.1 * cos_xz) // move things "backward"
-        ]
+          this.camera.translate[0] - (0.1 * forward_x),
+          this.camera.translate[1] - (0.1 * forward_y),
+          this.camera.translate[2] - (0.1 * forward_z)
+        ];
       } // end if
 
+      // backward motion
       if (frontend_data.s) {
-        // same as above but opposite
-        const theta_xz = this.camera.rotate[1]; // amount in deg that i've rotated the scene
-        const theta_yz = this.camera.rotate[0]; // amount in deg i've rotated te scene around the x axis -> yz motion
-        const sin_yz = Math.sin(theta_yz)
-        const sin_xz = Math.sin(theta_xz); 
-        const cos_xz = Math.cos(theta_xz);  
         this.camera.translate = [
-          this.camera.translate[0] + (0.1 * sin_xz), // move things opposing x directio
-          this.camera.translate[1] + (0.1 * sin_yz),
-          this.camera.translate[2] - (0.1 * cos_xz) // move things "backward"
-        ]
+          this.camera.translate[0] + (0.1 * forward_x),
+          this.camera.translate[1] + (0.1 * forward_y),
+          this.camera.translate[2] + (0.1 * forward_z)
+        ];
       } // end if
-
-
-      /**
-       * moving things in and out of scene to mimic
-       * the movement of the camera to a different angular direction.
-       */
-      // if (frontend_data.mouse_x && frontend_data.mouse_y) {
-      //   const h = 600; const w = 1200;
-      //   // const z = this.solar_system.sun.position[2];
-      //   // this.solar_system.sun.position = [
-      //   //   ((frontend_data.mouse_x / (w * w)) - (w / 2)) / z,
-      //   //   ((frontend_data.mouse_y / (h * h)) - (h / 2)) / z,
-      //   //   z
-      //   // ]
-      //   this.solar_system.sun.position = [
-      //     -(((2 * frontend_data.mouse_x) / w - 1) * (w / 2)) / Math.abs(z),
-      //     -(((2 * frontend_data.mouse_y) / h - 1) * (h / 2)) / Math.abs(z),
-      //     z
-      //   ]
-      //   console.log(this.solar_system.sun.position)
-      // } else {
-      //   this.solar_system.sun.position = [
-      //     this.solar_system.sun.position[0],
-      //     this.solar_system.sun.position[1],
-      //     z
-      //   ]
-      // }
-      
-
-     
+        
+      // render call!
       super.render([0, 0, 0]);  // let the renderer do it's draw thing
     } // end function
 
