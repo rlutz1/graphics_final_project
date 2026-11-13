@@ -211,6 +211,28 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         ]
       }
 
+      /**
+       * a and s can rotate the camera around y axis,
+       * which effectively is rotating things the opposite 
+       * direction around y
+       */
+      if (frontend_data.a) {
+        // z += 0.1
+        this.camera.rotate = [
+          this.camera.rotate[0],
+          this.camera.rotate[1] - 0.01,
+          this.camera.rotate[2]
+        ]
+      }
+
+      if (frontend_data.d) {
+        // z += 0.1
+        this.camera.rotate = [
+          this.camera.rotate[0],
+          this.camera.rotate[1] + 0.01,
+          this.camera.rotate[2]
+        ]
+      }
 
 
       /**
