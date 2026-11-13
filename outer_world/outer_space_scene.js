@@ -232,7 +232,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // includes up/down direction in the motion
       const forward_x = -Math.sin(yaw) * Math.cos(pitch);
       const forward_y = Math.sin(pitch);
-      const forward_z = Math.cos(yaw) * Math.cos(pitch);
+      const forward_z = Math.cos(yaw) * Math.cos(pitch); // flipping sign on this
+
+      // just fuckin around don't worry about this: 
+      // const forward_x = -Math.sin(yaw);
+      // const forward_y = Math.sin(pitch) * Math.cos(yaw);
+      // const forward_z = Math.cos(pitch) * Math.cos(yaw);
 
       // FOR IF YOU'RE GROUNDED ON A PLANE -- great for planet probably
       // const forward_x = -Math.sin(yaw);
