@@ -185,9 +185,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         });
       } // end if
 
+      let z = this.solar_system.sun.position[2];
+      if (frontend_data.w) {z += 0.1}
+
       if (frontend_data.mouse_x && frontend_data.mouse_y) {
         const h = 600; const w = 1200;
-        const z = this.solar_system.sun.position[2];
+        // const z = this.solar_system.sun.position[2];
         // this.solar_system.sun.position = [
         //   ((frontend_data.mouse_x / (w * w)) - (w / 2)) / z,
         //   ((frontend_data.mouse_y / (h * h)) - (h / 2)) / z,
@@ -199,6 +202,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           z
         ]
         console.log(this.solar_system.sun.position)
+      } else {
+        this.solar_system.sun.position = [
+          this.solar_system.sun.position[0],
+          this.solar_system.sun.position[1],
+          z
+        ]
       }
       
 
