@@ -114,8 +114,8 @@
     
     // going to set this as the default one being used for the moment:
     // (but uncomment and switch as needed, please be aware when pushing to main about this)
-    // curr_scene = earth;
-    // next_scene = space;
+    curr_scene = earth;
+    next_scene = space;
 
     // for potential transition testing.
     curr_scene = space;
@@ -136,7 +136,7 @@
       frontend_data.canvas_width = canvas.width; // add the canvas information for mouse interaction with the screen.
       frontend_data.canvas_height = canvas.height;
 
-      console.log(frontend_data); // TESTING
+      // console.log(frontend_data); // TESTING
 
       // TODO: this could be a potential simple transition between scenes. 
       // note that the curr_scene.initialized is there primarily for the space 

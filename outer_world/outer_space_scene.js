@@ -270,41 +270,76 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           this.camera.translate[2] - (0.1 * forward_z)
         ];
       } // end if
-        
+      
+      super.update_all_transformations(); // update all the transformation nodes, using the oberridenguy below.
+
+      // update the sun light position as the sun moves.
+      this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
+
+      // centers have been updated by the above iteration.
+      // should be able to very basically see if i run into something.
+      this.check_for_planet_collision();
+
       // render call!
       super.render([0, 0, 0]);  // let the renderer do it's draw thing
     } // end function
 
-  /**
-   * update all transformations in the tree, working your way down.
-   * render will call this automatically, but moving it here because
-   * position updates are a pain if i can't tweak this! easiest solution for now!
-   */
-  update_transformations(parent, M_parent) {
-    parent.update_transformation_matrix(M_parent);
+    /**
+     * this is basically a tester for now.
+     * check to see if any planet or sun position is within [1, 1, 1] of me at [0, 0, 0]
+     * and simply print to console.
+     */
+    check_for_planet_collision() {
+      const sun = this.solar_system.sun;
+      const planets = this.solar_system.planets;
 
-    // change from super implementation.
-    // i need to internally track a position of a node, likely for some basic
-    // collision detection && lighting change!
-    // everything but the player will need position updates, and that requires ALL transformation matrices.
-    // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
-    // to make sure this works at all.
-    const new_pos = matMul(
-      // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
-      this.camera.get_view_matrix(),
-      parent.transformation_matrix
-    );
-    // if (parent instanceof(PlanetBuilder.SunSceneNode))
-    //    console.log(multiplyMat4Vec4(new_pos, parent.center));
+      // radius of sun is 2.5, this is dirty, but you get it, testing.
+      if (Math.abs(sun.center[0]) < 2.5 && Math.abs(sun.center[1]) < 2.5 && Math.abs(sun.center[2]) < 2.5) {
+        console.log(`hit ${sun.data.name}`)
+      } // end if
 
-    
+      // not accounting for special radius's below, won't be perfect:
+      planets.forEach((p) => {
+        if (Math.abs(p.center[0]) < 1 && Math.abs(p.center[1]) < 1 && Math.abs(p.center[2]) < 1) {
+        console.log(`hit ${p.data.name}`)
+      } // end if
+      }) // end loop
 
-    if (parent.children) {
-      parent.children.forEach((c) => { // drill down the tree
-        this.update_transformations(c, parent.transformation_matrix);
-      });
-    } // end if
-  } // end function
+    } // end function
+
+
+    /**
+     * update all transformations in the tree, working your way down.
+     * render will call this automatically, but moving it here because
+     * position updates are a pain if i can't tweak this! easiest solution for now!
+     */
+    update_transformations(parent, M_parent) {
+      parent.update_transformation_matrix(M_parent);
+
+      // change from super implementation.
+      // i need to internally track a position of a node, likely for some basic
+      // collision detection && lighting change!
+      // everything but the player will need position updates, and that requires ALL transformation matrices.
+      // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
+      // to make sure this works at all.
+      const new_center_mtx = matMul(
+        // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
+        this.camera.get_view_matrix(),
+        parent.transformation_matrix
+      );
+
+      // parent.center = new_center; // set the new center.
+      parent.center = multiplyMat4Vec4(new_center_mtx, [0, 0, 0, 1]);
+
+      // if (parent instanceof(PlanetBuilder.SunSceneNode)) {console.log(parent.center);
+      
+
+      if (parent.children) {
+        parent.children.forEach((c) => { // drill down the tree
+          this.update_transformations(c, parent.transformation_matrix);
+        });
+      } // end if
+    } // end function
 
 
 } // end class

@@ -99,8 +99,19 @@ export class Scene {
   } // end function
 
   /**
- * update all transformations in the tree, working your way down.
- */
+   * scene level call to update all transformation matrices of nodes in the scene.
+   */
+  update_all_transformations() {
+    this.roots.forEach((r) => {
+      // setup any new transformation matrices first in the hierarchy
+      // TODO: dirty bit optimization to avoid needless calculation (thanks for that idea gemini)
+      this.update_transformations(r, mat4Identity());
+    });
+  }
+  
+  /**
+   * update all transformations in the tree, working your way down.
+   */
   update_transformations(parent, M_parent) {
     parent.update_transformation_matrix(M_parent);
 
@@ -722,10 +733,6 @@ export class Renderer {
     this.clear(clear_color); // clear out (?)
 
     scene.roots.forEach((r) => {
-      // setup any new transformation matrices first in the hierarchy
-      // TODO: dirty bit optimization to avoid needless calculation (thanks for that idea gemini)
-      scene.update_transformations(r, mat4Identity());
-
       // for each node in hierarchy tree (maybe combine with prior step to 
       // optimize this a bit, but for clarity, this is two separate steps)
       // grab their shader, load the shader, and draw with shader.
