@@ -98,9 +98,9 @@ export class Scene {
     this.camera = camera;
   } // end function
 
-   /**
-   * update all transformations in the tree, working your way down.
-   */
+  /**
+ * update all transformations in the tree, working your way down.
+ */
   update_transformations(parent, M_parent) {
     parent.update_transformation_matrix(M_parent);
 

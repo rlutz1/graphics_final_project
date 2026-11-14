@@ -1,6 +1,8 @@
 import * as SceneBuilder from "../util/scene_graph.js";
 import * as MeshBuilder from "../util/mesh_generators.js";
 import * as PlanetBuilder from "./planet_scene_node.js";
+import { matMul, multiplyMat4Vec4 } from '../util/transitions.js';
+
 
 export class OuterSpaceScene extends SceneBuilder.Scene {
   
@@ -272,6 +274,37 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // render call!
       super.render([0, 0, 0]);  // let the renderer do it's draw thing
     } // end function
+
+  /**
+   * update all transformations in the tree, working your way down.
+   * render will call this automatically, but moving it here because
+   * position updates are a pain if i can't tweak this! easiest solution for now!
+   */
+  update_transformations(parent, M_parent) {
+    parent.update_transformation_matrix(M_parent);
+
+    // change from super implementation.
+    // i need to internally track a position of a node, likely for some basic
+    // collision detection && lighting change!
+    // everything but the player will need position updates, and that requires ALL transformation matrices.
+    // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
+    // to make sure this works at all.
+    const new_pos = matMul(
+      // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
+      this.camera.get_view_matrix(),
+      parent.transformation_matrix
+    );
+    // if (parent instanceof(PlanetBuilder.SunSceneNode))
+    //    console.log(multiplyMat4Vec4(new_pos, parent.center));
+
+    
+
+    if (parent.children) {
+      parent.children.forEach((c) => { // drill down the tree
+        this.update_transformations(c, parent.transformation_matrix);
+      });
+    } // end if
+  } // end function
 
 
 } // end class
