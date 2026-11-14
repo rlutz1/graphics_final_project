@@ -217,11 +217,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       } // end if
 
       // set the pitch angle to an angle that is specified by the y coordinate of the mouse
-      if (frontend_data.mouse_y !== undefined) {
-        const h = 600; // hardcoded: current height of canvas
-        const normalized_y = (2 * frontend_data.mouse_y / h) - 1; // normalize to [-1, 1]
+      if (frontend_data.mouse_y) {
+        const normalized_y = (2 * frontend_data.mouse_y / frontend_data.canvas_height) - 1; // normalize to [-1, 1]
         const max_pitch = Math.PI / 2 - 0.01; // - 0.01 to avoid a wrap around
-        this.camera.rotate[0] = normalized_y * max_pitch; // flip y so pos moves down, neg moves up, make a degree in radians
+        this.camera.rotate[0] = normalized_y * max_pitch; // make a degree in radians
       } // end if
 
       const yaw = this.camera.rotate[1]; // the rotation around the y axis
