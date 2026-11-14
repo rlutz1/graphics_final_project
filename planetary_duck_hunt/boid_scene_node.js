@@ -15,6 +15,7 @@ export class BoidSceneNode extends SceneBuilder.SceneNode {
     this.idx = null; // or this.idx = atoi(id), know what i mean?
     this.velocity = [0, 0, 0];
     this.acceleration = [0, 0, 0];
+    this.scale = [0.07, 0.07, 0.07];
   } // end constructor
   
   /**
