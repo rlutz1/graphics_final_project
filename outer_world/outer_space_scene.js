@@ -51,12 +51,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   init_solar_system() {
     this.solar_system = {}; // for readability -- to actually render, add root nodes/hierarchy
 
-    // init sun and planets
+    // init sun and planets, etc
     const sun = this.init_sun();
     const planets = this.init_planets();
+    const spaceship = this.init_spaceship();
     
     this.solar_system.sun = sun; // for easy access more than anything
     this.solar_system.planets = planets; // can make this more specific if needed
+    this.spaceship = spaceship; // again, easy access if needed.
+
 
     this.normalize_distance(); // normalize the distances of all planets for viewing pleasure
     this.normalize_radii(); // same thing here.
@@ -67,6 +70,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // add all planets as children of the sun for positioning to carry through when moving scene.
       sun.add_child(p);
     });
+    // this.add_node(spaceship); // spaceship to daddy sceen
 
   } // end function
 
@@ -172,8 +176,17 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const texture = new SceneBuilder.VideoTexture(this.renderer.gl, PlanetBuilder.SUN_DATA.sun.texture_path);
 
     sun.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
-    sun.light = this.sun_light; // a little dirty, but easy access from sun to change direction.
     return sun;
+  } // end function
+
+  /**
+   * right now this is wrapper only in order to keep any hierarchy
+   * or building complexity in the spaceship node implementation.
+   */
+  init_spaceship() {
+    const spaceship = new SpaceshipBuilder.SpaceshipSceneNode();
+    spaceship.init();
+    return spaceship;
   } // end function
 
   /**

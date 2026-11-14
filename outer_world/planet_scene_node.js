@@ -86,7 +86,6 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
     this.position = [0, 0, -30]; // where i want to be when we start scene
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
     // this.center.push(1); // homogenous
-    this.light = null; // shared reference to the light that should always be at my position.
   } // end constructor
 
   update_transformation_matrix(M_parent) {

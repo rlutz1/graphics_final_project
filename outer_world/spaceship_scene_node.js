@@ -3,6 +3,6 @@ import { mat4Identity, matMul, translate, rotate, scale, mat4FromRows } from '..
 
 export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
   
-
+  init() {}
 
 }
