@@ -306,7 +306,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const planets = this.solar_system.planets;
 
     // radius of sun is 2.5, this is dirty, but you get it, testing.
-    // assuming for spaceship at 0, 0, -10 -- obviously need to generalize
+    // assuming for spaceship at 0, 0, -10 -- obviously need to generalize.
     if (
       Math.abs(sun.center[0]) < 2.5
       && Math.abs(sun.center[1]) < 2.5 
