@@ -8,10 +8,9 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     super(id, shader);
 
     this.position = [0, 0, -10]; // shove it back a little
-    this.rotation = [deg_to_rad(340), 0, 0]; // rotate to face front
+    this.rotation = [-deg_to_rad(20), 0, 0]; // rotate to face front
     this.center = [0, 0, 0, 1];
     this.velocity = [0.1, 0.1, 0.1]; // velocity in each direction (can tweak of course :) )
-    // this.rotation = [-deg_to_rad(90), 0, 0]; // rotate to face front
   }
 
   /**
