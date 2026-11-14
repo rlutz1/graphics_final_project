@@ -1,5 +1,5 @@
 import * as SourceDicts from './shader_sources.js';
-import { normalMat, multiplyMat4 } from './transitions.js';
+import { normalMat, multiplyMat4, mat4Identity } from './transitions.js';
 
 /**
  * this file is to contain a mapping of id -> shader (BOTTOM OF FILE). 
@@ -483,6 +483,62 @@ export class PlanetShader extends Shader {
   } // end function
 } // end class
 
+/**
+ * two things this accounts for. it is essentially a basic phong shader but:
+ * + it uses identity every time instead of the camera.get_view_matrix.
+ * + sets up the sun as the single point light in the scene.
+ */
+export class SpaceshipShader extends PhongShader {
+
+  /**
+   * overriding this only slightly to be able to grab out the 
+   * sun_light as the point light source.
+   */
+  load(node, camera, lights, gl) {
+    // from super
+    gl.useProgram(this.program);
+
+    // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
+    // set gl attributes for the camera_matrices
+    gl.uniformMatrix4fv(this.projection_loc, false, camera.get_projection_matrix());
+    gl.uniformMatrix4fv(this.model_view_loc, false, mat4Identity()); // do NOT apply the camera to this! 
+
+    // only one light here. THE SUNNNNN
+    const sun_light = lights[0];
+    gl.uniform3fv(this.lights_loc, new Float32Array(sun_light.position)); // TODO don't love the new here... 
+    gl.uniform1i(this.num_lights_loc, 1);
+
+    // set this nodes transformation matrix
+    gl.uniformMatrix4fv(this.node_transforms_loc, false, node.transformation_matrix);
+
+    // set up material information for the phong shader
+    gl.uniform3fv(this.material_params_loc["ka"], node.material.ka);
+    gl.uniform3fv(this.material_params_loc["kd"], node.material.kd);
+    gl.uniform3fv(this.material_params_loc["ks"], node.material.ks);
+    gl.uniform1f(this.material_params_loc["shininess"], node.material.shininess);
+    gl.uniform1f(this.material_params_loc["transparency"], node.material.transparency);
+
+    // vertex/positions buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
+    gl.enableVertexAttribArray(this.pos_loc);
+    gl.vertexAttribPointer(this.pos_loc, 3, gl.FLOAT, false, 0, 0);
+
+    // norm buffer setup
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.norm_buff);
+    gl.enableVertexAttribArray(this.norm_loc);
+    gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
+
+    // color buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.color_buff);
+    gl.enableVertexAttribArray(this.color_loc);
+    gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
+
+    // index buffer for drawing as triangles
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
+    
+  } // end function
+}
+
 
 // ==============================================
 // SHADER MAP
@@ -498,5 +554,6 @@ export const SHADER_MAP = {
   "phong_basic": PhongShader,
   "texture_bump_mapping_basic": TextureBumpMappingShader, // TODO: collapse these and use the mesh setter
   "texture_normal_mapping_basic": TextureNormalMappingShader, 
-  "planet_basic": PlanetShader // for ya planets
+  "planet_basic": PlanetShader, // for ya planets
+  "spaceship_basic": SpaceshipShader // a basic starter (basically just general phong) using sun as single point light.
 } // end shader map

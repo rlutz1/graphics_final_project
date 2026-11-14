@@ -91,9 +91,9 @@ export class EarthScene extends SceneBuilder.Scene {
    * should be occurring that need per-render-call updates.
    */
   render(frontend_data={}) {
+    super.update_all_transformations(); // update all transformation nodes.
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
-   
     super.render();  // let the renderer do it's draw thing
   } // end function
 

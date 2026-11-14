@@ -98,6 +98,30 @@ export class Scene {
     this.camera = camera;
   } // end function
 
+  /**
+   * scene level call to update all transformation matrices of nodes in the scene.
+   */
+  update_all_transformations() {
+    this.roots.forEach((r) => {
+      // setup any new transformation matrices first in the hierarchy
+      // TODO: dirty bit optimization to avoid needless calculation (thanks for that idea gemini)
+      this.update_transformations(r, mat4Identity());
+    });
+  }
+  
+  /**
+   * update all transformations in the tree, working your way down.
+   */
+  update_transformations(parent, M_parent) {
+    parent.update_transformation_matrix(M_parent);
+
+    if (parent.children) {
+      parent.children.forEach((c) => { // drill down the tree
+        this.update_transformations(c, parent.transformation_matrix);
+      });
+    } // end if
+  } // end function
+
 } // end class
 
 /**
@@ -646,6 +670,39 @@ export class PerspectiveCamera extends Camera {
   }
 } // end class
 
+/**
+ * splitting this off for testing so 
+ * nothing is fucked on any other scene.
+ */
+export class SpaceCamera extends PerspectiveCamera {
+  constructor(camera_setup) {
+    super(camera_setup);
+    this.translate = [0, 0, 0];
+    this.rotate = [0, 0, 0];
+  }
+
+  /**
+   * to handle the setting of translation and
+   * rotation from the scene in the correct order.
+   */
+  get_view_matrix() {
+    const pitch = this.rotate[0]; // rotation around x axis
+    const yaw = this.rotate[1]; // rotation around y axis
+
+    // typically: R(y)R(x)
+    // need to calculate R(x)R(y)
+    // for correct motion
+    const swapped_rotation = matMul(
+        rotate([pitch, 0, 0]), // must rotate x axis items SECOND
+        rotate([0, yaw, 0]) // first y
+        // because otherwise you get some funky rotation behavior
+    );
+    // opposing directions are handled at the scene level.
+    return matMul(swapped_rotation, translate(this.translate));
+  }
+
+}
+
 
 /**
  * split up the cameras this way. perspective camera.
@@ -676,29 +733,12 @@ export class Renderer {
     this.clear(clear_color); // clear out (?)
 
     scene.roots.forEach((r) => {
-      // setup any new transformation matrices first in the hierarchy
-      // TODO: dirty bit optimization to avoid needless calculation (thanks for that idea gemini)
-      this.update_transformations(r, mat4Identity());
-
       // for each node in hierarchy tree (maybe combine with prior step to 
       // optimize this a bit, but for clarity, this is two separate steps)
       // grab their shader, load the shader, and draw with shader.
       this.draw_nodes(r, scene.camera, scene.lights);
     });
 
-  } // end function
-
-  /**
-   * update all transformations in the tree, working your way down.
-   */
-  update_transformations(parent, M_parent) {
-    parent.update_transformation_matrix(M_parent);
-
-    if (parent.children) {
-      parent.children.forEach((c) => { // drill down the tree
-        this.update_transformations(c, parent.transformation_matrix);
-      });
-    } // end if
   } // end function
 
   /**

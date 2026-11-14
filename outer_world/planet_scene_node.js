@@ -37,6 +37,8 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     // this.delta_time = 0; // time since last frame
     this.display_distance = 0; // distance from the sun, normalized for viewing.
     this.radius_distance = 0; // the radius of this planet, normalized for viewing.
+    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
+    // this.center.push(1); // homogenous
   } // end constructor
 
   /**
@@ -81,8 +83,17 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
   constructor(id="sun", shader_id="planet_basic", data=null) {
     super(id, shader_id); // takes care of some baseline stuff for now.
     this.data = data; // can hand off a data pack as well
-    this.position = [0, 0, -30]; // shove her back
+    this.position = [0, 0, -30]; // where i want to be when we start scene
+    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
+    // this.center.push(1); // homogenous
   } // end constructor
+
+  update_transformation_matrix(M_parent) {
+    super.update_transformation_matrix(M_parent); // does the above..
+    // fuck, we need to update this position, but we aren't aware of camera here.
+
+  } // end function
+
 } // end class
 
 /**
