@@ -331,8 +331,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // parent.center = new_center; // set the new center.
       parent.center = multiplyMat4Vec4(new_center_mtx, [0, 0, 0, 1]);
 
-      // if (parent instanceof(PlanetBuilder.SunSceneNode)) {console.log(parent.center);
-      
+      // if (parent instanceof(PlanetBuilder.SunSceneNode)) {console.log(parent.center);}
 
       if (parent.children) {
         parent.children.forEach((c) => { // drill down the tree
