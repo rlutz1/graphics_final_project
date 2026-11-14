@@ -9,6 +9,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
 
     this.position = [0, 0, -10]; // shove it back a little
     this.rotation = [-deg_to_rad(20), 0, 0]; // rotate to face front
+    this.scale = [0.6, 0.7, 1];
     this.center = [...this.position, 1]; // this will ALWAYS be static on scene!
     this.velocity = [0.1, 0.1, 0.1]; // velocity in each direction (can tweak of course :) )
     this.rotation_speed = 0.03; // controls the rotation speed left/right 
@@ -28,15 +29,15 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     const pointer = new SceneBuilder.SceneNode(this.id, this.shader_id); // pointer with the same shader and id for now
     pointer.position = [0, 0.7, 0]; // push up from the sphere. will be a cone, base of cone is at origin
 
-    const base_mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_sphere_mesh()); // generate a basic base sphere
-    const pointer_mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_cone_mesh());
+    const base_mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_sphere_mesh(1, 0.1, 0.1, [0.7, 0.2, 0.2])); // generate a basic base sphere
+    const pointer_mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_cone_mesh(0.5, 0.1, 0.1, [0.7, 0.7, 0.2]));
 
     // super basic material for now
     const material = new SceneBuilder.Material({ 
       "ka": [0.7, 0.5, 0.5], 
       "kd": [0.6, 0.5, 0.5],
       "ks": [0.8, 0.8, 0.8], 
-      "shininess": 20, 
+      "shininess": 30, 
       "transparency": 1
     });
 
