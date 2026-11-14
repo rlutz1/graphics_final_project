@@ -70,8 +70,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // add all planets as children of the sun for positioning to carry through when moving scene.
       sun.add_child(p);
     });
-    // this.add_node(spaceship); // spaceship to daddy sceen
+    this.add_node(spaceship); // spaceship to daddy sceen
 
+
+    console.log(this.roots)
   } // end function
 
   /**
@@ -185,7 +187,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    */
   init_spaceship() {
     const spaceship = new SpaceshipBuilder.SpaceshipSceneNode();
-    spaceship.init();
+    spaceship.init(this.renderer.gl);
     return spaceship;
   } // end function
 
@@ -327,6 +329,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    */
   update_transformations(parent, M_parent) {
     parent.update_transformation_matrix(M_parent);
+    console.log(`${parent.id}`)
 
     // change from super implementation.
     // i need to internally track a position of a node, likely for some basic
@@ -334,16 +337,19 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // everything but the player will need position updates, and that requires ALL transformation matrices.
     // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
     // to make sure this works at all.
-    const new_center_mtx = matMul(
-      // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
-      this.camera.get_view_matrix(),
-      parent.transformation_matrix
-    );
+    // if (!(parent instanceof(SpaceshipBuilder.SpaceshipSceneNode))) { // ignore the calc's for the spaceship--that's static; not perfect...
+      const new_center_mtx = matMul(
+        // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
+        this.camera.get_view_matrix(),
+        parent.transformation_matrix
+      );
 
-    // parent.center = new_center; // set the new center.
-    parent.center = multiplyMat4Vec4(new_center_mtx, [0, 0, 0, 1]);
+      // parent.center = new_center; // set the new center.
+      parent.center = multiplyMat4Vec4(new_center_mtx, [0, 0, 0, 1]);
 
-    // if (parent instanceof(PlanetBuilder.SunSceneNode)) {console.log(parent.center);}
+      // if (parent instanceof(PlanetBuilder.SunSceneNode)) {console.log(parent.center);}
+    // } // end if
+    
 
     if (parent.children) {
       parent.children.forEach((c) => { // drill down the tree
