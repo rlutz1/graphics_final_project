@@ -223,12 +223,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.rotate[0] = normalized_y * max_pitch; // make a degree in radians
       } // end if
 
-      const yaw = this.camera.rotate[1]; // the rotation around the y axis
-      const pitch = this.camera.rotate[0]; // the rotation around the x axis
+      const yaw = this.camera.rotate[1]; // the rotation around the y axis, left/right motion
+      const pitch = this.camera.rotate[0]; // the rotation around the x axis, up/down tilting
 
       // the calculations of how to move forward considering the direction of
-      // my camera view at this moment.
-      // includes up/down direction in the motion
+      // my camera view at this moment. includes up/down/left/right direction in the motion.
+      // can derive from using direction vector [0, 0, -1] (always move in negative z)
+      // and calculating R(y)*R(x)*[0, 0, -1]
+      // and that flips the direction in which to move the scene in terms of tranlation
+      // with consideration to your current orientation, giving impression you are moving in direction you're pointed in.
       const forward_x = -Math.sin(yaw) * Math.cos(pitch);
       const forward_y = Math.sin(pitch);
       const forward_z = Math.cos(yaw) * Math.cos(pitch); // flipping sign on this
@@ -245,6 +248,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
       // forward motion -- 0.1 is speed
       if (frontend_data.w) {
+        // move things backward
         this.camera.translate = [
           this.camera.translate[0] + (0.1 * forward_x),
           this.camera.translate[1] + (0.1 * forward_y),
@@ -254,6 +258,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
       // backward motion -- 0.1 is speed
       if (frontend_data.s) {
+        // move things forward
         this.camera.translate = [
           this.camera.translate[0] - (0.1 * forward_x),
           this.camera.translate[1] - (0.1 * forward_y),
