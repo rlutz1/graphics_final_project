@@ -72,8 +72,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     });
     this.add_node(spaceship); // spaceship to daddy sceen
 
-
-    console.log(this.roots)
   } // end function
 
   /**
@@ -308,15 +306,24 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const planets = this.solar_system.planets;
 
     // radius of sun is 2.5, this is dirty, but you get it, testing.
-    if (Math.abs(sun.center[0]) < 2.5 && Math.abs(sun.center[1]) < 2.5 && Math.abs(sun.center[2]) < 2.5) {
+    // assuming for spaceship at 0, 0, -10 -- obviously need to generalize
+    if (
+      Math.abs(sun.center[0]) < 2.5
+      && Math.abs(sun.center[1]) < 2.5 
+      && (Math.abs(sun.center[2]) < 12.5 && Math.abs(sun.center[2]) > 7.5)
+    ) {
       console.log(`hit ${sun.data.name}`)
     } // end if
 
     // not accounting for special radius's below, won't be perfect:
     planets.forEach((p) => {
-      if (Math.abs(p.center[0]) < 1 && Math.abs(p.center[1]) < 1 && Math.abs(p.center[2]) < 1) {
-      console.log(`hit ${p.data.name}`)
-    } // end if
+      if (
+        Math.abs(p.center[0]) < 1 
+        && Math.abs(p.center[1]) < 1 
+        && (Math.abs(p.center[2]) < 11 && Math.abs(p.center[2]) > 9)
+      ) {
+        console.log(`hit ${p.data.name}`)
+      } // end if
     }) // end loop
 
   } // end function
@@ -329,7 +336,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    */
   update_transformations(parent, M_parent) {
     parent.update_transformation_matrix(M_parent);
-    console.log(`${parent.id}`)
 
     // change from super implementation.
     // i need to internally track a position of a node, likely for some basic
@@ -337,18 +343,16 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // everything but the player will need position updates, and that requires ALL transformation matrices.
     // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
     // to make sure this works at all.
-    // if (!(parent instanceof(SpaceshipBuilder.SpaceshipSceneNode))) { // ignore the calc's for the spaceship--that's static; not perfect...
+    if (!(parent.id === this.spaceship.id)) { // important! all nodes in spaceship should have this id for now...
       const new_center_mtx = matMul(
         // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
         this.camera.get_view_matrix(),
         parent.transformation_matrix
       );
 
-      // parent.center = new_center; // set the new center.
+      // set the new center based off of camera movements and the actual node movements.
       parent.center = multiplyMat4Vec4(new_center_mtx, [0, 0, 0, 1]);
-
-      // if (parent instanceof(PlanetBuilder.SunSceneNode)) {console.log(parent.center);}
-    // } // end if
+    } // end if
     
 
     if (parent.children) {
