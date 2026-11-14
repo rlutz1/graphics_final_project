@@ -11,6 +11,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     this.rotation = [-deg_to_rad(20), 0, 0]; // rotate to face front
     this.center = [0, 0, 0, 1];
     this.velocity = [0.1, 0.1, 0.1]; // velocity in each direction (can tweak of course :) )
+    this.rotation_speed = 0.03; // controls the rotation speed left/right 
   }
 
   /**
@@ -20,7 +21,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
    * complex and don't want to clutter the scene.
    */
   init(gl) {
-    const pointer = new SceneBuilder.SceneNode("spaceship_pointer", this.shader_id); // pointer with the same shader and id for now
+    const pointer = new SceneBuilder.SceneNode("spaceship", this.shader_id); // pointer with the same shader and id for now
     pointer.position = [0, 0.7, 0]; // push up from the sphere. will be a cone, base of cone is at origin
 
     const base_mesh = new SceneBuilder.Mesh(gl, MeshBuilder.gen_sphere_mesh()); // generate a basic base sphere

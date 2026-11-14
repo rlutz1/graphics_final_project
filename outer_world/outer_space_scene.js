@@ -221,7 +221,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     if (frontend_data.a) {
       this.camera.rotate = [
         this.camera.rotate[0],
-        (this.camera.rotate[1] - 0.03) % (2 * Math.PI), 
+        (this.camera.rotate[1] - this.spaceship.rotation_speed) % (2 * Math.PI), 
         this.camera.rotate[2]
       ]
     } // end if
@@ -230,7 +230,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     if (frontend_data.d) {
       this.camera.rotate = [
         this.camera.rotate[0],
-        (this.camera.rotate[1] + 0.03) % (2 * Math.PI),
+        (this.camera.rotate[1] + this.spaceship.rotation_speed) % (2 * Math.PI),
         this.camera.rotate[2]
       ]
     } // end if
@@ -269,9 +269,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     if (frontend_data.w) {
       // move things backward
       this.camera.translate = [
-        this.camera.translate[0] + (0.1 * forward_x),
-        this.camera.translate[1] + (0.1 * forward_y),
-        this.camera.translate[2] + (0.1 * forward_z)
+        this.camera.translate[0] + (this.spaceship.velocity[0] * forward_x),
+        this.camera.translate[1] + (this.spaceship.velocity[1] * forward_y),
+        this.camera.translate[2] + (this.spaceship.velocity[2] * forward_z)
       ];
     } // end if
 
@@ -279,9 +279,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     if (frontend_data.s) {
       // move things forward
       this.camera.translate = [
-        this.camera.translate[0] - (0.1 * forward_x),
-        this.camera.translate[1] - (0.1 * forward_y),
-        this.camera.translate[2] - (0.1 * forward_z)
+        this.camera.translate[0] - (this.spaceship.velocity[0] * forward_x),
+        this.camera.translate[1] - (this.spaceship.velocity[1] * forward_y),
+        this.camera.translate[2] - (this.spaceship.velocity[2] * forward_z)
       ];
     } // end if
     
