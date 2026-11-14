@@ -98,6 +98,19 @@ export class Scene {
     this.camera = camera;
   } // end function
 
+   /**
+   * update all transformations in the tree, working your way down.
+   */
+  update_transformations(parent, M_parent) {
+    parent.update_transformation_matrix(M_parent);
+
+    if (parent.children) {
+      parent.children.forEach((c) => { // drill down the tree
+        this.update_transformations(c, parent.transformation_matrix);
+      });
+    } // end if
+  } // end function
+
 } // end class
 
 /**
@@ -711,7 +724,7 @@ export class Renderer {
     scene.roots.forEach((r) => {
       // setup any new transformation matrices first in the hierarchy
       // TODO: dirty bit optimization to avoid needless calculation (thanks for that idea gemini)
-      this.update_transformations(r, mat4Identity());
+      scene.update_transformations(r, mat4Identity());
 
       // for each node in hierarchy tree (maybe combine with prior step to 
       // optimize this a bit, but for clarity, this is two separate steps)
@@ -719,19 +732,6 @@ export class Renderer {
       this.draw_nodes(r, scene.camera, scene.lights);
     });
 
-  } // end function
-
-  /**
-   * update all transformations in the tree, working your way down.
-   */
-  update_transformations(parent, M_parent) {
-    parent.update_transformation_matrix(M_parent);
-
-    if (parent.children) {
-      parent.children.forEach((c) => { // drill down the tree
-        this.update_transformations(c, parent.transformation_matrix);
-      });
-    } // end if
   } // end function
 
   /**

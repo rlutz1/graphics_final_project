@@ -36,10 +36,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         "aspect": aspect, // since my canvas is not square
       }))
   
+      this.sun_light = new SceneBuilder.SunLight({"position": this.solar_system.sun.position});
+      this.fill_light = new SceneBuilder.FillLight();
       // add sun point light and directional light.
-      this.add_light(new SceneBuilder.SunLight({"position": this.solar_system.sun.position}));
-      // this.add_light(new SceneBuilder.SunLight({"position": [0, 5, 20]})); // testing
-      this.add_light(new SceneBuilder.FillLight());
+      this.add_light(this.sun_light);
+      this.add_light(this.fill_light);
     } // end function
     
     
@@ -170,6 +171,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       const texture = new SceneBuilder.VideoTexture(this.renderer.gl, PlanetBuilder.SUN_DATA.sun.texture_path);
 
       sun.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
+      sun.light = this.sun_light; // a little dirty, but easy access from sun to change direction.
       return sun;
     } // end function
   
@@ -194,10 +196,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // TODO: everything needs to have some sort of relative position tracking for collision detection (ASSUMEDLY)
 
       /**
-       * a and s can rotate the camera around y axis,
-       * which effectively is rotating things the opposite 
-       * direction around y
+       * w/s are a move forward/back.
+       * a/d are left/right rotation
+       * mouse on screen registers only up/down tilt, turning y position on canvas to a degree in radians.
        */
+
       // left rotate
       if (frontend_data.a) {
         this.camera.rotate = [

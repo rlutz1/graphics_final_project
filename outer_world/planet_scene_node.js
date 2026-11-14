@@ -81,10 +81,26 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
   constructor(id="sun", shader_id="planet_basic", data=null) {
     super(id, shader_id); // takes care of some baseline stuff for now.
     this.data = data; // can hand off a data pack as well
-    // this.position = [-((0.5 * 600) / 30), -((0.5 * 300) / 30), -30]; // shove her back
-    this.position = [0, 0, -30];
-    // this.relative_position = this.position; // for the light position updates to be simple...
+    this.position = [0, 0, -30]; // where i want to be when we start scene
+    this.center = this.position; // center of me is at this position, sphere centers around origin...
+    this.light = null; // shared reference to the light that should always be at my position.
   } // end constructor
+
+  update_transformation_matrix(M_parent) {
+    // const translation = translate(this.position);
+    // const rotation = rotate(this.rotation);
+    // const scale_mtx = scale(this.scale);
+
+    // // my local transformations
+    // const M_local = matMul(translation, rotation, scale_mtx);
+
+    // // add my transformations to the world's
+    // this.transformation_matrix = matMul(M_parent, M_local);
+    super.update_transformation_matrix(M_parent); // does the above..
+    // fuck, we need to update this position, but we aren't aware of camera here.
+
+  } // end function
+
 } // end class
 
 /**
