@@ -86,6 +86,13 @@ export class EarthScene extends SceneBuilder.Scene {
   } // end function
 
   /**
+   * creating earth terrain (trying to atleast :P)
+   * will create a sphere from the scenebuilder and need to adjust the mesh 
+   * to create bumps 
+   * will probably add functions to scene builder for the bumbs and landscape stuff 
+   */
+
+  /**
    * called once every rendering call from index.html.
    * this is where any global game logic, scene component updates
    * should be occurring that need per-render-call updates.
