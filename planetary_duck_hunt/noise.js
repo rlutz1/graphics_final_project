@@ -132,5 +132,49 @@ export function seededPerlin(seed){
     return function noise(){
         return improvedPerlin(x + xOffset, y + yOffset, z + zOffset);
     };
-
 }
+
+/**
+ * Using Fractial Brownian Motion (FBM) to create more interesting paterns and detailed layers
+ * Creating more noiseee to create a more natural terrain
+ * p(t+1) = p(t) + white_noise
+ * https://www.youtube.com/watch?v=PzuzGea3AAc
+ * 
+ * octaves = number of layers
+ * lacunarity = the amount of scaling between each layer
+ * gain = amount of influence each successive layer has on the result
+ * preset w/ defaults
+ */
+export function fbm(noise, {octaves = 4, lacunarity = 2.0, gain = 0.5} = {}){
+    // normalize based on input values --> forces land to not get too big
+    // values can be adjusted to change this later if needed 
+    let norm = 0;
+    for(let o = 0, a = 1; o < octaves; o++, a *= gain) norm += a;
+
+    // standard fbm function
+    // in the loop, each step we scale by lacunarity
+    // then scale accumulated value by gain
+    return function fbm(x, y, z) {
+    let sum = 0, 
+        amp = 1, 
+        freq = 1;
+
+    for (let o = 0; o < octaves; o++) {
+      // small per-octave offset so octaves don't line up at the origin
+      sum += amp * noise(x * freq + o * 17.13, y * freq + o * 5.71, z * freq + o * 11.37);
+      amp *= gain;
+      freq *= lacunarity;
+    }
+    return sum / norm; // normalize sum
+  };
+}
+
+/**
+ * Performs Hermite interpolation between given edge values 
+ * Is a helper in order to smooth values nicer --> will be helpful potentially in the colors
+ * https://registry.khronos.org/OpenGL-Refpages/gl4/html/smoothstep.xhtml
+ */
+export function smoothstep(edge0, edge1, x) {
+  const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1);
+  return t * t * (3 - 2 * t);
+} 
