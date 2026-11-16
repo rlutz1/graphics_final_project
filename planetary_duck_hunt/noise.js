@@ -145,7 +145,7 @@ export function seededPerlin(seed){
  * gain = amount of influence each successive layer has on the result
  * preset w/ defaults
  */
-export function fbm(noise, {octaves = 4, lacunarity = 2.0, gain = 0.5} = {}){
+export function initFbm(noise, {octaves = 4, lacunarity = 2.0, gain = 0.5} = {}){
     // normalize based on input values --> forces land to not get too big
     // values can be adjusted to change this later if needed 
     let norm = 0;
