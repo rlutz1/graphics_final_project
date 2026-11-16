@@ -597,4 +597,165 @@ export function gen_planet_mesh(r, vSteps, uSteps, color=[0.2, 0.4, 0.9], mappin
 } // end function
 
 
+// ==================================
+// Bumpy Terrain Stuff
+// ==================================
 
+/**
+ * bumpy sphere for terrain. this is gen_sphere_mesh but...
+ *   - each point is pushed out by height_fn(dir) -> the bumps
+ *   - normals are recalculated from the triangles (on a bumpy surface the
+ *      normal is no longer just the point, so the old normals would be wrong)
+ * height_fn(dir) -> how far above the base radius the ground is at direction dir
+ * color_fn(dir, h) -> [r, g, b] for that point
+ */
+export function gen_terrain_sphere_mesh(
+  r=1.0, // radius
+  h_step=0.1, // horizontal "resolution"
+  v_step=0.1, // vertical "resolution"
+  height_fn=(dir) => 0, // ground height at a direction
+  color_fn=(dir, h) => [0.5, 0.5, 0.5] // color at a direction/height
+) {
+  // how many steps we are taking in that range.
+  let h_steps = Math.round((2 * Math.PI) / h_step)
+  let v_steps = Math.round(Math.PI / v_step)
+
+  const vertices = [] // simple js array for collection of vertices
+  const indices = [] // js array for collecting indices
+  const normals = []; // normals for the planes
+  const tangents = []; // for texture mapping; tangent to the minisurface
+  const texels = []; // texture coordinates for sampling
+  const colors = []; // basic colors of the primitive mesh
+
+  // ==================================
+  //  GENERATE POINTS
+  // ==================================
+
+  // helper: push one point at direction dir, raised by the terrain height
+  function add_point(dir, tangent, texel) {
+    const h = height_fn(dir); // how high is the ground here
+    const dist = r + h; // distance from the center
+    vertices.push(dir[0] * dist, dir[1] * dist, dir[2] * dist);
+    normals.push(0, 0, 0); // placeholder, calculated below
+    tangents.push(...tangent);
+    texels.push(...texel);
+    colors.push(...color_fn(dir, h));
+  } // end function
+
+  add_point([0, 1, 0], [-1, 0, 0], [0.5, 0.5]); // north polar cap
+
+  // generate the bands of the sphere
+  for (let v_i = 1; v_i < v_steps; v_i++) { // for each vertical step
+    const v = (v_i / v_steps) * Math.PI;
+    const sin_v = Math.sin(v)
+    const cos_v = Math.cos(v)
+
+    for (let h_i = 0; h_i <= h_steps; h_i++) { // for each horizontal step
+      const h = (h_i / h_steps) * 2 * Math.PI;
+
+      // direction on a radius 1 sphere (same as gen_sphere_mesh with r = 1)
+      const x = sin_v * Math.cos(h);
+      const z = sin_v * Math.sin(h);
+      const y = cos_v;
+
+      add_point([x, y, z], [-z, 0, x], [h_i / h_steps, v_i / v_steps]);
+    } // end loop
+  } // end loop
+
+  add_point([0, -1, 0], [1, 0, 0], [0.5, 0.5]); // south polar cap
+
+  // ==================================
+  //  GENERATE INDICES (same as gen_sphere_mesh)
+  // ==================================
+
+  const vertices_per_ring = h_steps + 1;
+  let last_pt_index = (vertices.length / 3) - 1; // the south polar cap index
+
+  // NORTH POLAR CAP INDICES
+  for (let h_i = 0; h_i < h_steps; h_i++) {
+    const current_ring_pt = 1 + h_i;
+    const next_ring_pt = current_ring_pt + 1;
+    indices.push(0, current_ring_pt, next_ring_pt);
+  } // end loop
+
+  // MIDDLE BANDING INDICES
+  for (let v_i = 0; v_i < v_steps - 2; v_i++) {
+    const current_ring_start = 1 + (v_i * vertices_per_ring);
+    const next_ring_start = current_ring_start + vertices_per_ring;
+
+    for (let h_i = 0; h_i < h_steps; h_i++) {
+      const bottom_left  = current_ring_start + h_i;
+      const bottom_right = bottom_left + 1;
+      const top_left     = next_ring_start + h_i;
+      const top_right    = top_left + 1;
+
+      indices.push(
+        bottom_left, top_left, top_right,
+        bottom_left, top_right, bottom_right
+      );
+    } // end loop
+  } // end loop
+
+  // SOUTH POLAR CAP INDICES
+  const last_ring_start = 1 + ((v_steps - 2) * vertices_per_ring);
+  for (let h_i = 0; h_i < h_steps; h_i++) {
+    const current_ring_pt = last_ring_start + h_i;
+    const next_ring_pt = current_ring_pt + 1;
+    indices.push(last_pt_index, next_ring_pt, current_ring_pt);
+  }
+
+  // ==================================
+  //  GENERATE NORMALS
+  // ==================================
+
+  // each triangle's normal is the cross product of two of its edges.
+  // add it to all 3 corners -> each point ends up with the average
+  // direction of the triangles around it (smooth shading).
+  for (let i = 0; i < indices.length; i += 3) {
+    const a = indices[i] * 3, b = indices[i + 1] * 3, c = indices[i + 2] * 3;
+
+    // two edges of the triangle
+    const e1 = [vertices[c] - vertices[a], vertices[c + 1] - vertices[a + 1], vertices[c + 2] - vertices[a + 2]];
+    const e2 = [vertices[b] - vertices[a], vertices[b + 1] - vertices[a + 1], vertices[b + 2] - vertices[a + 2]];
+
+    // cross product (e1 x e2), ordered so it points outward with these indices
+    const n = [
+      e1[1] * e2[2] - e1[2] * e2[1],
+      e1[2] * e2[0] - e1[0] * e2[2],
+      e1[0] * e2[1] - e1[1] * e2[0]
+    ];
+
+    for (const k of [a, b, c]) {
+      normals[k] += n[0]; normals[k + 1] += n[1]; normals[k + 2] += n[2];
+    } // end loop
+  } // end loop
+
+  // the first and last point of each ring are the same spot (the <= h_steps loop),
+  // but each only got the triangles on its own side. share them so there's no seam line.
+  for (let v_i = 0; v_i < v_steps - 1; v_i++) {
+    const first = (1 + v_i * vertices_per_ring) * 3;
+    const last = first + h_steps * 3;
+    for (let d = 0; d < 3; d++) {
+      const sum = normals[first + d] + normals[last + d];
+      normals[first + d] = sum;
+      normals[last + d] = sum;
+    } // end loop
+  } // end loop
+
+  // make every normal length 1
+  for (let i = 0; i < normals.length; i += 3) {
+    const len = Math.hypot(normals[i], normals[i + 1], normals[i + 2]);
+    normals[i] /= len; normals[i + 1] /= len; normals[i + 2] /= len;
+  } // end loop
+
+  // return as a js dict
+  return {
+    "vertices": new Float32Array(vertices), 
+    // Uint16 can only count to 65535 points -- terrain has way more
+    "indices": vertices.length / 3 > 65535 ? new Uint32Array(indices) : new Uint16Array(indices),
+    "normals": new Float32Array(normals),
+    "tangents": new Float32Array(tangents),
+    "texels": new Float32Array(texels),
+    "colors": new Float32Array(colors)
+  };
+}
