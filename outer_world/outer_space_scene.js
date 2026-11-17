@@ -272,9 +272,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // should be able to very basically see if i run into something.
     // this is a WIP because the movement direction vector should be altered, but how is the tricky bit.
     const planet_collide = this.spaceship_planet_collision_check();
+    console.log(planet_collide)
     if (planet_collide) { 
-      forward_x += planet_collide[0];  
-      forward_y += planet_collide[1];  
+      forward_x -= planet_collide[0];  
+      forward_y -= planet_collide[1];  
       forward_z += planet_collide[2];  
     }
 
@@ -317,24 +318,25 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       console.log("spaceship hit sun");
       // return true;
       return [
-        sun.center[0] - this.spaceship.center[0], 
-        sun.center[1] - this.spaceship.center[1], 
-        sun.center[2] - this.spaceship.center[2], 
+        this.spaceship.center[0] - sun.center[0], 
+        this.spaceship.center[1] - sun.center[1], 
+        this.spaceship.center[2] - sun.center[2], 
         ]
     } // end if
 
     // check for planet collisions
-    planets.forEach((p) => {
+    for (const p of planets) {
       if (this.spaceship.bounding_shape.intersect(p.bounding_shape)) {
         console.log(`hit ${p.data.name}`)
         // return true;
         return [
-          p.center[0] - this.spaceship.center[0], 
-          p.center[1] - this.spaceship.center[1], 
-          p.center[2] - this.spaceship.center[2], 
+          this.spaceship.center[0] - p.center[0], 
+          this.spaceship.center[1] - p.center[1], 
+          this.spaceship.center[2] - p.center[2], 
         ]
       } // end if
-    }) // end loop
+    } // end loop
+
     return null;
   } // end function
 
