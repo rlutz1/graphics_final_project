@@ -79,18 +79,19 @@ export class EarthScene extends SceneBuilder.Scene {
       boid = new BoidSceneNode(`${i}`, "phong_basic"); // set up a simple hierarchy
       boid.init(boid_mesh, boid_material, null); // init the nodes with their assets
       
-      // below is a proof of concept of positioning. obv will be set by wasm shtuff.
+      
       const x = this.boidPositions[(i * this.boidDim)];
       const y = this.boidPositions[(i * this.boidDim) + 1];
       const z = this.boidPositions[(i * this.boidDim) + 2];
 
-      /* GONNA HAVE TO ADDRESS THIS LATER AS IT INTERFERES WITH SIMUALATION
-      if (this.camera instanceof SceneBuilder.PerspectiveCamera) {
-        // shove back the boid a bit -- z dimension matters here, if at z=0 it'll look like nothing's there.
-        z = -(Math.random() * 10) - 10; // -10 -> -20
-      } // end if */
+      const vx = this.boidVelocities[(i * this.boidDim)];
+      const vy = this.boidVelocities[(i * this.boidDim) + 1];
+      const vz = this.boidVelocities[(i * this.boidDim) + 2];
+
+      // shove back the boid a bit -- z dimension matters here, if at z=0 it'll look like nothing's there. Will address 
 
       boid.position = [x, y, z];
+      boid.rotation = this.velocityToRotation(vx, vy, vz);
       this.boidNodes.push(boid);
       this.boids.add_child(boid); // add boid as child of a dummy grouper node
     } // end loop
@@ -98,19 +99,35 @@ export class EarthScene extends SceneBuilder.Scene {
     this.add_node(this.boids); // add grouper node as a root node of the scene.
   } // end function
 
+  velocityToRotation(vx, vy, vz) {
+    const mag = Math.sqrt(vx*vx + vy*vy + vz*vz);
+
+    if (mag < 1e-6) return null;
+
+    // Normalize velocity
+    vx /= mag;
+    vy /= mag;
+    vz /= mag;
+
+    // Rotate around X to account for vertical component
+    const rx = Math.atan2(vz, Math.sqrt(vx*vx + vy*vy));
+
+    // Rotate around Z to account for horizontal direction
+    const rz = -Math.atan2(vx, vy);
+
+    return [rx, 0, rz];
+  }
   /**
    * called once every rendering call from index.html.
    * this is where any global game logic, scene component updates
    * should be occurring that need per-render-call updates.
    */
   render(keys_pressed={}) {
-    console.log("EarthScene render called");
     const now = performance.now();
 
     if (this.lastFrameTime !== null) {
-      console.log(this.boidPositions.slice(0, 3));
+      console.log(this.boidVelocities.slice(0, 3));
       const delT = (now - this.lastFrameTime) / 1000.0;
-      console.log(this.boidPositions.slice(0, 3));
       this.Module._advanceBoids(delT);
       this.update_boids();
     }
@@ -120,7 +137,9 @@ export class EarthScene extends SceneBuilder.Scene {
     super.render();  // let the renderer do it's draw thing
   } // end function
 
-  // just grab new coordinates
+
+  
+  // just grab new coordinates and velocities
   update_boids() {
     for (let i = 0; i < this.boidNodes.length; i++) {
       const offset = i * this.boidDim;
@@ -130,7 +149,20 @@ export class EarthScene extends SceneBuilder.Scene {
         this.boidPositions[offset + 1],
         this.boidPositions[offset + 2]
       ];
-    }
-}
 
+      this.boidNodes[i].velocity = [
+        this.boidVelocities[offset],
+        this.boidVelocities[offset + 1],
+        this.boidVelocities[offset + 2]
+      ];
+
+      const [vx, vy, vz] = this.boidNodes[i].velocity;
+
+      const rot = this.velocityToRotation(vx, vy, vz);
+
+      if (rot !== null) {
+          this.boidNodes[i].rotation = rot;
+      }
+    }
+  }
 } // end class
