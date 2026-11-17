@@ -352,6 +352,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
       // set the new center based off of camera movements and the actual node movements.
       parent.center = multiplyMat4Vec4(new_center_mtx, [0, 0, 0, 1]);
+      if (parent.bounding_shape && parent.bounding_shape instanceof(SceneBuilder.BoundingSphere)) {
+        parent.bounding_shape.center_x = parent.center[0];
+        parent.bounding_shape.center_y = parent.center[1];
+        parent.bounding_shape.center_z = parent.center[2];
+       } // TODO
+    
     } // end if
     
 

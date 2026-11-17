@@ -156,8 +156,7 @@ export class SceneNode {
     // @Theo may be a place for C if things are chuggy.
     this.transformation_matrix = mat4Identity();
 
-    this.bounding_box = null; // for if you want to add a bounding box/shape to the node.
-
+    this.bounding_shape = null; // for if you want to add a bounding box/shape to the node.
   } // end constructor
 
   /**
@@ -745,16 +744,28 @@ export class BoundingBox {
   }
 
   /**
+   * main call that will route based on type
+   */
+  intersect(other) {
+    if (other instanceof(BoundingBox)) {
+      return this.intersect_box(other);
+    } else if (other instanceof(BoundingSphere)) {
+      return this.intersect_sphere(other);
+    } // end if
+    // add on as needed
+  } // end function
+
+  /**
    * test whether i intersect with another box
    */
-  intersect_box(other_box) {
+  intersect_box(box) {
     return (
-      this.x_min <= other_box.x_max &&
-      this.x_max >= other_box.x_min &&
-      this.y_min <= other_box.y_max &&
-      this.y_max >= other_box.y_min &&
-      this.z_min <= other_box.z_max &&
-      this.z_max >= other_box.z_min
+      this.x_min <= box.x_max &&
+      this.x_max >= box.x_min &&
+      this.y_min <= box.y_max &&
+      this.y_max >= box.y_min &&
+      this.z_min <= box.z_max &&
+      this.z_max >= box.z_min
     );
   } // end function
 
@@ -791,6 +802,18 @@ export class BoundingSphere {
     this.center_z = center_z;
     this.radius = radius;
   }
+
+   /**
+   * main call that will route based on type
+   */
+  intersect(other) {
+    if (other instanceof(BoundingBox)) {
+      return this.intersect_box(other);
+    } else if (other instanceof(BoundingSphere)) {
+      return this.intersect_sphere(other);
+    } // end if
+    // add on as needed
+  } // end function
 
   /**
    * same as above box v sphere algorithm
