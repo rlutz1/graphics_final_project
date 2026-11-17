@@ -16,7 +16,7 @@ export class EarthScene extends SceneBuilder.Scene {
     // makes killing boids easier and also makes easy access to boid positions
     this.boidNodes = []
     this.lastFrameTime = null;
-    // this.player = null;
+    // this.player = null; camera is below, kinda like a player?
     // this.ground = null;
     // this.sky = null;
     // ...
@@ -126,10 +126,11 @@ export class EarthScene extends SceneBuilder.Scene {
     const now = performance.now();
 
     if (this.lastFrameTime !== null) {
-      console.log(this.boidVelocities.slice(0, 3));
       const delT = (now - this.lastFrameTime) / 1000.0;
       this.Module._advanceBoids(delT);
       this.update_boids();
+
+      this.move_player(keys_pressed, delT);
     }
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
@@ -164,5 +165,14 @@ export class EarthScene extends SceneBuilder.Scene {
           this.boidNodes[i].rotation = rot;
       }
     }
+  }
+
+  move_player(keys_pressed, delT) {
+    const speed = 3.0 * delT;
+
+    if (keys_pressed["w"]) this.camera.position[2] -= speed;
+    if (keys_pressed["s"]) this.camera.position[2] += speed;
+    if (keys_pressed["a"]) this.camera.position[0] -= speed;
+    if (keys_pressed["d"]) this.camera.position[0] += speed;
   }
 } // end class

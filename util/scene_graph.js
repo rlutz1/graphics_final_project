@@ -510,13 +510,18 @@ export class Camera {
     this.far = far;
     this.aspect = aspect;
     this.ortho_size = ortho_size
+    this.position = [0,0,0];
   }
 
   /**
-   * TODO: placeholder!
+   * Replaced by theo for camera on planet scene
    */
   get_view_matrix() {
-    return mat4Identity();
+    return translate([
+      -this.position[0],
+      -this.position[1],
+      -this.position[2]
+    ]);
   }
 } // end class
 
