@@ -7,7 +7,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
   constructor(id="spaceship", shader="spaceship_basic") {
     super(id, shader);
 
-    this.position = [0, 0, -10]; // shove it back a little
+    this.position = [0, 0, -5]; // shove it back a little
     this.rotation = [-deg_to_rad(20), 0, 0]; // rotate to face front
     this.scale = [0.6, 0.7, 1];
     this.center = [...this.position, 1]; // this will ALWAYS be static on scene!
@@ -40,6 +40,13 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
       "shininess": 30, 
       "transparency": 1
     });
+
+    // some really basic bounding boxes
+    this.bounding_box = new SceneBuilder.BoundingBox({
+      x_min: -0.6, x_max: 0.6,
+      y_min: -0.7, y_max: 0.7,
+      z_min: -6, z_max: -4
+    })
 
     this.set_mesh(base_mesh).set_material(material); 
     pointer.set_mesh(pointer_mesh).set_material(material);

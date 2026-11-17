@@ -156,6 +156,8 @@ export class SceneNode {
     // @Theo may be a place for C if things are chuggy.
     this.transformation_matrix = mat4Identity();
 
+    this.bounding_box = null; // for if you want to add a bounding box/shape to the node.
+
   } // end constructor
 
   /**
