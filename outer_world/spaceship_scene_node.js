@@ -42,10 +42,11 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     });
 
     // some really basic bounding boxes
+    // this is primarily for testing! so pretty hard coded :(
     this.bounding_shape = new SceneBuilder.BoundingBox({
       x_min: -0.6, x_max: 0.6,
       y_min: -0.7, y_max: 0.7,
-      z_min: -6, z_max: -4
+      z_min: -6, z_max: -3
     })
 
     this.set_mesh(base_mesh).set_material(material); 
