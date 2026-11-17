@@ -249,9 +249,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // and calculating R(y)*R(x)*[0, 0, -1]
     // and that flips the direction in which to move the scene in terms of tranlation
     // with consideration to your current orientation, giving impression you are moving in direction you're pointed in.
-    const forward_x = -Math.sin(yaw) * Math.cos(pitch);
-    const forward_y = Math.sin(pitch);
-    const forward_z = Math.cos(yaw) * Math.cos(pitch); // flipping sign on this
+    let forward_x = -Math.sin(yaw) * Math.cos(pitch);
+    let forward_y = Math.sin(pitch);
+    let forward_z = Math.cos(yaw) * Math.cos(pitch); // flipping sign on this
 
     // just fuckin around don't worry about this: 
     // const forward_x = -Math.sin(yaw);
@@ -270,17 +270,22 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     // centers have been updated by the above iteration.
     // should be able to very basically see if i run into something.
-    let xz_motion = 1;
-    if (this.spaceship_planet_collision_check()) { xz_motion = 0; }
+    // this is a WIP because the movement direction vector should be altered, but how is the tricky bit.
+    const planet_collide = this.spaceship_planet_collision_check();
+    if (planet_collide) { 
+      forward_x += planet_collide[0];  
+      forward_y += planet_collide[1];  
+      forward_z += planet_collide[2];  
+    }
 
 
     // forward motion -- 0.1 is speed
     if (frontend_data.w) {
       // move things backward
       this.camera.translate = [
-        this.camera.translate[0] + (this.spaceship.velocity[0] * (forward_x * xz_motion)),
+        this.camera.translate[0] + (this.spaceship.velocity[0] * (forward_x)),
         this.camera.translate[1] + (this.spaceship.velocity[1] * forward_y),
-        this.camera.translate[2] + (this.spaceship.velocity[2] * (forward_z * xz_motion))
+        this.camera.translate[2] + (this.spaceship.velocity[2] * (forward_z) )
       ];
     } // end if
 
@@ -288,9 +293,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     if (frontend_data.s) {
       // move things forward
       this.camera.translate = [
-        this.camera.translate[0] - (this.spaceship.velocity[0] * (forward_x * xz_motion)),
+        this.camera.translate[0] - (this.spaceship.velocity[0] * (forward_x)),
         this.camera.translate[1] - (this.spaceship.velocity[1] * forward_y),
-        this.camera.translate[2] - (this.spaceship.velocity[2] * (forward_z * xz_motion))
+        this.camera.translate[2] - (this.spaceship.velocity[2] * (forward_z) )
       ];
     } // end if
 
@@ -310,17 +315,27 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // check for sun collision with ship
     if (this.spaceship.bounding_shape.intersect(sun.bounding_shape)) {
       console.log("spaceship hit sun");
-      return true;
+      // return true;
+      return [
+        sun.center[0] - this.spaceship.center[0], 
+        sun.center[1] - this.spaceship.center[1], 
+        sun.center[2] - this.spaceship.center[2], 
+        ]
     } // end if
 
     // check for planet collisions
     planets.forEach((p) => {
       if (this.spaceship.bounding_shape.intersect(p.bounding_shape)) {
         console.log(`hit ${p.data.name}`)
-        return true;
+        // return true;
+        return [
+          p.center[0] - this.spaceship.center[0], 
+          p.center[1] - this.spaceship.center[1], 
+          p.center[2] - this.spaceship.center[2], 
+        ]
       } // end if
     }) // end loop
-    return false;
+    return null;
   } // end function
 
 
