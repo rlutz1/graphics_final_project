@@ -157,7 +157,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           "flat": false
       });
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 200; i++) {
       const new_asteroid = new PlanetBuilder.AsteroidObstacle(); 
       const texture = new SceneBuilder.Texture(this.renderer.gl, new_asteroid.data.texture_path);
       new_asteroid.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
@@ -257,6 +257,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       this.solar_system.planets.forEach((p) => {
         p.update_orbit(this.day);
       });
+      this.solar_system.asteroid_belt.forEach((a) => {
+        a.update_orbit(this.day);
+      });
     } // end if
 
     // TODO: the light position that goes with sun needs to be bound to the sun's new position!!!!!!!!!
@@ -324,16 +327,17 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // centers have been updated by the above iteration.
     // should be able to very basically see if i run into something.
     // this is a WIP because the movement direction vector should be altered, but how is the tricky bit.
-    const planet_collide = this.spaceship_planet_collision_check();
-    console.log(planet_collide);
-    if (planet_collide) { 
-      forward_x -= planet_collide[0];  
-      forward_y -= planet_collide[1];  
-      forward_z += planet_collide[2];  
-    } // end if
+
+    // const planet_collide = this.spaceship_planet_collision_check();
+    // console.log(planet_collide);
+    // if (planet_collide) { 
+    //   forward_x -= planet_collide[0];  
+    //   forward_y -= planet_collide[1];  
+    //   forward_z += planet_collide[2];  
+    // } // end if
 
 
-    // forward motion -- 0.1 is speed
+    // forward motion
     if (frontend_data.w) {
       // move things backward
       this.camera.translate = [
@@ -343,7 +347,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       ];
     } // end if
 
-    // backward motion -- 0.1 is speed
+    // backward motion
     if (frontend_data.s) {
       // move things forward
       this.camera.translate = [
