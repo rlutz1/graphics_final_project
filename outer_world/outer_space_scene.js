@@ -290,7 +290,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     // centers have been updated by the above iteration.
     // should be able to very basically see if i run into something.
-    this.check_for_planet_collision();
+    this.spaceship_planet_collision_check();
 
     // render call!
     super.render([0, 0, 0]);  // let the renderer do it's draw thing
@@ -301,30 +301,35 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    * check to see if any planet or sun position is within [1, 1, 1] of me at [0, 0, 0]
    * and simply print to console.
    */
-  check_for_planet_collision() {
+  spaceship_planet_collision_check() {
     const sun = this.solar_system.sun;
     const planets = this.solar_system.planets;
 
-    // radius of sun is 2.5, this is dirty, but you get it, testing.
-    // assuming for spaceship at 0, 0, -10 -- obviously need to generalize.
-    if (
-      Math.abs(sun.center[0]) < 2.5
-      && Math.abs(sun.center[1]) < 2.5 
-      && (Math.abs(sun.center[2]) < 12.5 && Math.abs(sun.center[2]) > 7.5)
-    ) {
-      console.log(`hit ${sun.data.name}`)
+    if (this.spaceship.bounding_shape.intersect(sun.bounding_shape)) {
+      console.log("spaceship hit sun");
     } // end if
 
-    // not accounting for special radius's below, won't be perfect:
-    planets.forEach((p) => {
-      if (
-        Math.abs(p.center[0]) < 1 
-        && Math.abs(p.center[1]) < 1 
-        && (Math.abs(p.center[2]) < 11 && Math.abs(p.center[2]) > 9)
-      ) {
-        console.log(`hit ${p.data.name}`)
-      } // end if
-    }) // end loop
+
+    // // radius of sun is 2.5, this is dirty, but you get it, testing.
+    // // assuming for spaceship at 0, 0, -10 -- obviously need to generalize.
+    // if (
+    //   Math.abs(sun.center[0]) < 2.5
+    //   && Math.abs(sun.center[1]) < 2.5 
+    //   && (Math.abs(sun.center[2]) < 12.5 && Math.abs(sun.center[2]) > 7.5)
+    // ) {
+    //   console.log(`hit ${sun.data.name}`)
+    // } // end if
+
+    // // not accounting for special radius's below, won't be perfect:
+    // planets.forEach((p) => {
+    //   if (
+    //     Math.abs(p.center[0]) < 1 
+    //     && Math.abs(p.center[1]) < 1 
+    //     && (Math.abs(p.center[2]) < 11 && Math.abs(p.center[2]) > 9)
+    //   ) {
+    //     console.log(`hit ${p.data.name}`)
+    //   } // end if
+    // }) // end loop
 
   } // end function
 

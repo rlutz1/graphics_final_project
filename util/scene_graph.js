@@ -741,6 +741,9 @@ export class BoundingBox {
     this.y_max = y_max,
     this.z_min = z_min, // TODO: any funkiness in z dir?
     this.z_max = z_max 
+    this.width = x_max - x_min;
+    this.height = y_max - y_min;
+    this.depth = z_max - z_min;
   }
 
   /**

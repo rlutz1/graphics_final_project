@@ -42,7 +42,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     });
 
     // some really basic bounding boxes
-    this.bounding_box = new SceneBuilder.BoundingBox({
+    this.bounding_shape = new SceneBuilder.BoundingBox({
       x_min: -0.6, x_max: 0.6,
       y_min: -0.7, y_max: 0.7,
       z_min: -6, z_max: -4

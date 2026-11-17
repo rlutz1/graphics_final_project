@@ -86,7 +86,12 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
     this.position = [0, 0, -30]; // where i want to be when we start scene
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
     // this.center.push(1); // homogenous
-    this.bounding_shape = new SceneBuilder.BoundingSphere();
+    this.bounding_shape = new SceneBuilder.BoundingSphere({
+      center_x:  this.center[0],
+      center_x:  this.center[0],
+      center_x:  this.center[0],
+      radius: 2.5 // TODO don't like this, for tesing only
+    });
   } // end constructor
 
   update_transformation_matrix(M_parent) {
