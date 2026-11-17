@@ -305,9 +305,17 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const sun = this.solar_system.sun;
     const planets = this.solar_system.planets;
 
+    // check for sun collision with ship
     if (this.spaceship.bounding_shape.intersect(sun.bounding_shape)) {
       console.log("spaceship hit sun");
     } // end if
+
+    // check for planet collisions
+    planets.forEach((p) => {
+      if (this.spaceship.bounding_shape.intersect(p.bounding_shape)) {
+        console.log(`hit ${p.data.name}`)
+      } // end if
+    }) // end loop
 
 
     // // radius of sun is 2.5, this is dirty, but you get it, testing.
@@ -321,16 +329,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // } // end if
 
     // // not accounting for special radius's below, won't be perfect:
-    // planets.forEach((p) => {
-    //   if (
-    //     Math.abs(p.center[0]) < 1 
-    //     && Math.abs(p.center[1]) < 1 
-    //     && (Math.abs(p.center[2]) < 11 && Math.abs(p.center[2]) > 9)
-    //   ) {
-    //     console.log(`hit ${p.data.name}`)
-    //   } // end if
-    // }) // end loop
-
+   
   } // end function
 
 
@@ -349,20 +348,14 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
     // to make sure this works at all.
     if (!(parent.id === this.spaceship.id)) { // important! all nodes in spaceship should have this id for now...
-      const new_center_mtx = matMul(
+      const position_transforms = matMul(
         // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
         this.camera.get_view_matrix(),
         parent.transformation_matrix
       );
 
-      // set the new center based off of camera movements and the actual node movements.
-      parent.center = multiplyMat4Vec4(new_center_mtx, [0, 0, 0, 1]);
-      if (parent.bounding_shape && parent.bounding_shape instanceof(SceneBuilder.BoundingSphere)) {
-        parent.bounding_shape.center_x = parent.center[0];
-        parent.bounding_shape.center_y = parent.center[1];
-        parent.bounding_shape.center_z = parent.center[2];
-       } // TODO
-    
+      // update the center point and any other things that could effect.
+      parent.update_bounding_shape(position_transforms);
     } // end if
     
 

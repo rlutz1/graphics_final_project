@@ -1,5 +1,5 @@
 import * as SceneBuilder from "../util/scene_graph.js";
-import { mat4Identity, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
+import { mat4Identity, matMul, translate, rotate, scale, mat4FromRows, multiplyMat4Vec4 } from '../util/transitions.js';
 
 /**
  * just a small wrapper
@@ -86,6 +86,17 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     this.position = [this.display_distance, 0, this.display_distance]; // be sure to update this by scene init
   } // end function
 
+  /**
+   * wrapper to update the center of this planet, which affects the bounding box.
+   */
+  update_bounding_shape(transformation_matrix) {
+    // set the new center based off of camera movements and the actual node movements.
+    this.center = multiplyMat4Vec4(transformation_matrix, [0, 0, 0, 1]);
+    this.bounding_shape.center_x = this.center[0];
+    this.bounding_shape.center_y = this.center[1];
+    this.bounding_shape.center_z = this.center[2];
+  } // end function
+
 
   /**
    * update my transformation dumbly, simply calculate:
@@ -124,6 +135,18 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
       radius: 2.5 // TODO don't like this, for tesing only
     });
   } // end constructor
+
+  /**
+   * wrapper to update the center of this planet, which affects the bounding box.
+   */
+  update_bounding_shape(transformation_matrix) {
+    // set the new center based off of camera movements and the actual node movements.
+    this.center = multiplyMat4Vec4(transformation_matrix, [0, 0, 0, 1]);
+    this.bounding_shape.center_x = this.center[0];
+    this.bounding_shape.center_y = this.center[1];
+    this.bounding_shape.center_z = this.center[2];
+  } // end function
+
 } // end class
 
 /**
