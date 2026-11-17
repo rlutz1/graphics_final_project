@@ -701,7 +701,7 @@ export class SpaceCamera extends PerspectiveCamera {
     return matMul(swapped_rotation, translate(this.translate));
   }
 
-}
+} // end class
 
 
 /**
@@ -712,6 +712,118 @@ export class OrthographicCamera extends Camera {
     return ortho(this.ortho_size, this.aspect, this.near, this.far);
   }
 } // end class
+
+
+/**
+ * ==============================================
+ * BOUNDING SHAPE UTIL
+ * ==============================================
+ */
+
+/**
+ * following two classes are built with AABB algorithms in mind:
+ * https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection
+ */
+
+export class BoundingBox {
+  constructor({
+    x_min=-0.5,
+    x_max=0.5,
+    y_min=-0.5,
+    y_max=0.5,
+    z_min=-0.5, // TODO: any funkiness in z dir?
+    z_max=0.5
+  } = {}) {
+    this.x_min = x_min;
+    this.x_max = x_max,
+    this.y_min = y_min,
+    this.y_max = y_max,
+    this.z_min = z_min, // TODO: any funkiness in z dir?
+    this.z_max = z_max 
+  }
+
+  /**
+   * test whether i intersect with another box
+   */
+  intersect_box(other_box) {
+    return (
+      this.x_min <= other_box.x_max &&
+      this.x_max >= other_box.x_min &&
+      this.y_min <= other_box.y_max &&
+      this.y_max >= other_box.y_min &&
+      this.z_min <= other_box.z_max &&
+      this.z_max >= other_box.z_min
+    );
+  } // end function
+
+  /**
+   * test whether i intersect with a sphere
+   */
+  intersect_sphere(sphere) {
+    // get box closest point to sphere center by clamping
+    const x = Math.max(this.x_min, Math.min(sphere.center_x, this.x_max));
+    const y = Math.max(this.y_min, Math.min(sphere.center_y, this.y_max));
+    const z = Math.max(this.z_min, Math.min(sphere.center_z, this.z_max));
+
+    // this is the same as isPointInsideSphere
+    const distance = Math.sqrt(
+      (x - sphere.center_x) * (x - sphere.center_x) +
+      (y - sphere.center_y) * (y - sphere.center_y) +
+      (z - sphere.center_z) * (z - sphere.center_z),
+    );
+
+    return distance < sphere.radius;
+  } // end function
+
+} // end class
+
+export class BoundingSphere {
+  constructor({
+    center_x=0,
+    center_y=0,
+    center_z=0,
+    radius=1,
+  } = {}) {
+    this.center_x = center_x;
+    this.center_y = center_y;
+    this.center_z = center_z;
+    this.radius = radius;
+  }
+
+  /**
+   * same as above box v sphere algorithm
+   */
+  intersect_box(box) {
+    // get box closest point to sphere center by clamping
+    const x = Math.max(box.x_min, Math.min(this.center_x, box.x_max));
+    const y = Math.max(box.y_min, Math.min(this.center_y, box.y_max));
+    const z = Math.max(box.z_min, Math.min(this.center_z, box.z_max));
+
+    // this is the same as isPointInsideSphere
+    const distance = Math.sqrt(
+      (x - this.center_x) * (x - this.center_x) +
+      (y - this.center_y) * (y - this.center_y) +
+      (z - this.center_z) * (z - this.center_z),
+    );
+
+    return distance < this.radius;
+  } // end function
+
+  /**
+   * check if i intersected another sphere
+   */
+  intersect_sphere(other_sphere) {
+    // we are using multiplications because it's faster than calling Math.pow
+    const distance = Math.sqrt(
+      (this.center_x - other_sphere.center_x) * (this.center_x - other_sphere.center_x) +
+      (this.center_y - other_sphere.center_y) * (this.center_y - other_sphere.center_y) +
+      (this.center_z - other_sphere.center_z) * (this.center_z - other_sphere.center_z),
+    );
+    return distance < this.radius + other_sphere.radius;
+  } // end function
+
+} // end class
+
 
 /**
  * ==============================================
