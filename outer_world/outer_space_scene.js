@@ -89,7 +89,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     this.solar_system.planets.forEach((p) => {
       const normalizedDistance = p.data.distance_km / max_distance;
-      p.display_distance = Math.sqrt(normalizedDistance) * this.distance_const;
+      p.update_display_distance(Math.sqrt(normalizedDistance) * this.distance_const);
     });
   } // end function
 
@@ -109,7 +109,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     this.solar_system.planets.forEach((p) => {
       const normalized_radius = p.data.radius_km / max_radius;
-      p.display_radius = Math.sqrt(normalized_radius);
+      p.update_radius(Math.sqrt(normalized_radius));
     });
   } // end function
 

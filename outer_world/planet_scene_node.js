@@ -38,7 +38,14 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     this.display_distance = 0; // distance from the sun, normalized for viewing.
     this.radius_distance = 0; // the radius of this planet, normalized for viewing.
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
-    // this.center.push(1); // homogenous
+
+    // basic sphere bounding shape for the planet body
+    this.bounding_shape = new SceneBuilder.BoundingSphere({
+      center_x:  this.center[0],
+      center_x:  this.center[0],
+      center_x:  this.center[0],
+      radius: 1.0 // TODO don't like this, for tesing only
+    });
   } // end constructor
 
   /**
@@ -51,6 +58,36 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
   } // end function 
 
   /**
+   * function to update radius of the planet. moved to a function
+   * access point so that any bounding shapes can be updated with this
+   * call automatically.
+   */
+  update_radius(radius=1.0) {
+    this.display_radius = radius; // for any other purposes, hold
+    
+    // NOTE: this is done because the initial planet mesh has a radius 1.
+    // so, scaling all points down by display radius is equivalent to shrinking the radius
+    // to that number.
+    this.scale = [this.display_radius, this.display_radius, this.display_radius]; // scale by norm radius for now
+
+    // need to also update the bounding sphere
+    this.bounding_shape.radius = this.display_radius;
+  } // end function
+
+  /**
+   * update the display distance. preferred access point over 
+   * this.display_distance = ...
+   * in case further logic needed.
+   */
+  update_display_distance(distance) {
+    this.display_distance = distance; // for any other purposes, hold
+
+    // this position is relative to the sun-parent!
+    this.position = [this.display_distance, 0, this.display_distance]; // be sure to update this by scene init
+  } // end function
+
+
+  /**
    * update my transformation dumbly, simply calculate:
    * M_world_child = M_world_parent * M_local_child.
    * if want to change, extend the SceneNode and override, but you MUST
@@ -58,13 +95,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
    * incorrect rendering.
    */
   update_transformation_matrix(M_parent) {
-    // change any trajectory via this.
-    this.position = [this.display_distance, 0, this.display_distance]; // be sure to update this by scene init
-    // NOTE: this is done because the initial planet mesh has a radius 1.
-    // so, scaling all points down by display radius is equivalent to shrinking the radius
-    // to that number.
-    this.scale = [this.display_radius, this.display_radius, this.display_radius]; // scale by norm radius for now
-
+    // scale for radius, rotate on axis, move away from origin, and rotate on orbital plane.
     const rotation_orbit = rotate(this.orbit_rotation); // the rotation around the sun
     const translation = translate(this.position); // my position relative to the sun as origin
     const rotation_axis = rotate(this.rotation); // my rotation on my axis
@@ -93,13 +124,6 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
       radius: 2.5 // TODO don't like this, for tesing only
     });
   } // end constructor
-
-  update_transformation_matrix(M_parent) {
-    super.update_transformation_matrix(M_parent); // does the above..
-    // fuck, we need to update this position, but we aren't aware of camera here.
-
-  } // end function
-
 } // end class
 
 /**
