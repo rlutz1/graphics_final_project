@@ -149,6 +149,27 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
 
 } // end class
 
+
+/**
+ * for a basic asteroid creation.
+ * treated like tiny rocky planets
+ * 
+ * width: 15,000,000,000  (~150e+8 km), about 1AU
+ * dist from sun: 329,100,000 km (3.291e+8 km)
+ * typical real radius between 0.01 - 530km, but scaling up a bit
+ */
+export class AsteroidObstacle extends PlanetSceneNode {
+  constructor(id="asteroid", shader_id="planet_basic") {
+    const radius = (Math.random() * 2000) + 1000; // radius between 100 - 530 km (1000 - 3000)
+    const distance = (Math.random() * 329100000) + 150000000; // random distance between mars and jupiter
+    const orbit_period = (Math.random() * 1095) + 1095 // random orbit period between 3 - 6 years
+    const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, texture_path: "./outer_world/textures/asteroid.jpg"}) 
+    console.log(data)
+    super(id, shader_id, data);
+  }
+} // end class
+
+
 /**
  * just placing these constants here.
  */
@@ -166,3 +187,4 @@ export const PLANET_DATA = {
   uranus: new PlanetData({name: "Uranus",  radius_km: 25362,   distance_km: 2870658186, color: [0.443, 0.694, 0.780], orbit_period: 30589, texture_path: "./outer_world/textures/uranus.jpg"}),
   neptune: new PlanetData({name: "Neptune", radius_km: 24622,   distance_km: 4498396441, color: [0.196, 0.376, 0.439], orbit_period: 59800, texture_path: "./outer_world/textures/neptune.jpg"})
 };
+

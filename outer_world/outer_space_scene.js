@@ -55,10 +55,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const sun = this.init_sun();
     const planets = this.init_planets();
     const spaceship = this.init_spaceship();
+    const asteroid_belt = this.init_asteroid_belt();
     
     this.solar_system.sun = sun; // for easy access more than anything
     this.solar_system.planets = planets; // can make this more specific if needed
     this.spaceship = spaceship; // again, easy access if needed.
+    this.solar_system.asteroid_belt = asteroid_belt; // asteroid belt 
 
 
     this.normalize_distance(); // normalize the distances of all planets for viewing pleasure
@@ -70,7 +72,13 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // add all planets as children of the sun for positioning to carry through when moving scene.
       sun.add_child(p);
     });
+    asteroid_belt.forEach((a) => {
+      // add all asteroids as children of the sun for positioning to carry through when moving scene.
+      sun.add_child(a);
+    });
     this.add_node(spaceship); // spaceship to daddy sceen
+
+    console.log(this.roots)
 
   } // end function
 
@@ -90,6 +98,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.solar_system.planets.forEach((p) => {
       const normalizedDistance = p.data.distance_km / max_distance;
       p.update_display_distance(Math.sqrt(normalizedDistance) * this.distance_const);
+    });
+
+    this.solar_system.asteroid_belt.forEach((a) => {
+      const normalizedDistance = a.data.distance_km / max_distance;
+      a.update_display_distance(Math.sqrt(normalizedDistance) * this.distance_const);
     });
   } // end function
 
@@ -111,6 +124,46 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       const normalized_radius = p.data.radius_km / max_radius;
       p.update_radius(Math.sqrt(normalized_radius));
     });
+
+    this.solar_system.asteroid_belt.forEach((a) => {
+      const normalized_radius = a.data.radius_km / max_radius;
+      a.update_radius(Math.sqrt(normalized_radius));
+    });
+  } // end function
+
+  /**
+   * 
+   */
+  init_asteroid_belt() {
+    const asteroids = [];
+
+    // TODO: may switch to diff mesh for all so that colors can be diff, but
+    // if texture mapping, color shouldn't matter, so same mesh is fine!
+
+    // for now, same mesh and material for all.
+    const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
+        1, // radius -- placeholder!
+        30, 30, // vSteps, uSteps
+        [0.2, 0.4, 0.9], 
+        0 // adding a texture bump mapping to these
+      )); // generate a basic planet mesh
+      const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
+          "ka": [0.3, 0.3, 0.3], 
+          "kd": [0.5, 0.5, 0.5],
+          "ks": [0.3, 0.3, 0.3], 
+          "shininess": 20, 
+          "metallic": 0,
+          "emissive": 0, 
+          "flat": false
+      });
+
+    for (let i = 0; i < 6; i++) {
+      const new_asteroid = new PlanetBuilder.AsteroidObstacle(); 
+      const texture = new SceneBuilder.Texture(this.renderer.gl, new_asteroid.data.texture_path);
+      new_asteroid.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
+      asteroids.push(new_asteroid);
+    } // end loop
+    return asteroids;
   } // end function
 
   /**
@@ -272,12 +325,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // should be able to very basically see if i run into something.
     // this is a WIP because the movement direction vector should be altered, but how is the tricky bit.
     const planet_collide = this.spaceship_planet_collision_check();
-    console.log(planet_collide)
+    console.log(planet_collide);
     if (planet_collide) { 
       forward_x -= planet_collide[0];  
       forward_y -= planet_collide[1];  
       forward_z += planet_collide[2];  
-    }
+    } // end if
 
 
     // forward motion -- 0.1 is speed

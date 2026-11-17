@@ -12,15 +12,3 @@ export class ObstacleSceneNode extends SceneBuilder.SceneNode {
   }
 } // end class
 
-/**
- * for a basic asteroid creation.
- * treated like tiny rocky planets
- * 
- * width: 15,000,000,000  (~150e+8 km)
- * dist from sun: 329,100,000 km (3.291e+8 km)
- */
-export class AsteroidObstacle extends PlanetBuilder.PlanetSceneNode {
-  constructor(id="asteroid", shader_id="planet_basic", data=null) {
-    super(id, shader_id, data);
-  }
-}
