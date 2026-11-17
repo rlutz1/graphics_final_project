@@ -262,26 +262,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // const forward_x = -Math.sin(yaw);
     // const forward_y = 0;
     // const forward_z = Math.cos(yaw);
-
-    // forward motion -- 0.1 is speed
-    if (frontend_data.w) {
-      // move things backward
-      this.camera.translate = [
-        this.camera.translate[0] + (this.spaceship.velocity[0] * forward_x),
-        this.camera.translate[1] + (this.spaceship.velocity[1] * forward_y),
-        this.camera.translate[2] + (this.spaceship.velocity[2] * forward_z)
-      ];
-    } // end if
-
-    // backward motion -- 0.1 is speed
-    if (frontend_data.s) {
-      // move things forward
-      this.camera.translate = [
-        this.camera.translate[0] - (this.spaceship.velocity[0] * forward_x),
-        this.camera.translate[1] - (this.spaceship.velocity[1] * forward_y),
-        this.camera.translate[2] - (this.spaceship.velocity[2] * forward_z)
-      ];
-    } // end if
     
     super.update_all_transformations(); // update all the transformation nodes, using the oberridenguy below.
 
@@ -290,7 +270,29 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     // centers have been updated by the above iteration.
     // should be able to very basically see if i run into something.
-    this.spaceship_planet_collision_check();
+    let xz_motion = 1;
+    if (this.spaceship_planet_collision_check()) { xz_motion = 0; }
+
+
+    // forward motion -- 0.1 is speed
+    if (frontend_data.w) {
+      // move things backward
+      this.camera.translate = [
+        this.camera.translate[0] + (this.spaceship.velocity[0] * (forward_x * xz_motion)),
+        this.camera.translate[1] + (this.spaceship.velocity[1] * forward_y),
+        this.camera.translate[2] + (this.spaceship.velocity[2] * (forward_z * xz_motion))
+      ];
+    } // end if
+
+    // backward motion -- 0.1 is speed
+    if (frontend_data.s) {
+      // move things forward
+      this.camera.translate = [
+        this.camera.translate[0] - (this.spaceship.velocity[0] * (forward_x * xz_motion)),
+        this.camera.translate[1] - (this.spaceship.velocity[1] * forward_y),
+        this.camera.translate[2] - (this.spaceship.velocity[2] * (forward_z * xz_motion))
+      ];
+    } // end if
 
     // render call!
     super.render([0, 0, 0]);  // let the renderer do it's draw thing
@@ -308,28 +310,17 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // check for sun collision with ship
     if (this.spaceship.bounding_shape.intersect(sun.bounding_shape)) {
       console.log("spaceship hit sun");
+      return true;
     } // end if
 
     // check for planet collisions
     planets.forEach((p) => {
       if (this.spaceship.bounding_shape.intersect(p.bounding_shape)) {
         console.log(`hit ${p.data.name}`)
+        return true;
       } // end if
     }) // end loop
-
-
-    // // radius of sun is 2.5, this is dirty, but you get it, testing.
-    // // assuming for spaceship at 0, 0, -10 -- obviously need to generalize.
-    // if (
-    //   Math.abs(sun.center[0]) < 2.5
-    //   && Math.abs(sun.center[1]) < 2.5 
-    //   && (Math.abs(sun.center[2]) < 12.5 && Math.abs(sun.center[2]) > 7.5)
-    // ) {
-    //   console.log(`hit ${sun.data.name}`)
-    // } // end if
-
-    // // not accounting for special radius's below, won't be perfect:
-   
+    return false;
   } // end function
 
 
