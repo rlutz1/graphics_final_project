@@ -596,5 +596,62 @@ export function gen_planet_mesh(r, vSteps, uSteps, color=[0.2, 0.4, 0.9], mappin
   
 } // end function
 
+/**
+ * torus mesh generation
+ */
+export function gen_torus_mesh(
+    r1 = 1,          // outer radius (center of tube to center of torus)
+    r2 = 0.4,        // inner radius (tube radius)
+    innerBands = 32, // resolution around the tube
+    outerBands = 32, // resolution around the torus ring
+    color = [0.5, 0.5, 0.5]
+) {
+  const vertices = [], normals = [], tangents = [], indices = [], texels = [], colors = [];
 
+  for (let inner = 0; inner <= innerBands; inner++) {
+    const phi = (inner / innerBands) * 2 * Math.PI;
+    const sinPhi = Math.sin(phi), cosPhi = Math.cos(phi);
 
+    for (let outer = 0; outer <= outerBands; outer++) {
+      const theta = (outer / outerBands) * 2 * Math.PI;
+      const sinTheta = Math.sin(theta), cosTheta = Math.cos(theta);
+
+      const x = (r1 + r2 * cosPhi) * cosTheta;
+      const y = r2 * sinPhi;
+      const z = (r1 + r2 * cosPhi) * sinTheta;
+
+      const nx = cosPhi * cosTheta;
+      const ny = sinPhi;
+      const nz = cosPhi * sinTheta;
+
+      const tx = -sinTheta;
+      const ty = 0;
+      const tz = cosTheta;
+
+      vertices.push(x, y, z);
+      normals.push(nx, ny, nz);
+      tangents.push(tx, ty, tz);
+      texels.push(theta / (2 * Math.PI), phi / (2 * Math.PI));
+      colors.push(...color);
+    }
+  }
+
+  for (let inner = 0; inner < innerBands; inner++) {
+    for (let outer = 0; outer < outerBands; outer++) {
+      const a = inner * (outerBands + 1) + outer;
+      const b = a + 1;
+      const c = a + (outerBands + 1);
+      const d = c + 1;
+      indices.push(a, c, b,  b, c, d);
+    }
+  }
+
+  return {
+    "vertices": new Float32Array(vertices),
+    "indices":  new Uint16Array(indices),
+    "normals":  new Float32Array(normals),
+    "tangents": new Float32Array(tangents),
+    "texels":   new Float32Array(texels),
+    "colors":   new Float32Array(colors),
+  };
+} // end function
