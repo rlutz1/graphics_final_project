@@ -42,8 +42,8 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     // basic sphere bounding shape for the planet body
     this.bounding_shape = new SceneBuilder.BoundingSphere({
       center_x:  this.center[0],
-      center_x:  this.center[0],
-      center_x:  this.center[0],
+      center_y:  this.center[1],
+      center_z:  this.center[2],
       radius: 1.0 // TODO don't like this, for tesing only
     });
   } // end constructor
@@ -130,8 +130,8 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
     // this.center.push(1); // homogenous
     this.bounding_shape = new SceneBuilder.BoundingSphere({
       center_x:  this.center[0],
-      center_x:  this.center[0],
-      center_x:  this.center[0],
+      center_y:  this.center[1],
+      center_z:  this.center[2],
       radius: 2.5 // TODO don't like this, for tesing only
     });
   } // end constructor

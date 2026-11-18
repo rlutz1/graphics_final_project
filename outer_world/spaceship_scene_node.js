@@ -9,7 +9,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
 
     this.position = [0, 0, -5]; // shove it back a little
     this.rotation = [-deg_to_rad(20), 0, 0]; // rotate to face front
-    this.scale = [0.6, 0.7, 1];
+    this.scale = [0.5, 0.5, 0.5];
     this.center = [...this.position, 1]; // this will ALWAYS be static on scene!
     this.velocity = [0.1, 0.1, 0.1]; // velocity in each direction (can tweak of course :) )
     this.rotation_speed = 0.03; // controls the rotation speed left/right 
@@ -41,13 +41,12 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
       "transparency": 1
     });
 
-    // some really basic bounding boxes
-    // this is primarily for testing! so pretty hard coded :(
-    this.bounding_shape = new SceneBuilder.BoundingBox({
-      x_min: -0.6, x_max: 0.6,
-      y_min: -0.7, y_max: 0.7,
-      z_min: -6, z_max: -3
-    })
+    this.bounding_shape = new SceneBuilder.BoundingSphere({
+      center_x:  this.center[0],
+      center_y:  this.center[1],
+      center_z:  this.center[2],
+      radius: 0.5 // TODO don't like this, for tesing only
+    });
 
     this.set_mesh(base_mesh).set_material(material); 
     pointer.set_mesh(pointer_mesh).set_material(material);

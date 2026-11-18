@@ -332,12 +332,25 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // so we're going to subtract out the part of movement we don't want from the current
     // Ry*Rx*[0, 0, -1]*V direction
     if (planet_collide) { 
-      const dot_vn = (planet_collide[0] * forward_x) + (planet_collide[1] * forward_y) + (planet_collide[2] * forward_z)
-      const vn = [planet_collide[0] * dot_vn, planet_collide[1] * dot_vn, planet_collide[2] * dot_vn];
+      const normal = planet_collide.normal; // the surface normal as calculated between bounding sphere centers 
+      const penetration = planet_collide.r_sum - planet_collide.d; // this is the 
 
-      forward_x -= vn[0];  
-      forward_y -= vn[1];  
-      forward_z -= vn[2];  
+      // simply correct the position here
+      this.camera.translate = [
+        this.camera.translate[0] - normal[0] * penetration,
+        this.camera.translate[1] - normal[1] * penetration,
+        this.camera.translate[2] - normal[2] * penetration
+      ];
+
+      // const dot = (normal[0] * forward_x) + (normal[1] * forward_y) + (normal[2] * forward_z)
+      // const vn = [normal[0] * dot, normal[1] * dot, normal[2] * dot];
+
+      // if (vn < 0) {
+      //   forward_x -= vn[0];  
+      //   forward_y -= vn[1];  
+      //   forward_z -= vn[2]; 
+      // }
+     
     } // end if
 
 
@@ -383,9 +396,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.spaceship.center[1] - sun.center[1], 
         this.spaceship.center[2] - sun.center[2], 
       ];
-      const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
+      const d_offset = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+      const d_mag = Math.sqrt(d_offset);
       const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
-      return n;
+      return {normal: n, d: d_mag, r_sum: this.spaceship.bounding_shape.radius + sun.bounding_shape.radius};
     } // end if
 
     // check for planet collisions
@@ -397,9 +411,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           this.spaceship.center[1] - p.center[1], 
           this.spaceship.center[2] - p.center[2], 
         ];
-        const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
+        const d_sq = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+        const d_mag = Math.sqrt(d_sq);
         const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
-        return n;
+        return {normal: n, d: d_mag, r_sum: this.spaceship.bounding_shape.radius + p.bounding_shape.radius};
       } // end if
     } // end loop
 
