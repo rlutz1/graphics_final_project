@@ -3,6 +3,7 @@ import * as MeshBuilder from "../util/mesh_generators.js";
 import * as PlanetBuilder from "./planet_scene_node.js";
 import * as SpaceshipBuilder from "./spaceship_scene_node.js";
 import { matMul, multiplyMat4Vec4 } from '../util/transitions.js';
+import { buildSpaceship } from "./spaceship_scene_node.js";
 
 
 export class OuterSpaceScene extends SceneBuilder.Scene {
@@ -282,6 +283,20 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.translate[2] - (this.spaceship.velocity[2] * forward_z)
       ];
     } // end if
+
+    // keep ship fixed in front of camera
+    this.spaceship.position = [
+      -this.camera.translate[0] + Math.sin(yaw) * 1.5,
+      -this.camera.translate[1] - Math.sin(pitch) * 1.5 - 0.3,
+      -this.camera.translate[2] - Math.cos(yaw) * 1.5
+    ];
+
+    // rotate ship with camera
+    this.spaceship.rotation = [
+      -pitch,
+      -yaw,
+      0
+    ];
     
     super.update_all_transformations(); // update all the transformation nodes, using the oberridenguy below.
 
