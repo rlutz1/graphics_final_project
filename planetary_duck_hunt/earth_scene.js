@@ -122,7 +122,7 @@ export class EarthScene extends SceneBuilder.Scene {
    * this is where any global game logic, scene component updates
    * should be occurring that need per-render-call updates.
    */
-  render(keys_pressed={}) {
+  render(frontend_data={}) {
     const now = performance.now();
 
     if (this.lastFrameTime !== null) {
@@ -130,8 +130,21 @@ export class EarthScene extends SceneBuilder.Scene {
       this.Module._advanceBoids(delT);
       this.update_boids();
 
-      this.move_player(keys_pressed, delT);
+      this.move_player(frontend_data, delT);
     }
+    // Mouse look: update camera orientation.
+    const sensitivity = 0.002;
+
+    this.camera.yaw -= (frontend_data.mouse_dx || 0) * sensitivity;
+    this.camera.pitch -= (frontend_data.mouse_dy || 0) * sensitivity;
+
+    // Prevent the player from looking completely upside down.
+    const pitchLimit = Math.PI / 2 - 0.01;
+
+    this.camera.pitch = Math.max(
+      -pitchLimit,
+      Math.min(pitchLimit, this.camera.pitch)
+    );
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
     this.lastFrameTime = now;

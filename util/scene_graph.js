@@ -511,17 +511,31 @@ export class Camera {
     this.aspect = aspect;
     this.ortho_size = ortho_size
     this.position = [0,0,0];
+//ADDED for mouse looking
+    this.yaw = 0;
+    this.pitch = 0;
   }
 
   /**
    * Replaced by theo for camera on planet scene
    */
   get_view_matrix() {
-    return translate([
-      -this.position[0],
-      -this.position[1],
-      -this.position[2]
+    // Inverse camera rotation
+    const inverseRotation = rotate([
+        -this.pitch,
+        -this.yaw,
+        0
     ]);
+
+    // Inverse camera translation
+    const inverseTranslation = translate([
+        -this.position[0],
+        -this.position[1],
+        -this.position[2]
+    ]);
+
+    // View = inverse rotation * inverse translation
+    return matMul(inverseRotation, inverseTranslation);
   }
 } // end class
 

@@ -12,12 +12,17 @@
   <!-- ======================================================= -->
   <!-- PRIMARY HTML PAGE                                       -->
   <!-- ======================================================= -->
+  
+  <!-- justify-content: center; /* Centers horizontally */
+  align-items: center;     /* Centers vertically */
+  height: 100vh;     -->
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <h1>Space Duck Hunt: The Birdening</h1>
+  </div>
 
-  <h1>Birds is Opps 2: The Birdening</h1>
-
-  <div style="display: flex; gap: 10px; align-items: flex-start;">
+  <div style="display: flex; justify-content: center; align-items: center;">
     <div style="display: flex; flex-direction: column; gap: 10px;">
-      <canvas id="glcanvas" width="600" height="600"></canvas>
+      <canvas id="glcanvas" width="1200" height="600"></canvas>
     </div>
   </div>
 
@@ -37,22 +42,43 @@
   <script>
     // adding some basic defaults at first, will dynamically add 
     // as more things keydown/keyup.
-    const keys_pressed = {
+    const frontend_data = {
       "w": false,
       "a": false,
       "s": false,
-      "d": false
+      "d": false,
+      mouse_dx: 0,
+      mouse_dy: 0
     };
 
     // example: keys.w = true on pressing
     window.addEventListener('keydown', (event) => {
-      keys_pressed[event.key] = true;
+      frontend_data[event.key] = true;
     });
 
     // example: keys.w = false on not pressing
     window.addEventListener('keyup', (event) => {
-      keys_pressed[event.key] = false;
+      frontend_data[event.key] = false;
     });
+
+    // for use in event handling/ui -- returns 
+    // position with x growing left to right, 0 -> w
+    // and y growing top to bottom, 0 -> h
+    /*
+    function getMousePosition(canvas, event) {
+            let rect = canvas.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+            return {x: x, y: y}
+    } // end function
+  */
+    // FPS mouse style, track movement between frame, accumulating movement until next render call
+    let mouseDX = 0;
+    let mouseDY = 0;
+
+    // Mouse sensitivity controls how quickly the camera rotates.
+    // Larger values = faster camera movement.
+    const mouseSensitivity = 0.002;
     
   </script>
 
@@ -69,6 +95,42 @@
     const gl = canvas.getContext("webgl2");
     if (!gl) alert("WebGL2 not supported");
         const aspect = canvas.width / canvas.height;
+
+    // get mouse position on screen for whatever you need.
+    // modified for use in FPS. original was absolute position on canvas, but 
+    // we need relatiive movement. 
+    const mouseSensitivity = 0.002;
+
+    // had to replace original mouseMove here
+    /*
+    // get mouse position on screen for whatever you need.
+    canvas.addEventListener('mousemove', (event) => {
+      const pos = getMousePosition(canvas, event);
+
+      frontend_data.mouse_x = pos.x;
+      frontend_data.mouse_y = pos.y;
+    });
+    */
+
+    // Request pointer lock when the player clicks the canvas.
+    // This hides the cursor and allows continuous mouse movement,
+    // even when the cursor would normally reach the edge of the window. 
+    // Might only apply for shooting.
+    canvas.addEventListener("click", () => {
+      canvas.requestPointerLock();
+    });
+
+    // Listen for relative mouse movement.
+    // movementX and movementY tell us how far the mouse moved
+    // since the previous mouse event, rather than its screen position.
+    document.addEventListener("mousemove", (event) => {
+      // Only control the camera while the canvas has pointer lock.
+      if (document.pointerLockElement !== canvas) return;
+
+      // Accumulate movement until the next rendered frame.
+      mouseDX += event.movementX;
+      mouseDY += event.movementY;
+    });
 
     let curr_scene = null; // the current scene to be rendered.
     let next_scene = null; // next scene up in the queue to be rendered.
@@ -96,21 +158,37 @@
     next_scene = space;
 
     // for potential transition testing.
-    // curr_scene = space;
+    curr_scene = earth;
     // next_scene = earth; 
 
-    // MUST BE ASYNCHRONOUS TO LOAD WASM
-    await curr_scene.init(renderer, aspect); // initialize the scene.
+    // birds init method is asynchronous, moved the call to render,  wrapped 
+    // in async
+    //curr_scene.init(renderer, aspect); // initialize the scene.
     
-    const start_time = Date.now() // start the clock 
+    let start_time = null;
     let delta_time;
 
     /**
      * render the scene.
      */
-    function render() {
-      delta_time = (Date.now() - start_time) / 1000 // dt in seconds from front end
-      
+    function render(timestep) {
+      if (!start_time) { start_time = timestep; }
+      delta_time = (timestep - start_time) / 1000 // dt in seconds from front end
+      frontend_data.delta_time = delta_time; // make sure this is passed to the scenes, likely will be needed.
+      frontend_data.canvas_width = canvas.width; // add the canvas information for mouse interaction with the screen.
+      frontend_data.canvas_height = canvas.height;
+
+      // ADDED 
+      frontend_data.mouse_dx = mouseDX;
+      frontend_data.mouse_dy = mouseDY;
+
+      // Reset the accumulated movement so it isn't applied again
+      // during the next frame.
+      mouseDX = 0;
+      mouseDY = 0;
+
+      // console.log(frontend_data); // TESTING
+
       // TODO: this could be a potential simple transition between scenes. 
       // note that the curr_scene.initialized is there primarily for the space 
       // scene: it's very likely we don't want to re-call that for that scene.
@@ -126,15 +204,23 @@
       //   } // end if
       // } // end if
 
-      // might be nice to pass delta_time to render
-      curr_scene.render(keys_pressed);
+      curr_scene.render(frontend_data);
+      requestAnimationFrame(render);
     } // end render
 
-    // can remove window.onload due to asynchronous function in curr_scene.init(). 
-    // May not be true of space scene unless we load a wasm module there or make it asynchronous otherwise
-    setInterval(render, 30);
+    // Initialize when page loads
+    // Initialize the scene before starting the render loop.
+    // Awaiting init ensures the WASM module and boid data are ready.
+    async function startGame() {
+      await curr_scene.init(renderer, aspect);
+
+      requestAnimationFrame(render);
+    }
+
+    startGame();
 
   </script>
+
 </body>
 
 </html>
