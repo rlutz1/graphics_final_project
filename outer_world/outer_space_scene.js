@@ -284,19 +284,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       ];
     } // end if
 
-    // keep ship fixed in front of camera
-    this.spaceship.position = [
-      -this.camera.translate[0] + Math.sin(yaw) * 1.5,
-      -this.camera.translate[1] - Math.sin(pitch) * 1.5 - 0.3,
-      -this.camera.translate[2] - Math.cos(yaw) * 1.5
-    ];
 
-    // rotate ship with camera
-    this.spaceship.rotation = [
-      -pitch,
-      -yaw,
-      0
-    ];
     
     super.update_all_transformations(); // update all the transformation nodes, using the oberridenguy below.
 
