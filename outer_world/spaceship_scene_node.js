@@ -9,7 +9,7 @@ import { mat4Identity, matMul, translate, rotate, scale } from '../util/transiti
  * Scale it via display_scale to fit whatever scene you drop it into.
  */
 export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
-  constructor(id = "spaceship", shader_id = "planet_basic") {
+  constructor(id = "spaceship", shader_id = "spaceship_basic") {
     super(id, shader_id);
     this.position = [0, 0, -10];
     this.rotation = [0, 0, 0];
@@ -23,14 +23,11 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
         gl,
         { ...MeshBuilder.gen_spaceship_mesh(), mapping: -1 }
     );
-    const material = new SceneBuilder.PlanetMaterial({
+    const material = new SceneBuilder.Material({
       "ka":        [0.6, 0.6, 0.6],
       "kd":        [0.8, 0.8, 0.8],
       "ks":        [1.0, 1.0, 1.0],
-      "shininess": 128,
-      "metallic":  0.8,
-      "emissive":  0.0,
-      "flat":      false,
+      "shininess": 128
     });
     this.set_mesh(mesh).set_material(material);
     return this;
@@ -59,7 +56,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
 export function buildSpaceship(renderer, {
   position = [0, 0.5, -8],
   display_scale = 0.8,
-  shader_id = "planet_basic",
+  shader_id = "spaceship_basic",
 } = {}) {
 
   const node = new SpaceshipSceneNode("spaceship", shader_id);
@@ -71,14 +68,11 @@ export function buildSpaceship(renderer, {
       MeshBuilder.gen_spaceship_mesh() // grey default color; pass [r,g,b] to tint
   );
 
-  const material = new SceneBuilder.PlanetMaterial({
+  const material = new SceneBuilder.Material({
     "ka":        [0.6, 0.6, 0.6],
     "kd":        [0.8, 0.8, 0.8],
     "ks":        [1.0, 1.0, 1.0],
-    "shininess": 128,
-    "metallic":  0.8,
-    "emissive":  0.0,
-    "flat":      false,
+    "shininess": 128
   });
 
   node.set_mesh(mesh).set_material(material);
