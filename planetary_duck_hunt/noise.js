@@ -38,11 +38,11 @@ export function mulberry32(a) {
  * 
  */
 export function spherePointPicking(rng) {
-    const y = 2 * Math.PI * rng();
-    const phi = Math.acos(1 - 2 * rng());
+    const theta = rng() * 2 - 1;
+    const phi = rng() * 2 * Math.PI;
     const r = Math.sqrt(1 - y * y);
 
-    return(r * Math.cos(y), y, r * Math.sin(y));
+    return [r * Math.cos(theta), y, r * Math.sin(theta)];
 }
 
 /**
@@ -57,7 +57,7 @@ export function spherePointPicking(rng) {
  * 
  */
 
-function FormDataEvent(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
 
 function lerp(t, a, b) {return a + t * (b - a);}
 
@@ -68,7 +68,7 @@ function grad(hash, x, y, z){
     return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
 }
 
-const p = new Array[512];
+const p = new Array(512);
 
 const permutation = [
   151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
@@ -99,8 +99,8 @@ y -= Math.floor(y);
 z -= Math.floor(z);
 
 const u = fade(x),
-      y = fade(y),
-      z = fade(z);
+      v = fade(y),
+      w = fade(z);
 
 const A = p[X] + Y,     AA = p[A] + Z, AB = p[A + 1] + Z,
       B = p[X + 1] + Y, BA = p[B] + Z, BB = p[B + 1] + Z;
@@ -129,7 +129,7 @@ export function seededPerlin(seed){
           zOffset = rng() * 256;
     
     // return the associated offset perlin coor
-    return function noise(){
+    return function noise(x, y, z){
         return improvedPerlin(x + xOffset, y + yOffset, z + zOffset);
     };
 }
