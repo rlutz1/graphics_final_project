@@ -660,8 +660,7 @@ export function gen_torus_mesh(
 
 
 /**
- * Spaceship mesh v3 — black caps on fuselage and engine pod backs to eliminate z-fighting.
- * White fuselage, blue wings, black engine backs, orange exhaust, blue cockpit.
+ * Spaceship mesh v3
  * Ship faces -Z (nose forward, away from camera in third-person view).
  */
 export function gen_spaceship_mesh(color = null) {

@@ -24,12 +24,12 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
         { ...MeshBuilder.gen_spaceship_mesh(), mapping: -1 }
     );
     const material = new SceneBuilder.PlanetMaterial({
-      "ka":        [0.6, 0.6, 0.6],  // much higher ambient
+      "ka":        [0.6, 0.6, 0.6],
       "kd":        [0.8, 0.8, 0.8],
       "ks":        [1.0, 1.0, 1.0],
       "shininess": 128,
       "metallic":  0.8,
-      "emissive":  0.3,              // slight glow so colors show
+      "emissive":  0.0,
       "flat":      false,
     });
     this.set_mesh(mesh).set_material(material);
@@ -72,12 +72,12 @@ export function buildSpaceship(renderer, {
   );
 
   const material = new SceneBuilder.PlanetMaterial({
-    "ka":        [0.6, 0.6, 0.6],  // much higher ambient
+    "ka":        [0.6, 0.6, 0.6],
     "kd":        [0.8, 0.8, 0.8],
     "ks":        [1.0, 1.0, 1.0],
     "shininess": 128,
     "metallic":  0.8,
-    "emissive":  0.3,              // slight glow so colors show
+    "emissive":  0.0,
     "flat":      false,
   });
 
