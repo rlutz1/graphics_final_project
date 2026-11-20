@@ -1,5 +1,5 @@
 import * as SceneBuilder from "../util/scene_graph.js";
-import { mat4Identity, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
+import { mat4Identity, matMul, translate, rotate, scale, mat4FromRows, multiplyMat4Vec4 } from '../util/transitions.js';
 
 /**
  * just a small wrapper
@@ -38,7 +38,14 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     this.display_distance = 0; // distance from the sun, normalized for viewing.
     this.radius_distance = 0; // the radius of this planet, normalized for viewing.
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
-    // this.center.push(1); // homogenous
+
+    // basic sphere bounding shape for the planet body
+    this.bounding_shape = new SceneBuilder.BoundingSphere({
+      center_x:  this.center[0],
+      center_y:  this.center[1],
+      center_z:  this.center[2],
+      radius: 1.0 // TODO don't like this, for tesing only
+    });
   } // end constructor
 
   /**
@@ -51,6 +58,46 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
   } // end function 
 
   /**
+   * function to update radius of the planet. moved to a function
+   * access point so that any bounding shapes can be updated with this
+   * call automatically.
+   */
+  update_radius(radius=1.0) {
+    this.display_radius = radius; // for any other purposes, hold
+    
+    // NOTE: this is done because the initial planet mesh has a radius 1.
+    // so, scaling all points down by display radius is equivalent to shrinking the radius
+    // to that number.
+    this.scale = [this.display_radius, this.display_radius, this.display_radius]; // scale by norm radius for now
+
+    // need to also update the bounding sphere
+    this.bounding_shape.radius = this.display_radius;
+  } // end function
+
+  /**
+   * update the display distance. preferred access point over 
+   * this.display_distance = ...
+   * in case further logic needed.
+   */
+  update_display_distance(distance) {
+    this.display_distance = distance; // for any other purposes, hold
+
+    // this position is relative to the sun-parent!
+    this.position = [this.display_distance, 0, this.display_distance]; // be sure to update this by scene init
+  } // end function
+
+  /**
+   * wrapper to update the center of this planet, which affects the bounding box.
+   */
+  update_bounding_shape(transformation_matrix) {
+    // set the new center based off of camera movements and the actual node movements.
+    this.center = multiplyMat4Vec4(transformation_matrix, [0, 0, 0, 1]);
+    this.bounding_shape.center_x = this.center[0];
+    this.bounding_shape.center_y = this.center[1];
+    this.bounding_shape.center_z = this.center[2];
+  } // end function
+
+  /**
    * update my transformation dumbly, simply calculate:
    * M_world_child = M_world_parent * M_local_child.
    * if want to change, extend the SceneNode and override, but you MUST
@@ -58,13 +105,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
    * incorrect rendering.
    */
   update_transformation_matrix(M_parent) {
-    // change any trajectory via this.
-    this.position = [this.display_distance, 0, this.display_distance]; // be sure to update this by scene init
-    // NOTE: this is done because the initial planet mesh has a radius 1.
-    // so, scaling all points down by display radius is equivalent to shrinking the radius
-    // to that number.
-    this.scale = [this.display_radius, this.display_radius, this.display_radius]; // scale by norm radius for now
-
+    // scale for radius, rotate on axis, move away from origin, and rotate on orbital plane.
     const rotation_orbit = rotate(this.orbit_rotation); // the rotation around the sun
     const translation = translate(this.position); // my position relative to the sun as origin
     const rotation_axis = rotate(this.rotation); // my rotation on my axis
@@ -86,15 +127,49 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
     this.position = [0, 0, -30]; // where i want to be when we start scene
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
     // this.center.push(1); // homogenous
+    this.bounding_shape = new SceneBuilder.BoundingSphere({
+      center_x:  this.center[0],
+      center_y:  this.center[1],
+      center_z:  this.center[2],
+      radius: 2.5 // TODO don't like this, for tesing only
+    });
+
+    // this.scale = [2, 2, 2] // potnetially. we'll see, it'd be nicer if things were a little bigger
   } // end constructor
 
-  update_transformation_matrix(M_parent) {
-    super.update_transformation_matrix(M_parent); // does the above..
-    // fuck, we need to update this position, but we aren't aware of camera here.
-
+  /**
+   * wrapper to update the center of this planet, which affects the bounding box.
+   */
+  update_bounding_shape(transformation_matrix) {
+    // set the new center based off of camera movements and the actual node movements.
+    this.center = multiplyMat4Vec4(transformation_matrix, [0, 0, 0, 1]);
+    this.bounding_shape.center_x = this.center[0];
+    this.bounding_shape.center_y = this.center[1];
+    this.bounding_shape.center_z = this.center[2];
   } // end function
 
 } // end class
+
+
+/**
+ * for a basic asteroid creation.
+ * treated like tiny rocky planets
+ * 
+ * width: 15,000,000,000  (~150e+8 km), about 1AU
+ * dist from sun: 329,100,000 km (3.291e+8 km)
+ * typical real radius between 0.01 - 530km, but scaling up a bit
+ */
+export class AsteroidObstacle extends PlanetSceneNode {
+  constructor(id="asteroid", shader_id="planet_basic") {
+    const radius = (Math.random() * 2000) + 1000; // radius between 100 - 530 km (1000 - 3000)
+    const distance = (Math.random() * 329100000) + 150000000; // random distance between mars and jupiter
+    const orbit_period = (Math.random() * 1095) + 1095 // random orbit period between 3 - 6 years
+    const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, texture_path: "./outer_world/textures/asteroid.jpg"}) 
+    // console.log(data)
+    super(id, shader_id, data);
+  }
+} // end class
+
 
 /**
  * just placing these constants here.
@@ -113,3 +188,4 @@ export const PLANET_DATA = {
   uranus: new PlanetData({name: "Uranus",  radius_km: 25362,   distance_km: 2870658186, color: [0.443, 0.694, 0.780], orbit_period: 30589, texture_path: "./outer_world/textures/uranus.jpg"}),
   neptune: new PlanetData({name: "Neptune", radius_km: 24622,   distance_km: 4498396441, color: [0.196, 0.376, 0.439], orbit_period: 59800, texture_path: "./outer_world/textures/neptune.jpg"})
 };
+

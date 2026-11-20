@@ -3,6 +3,7 @@ import * as MeshBuilder from "../util/mesh_generators.js";
 import * as PlanetBuilder from "./planet_scene_node.js";
 import * as SpaceshipBuilder from "./spaceship_scene_node.js";
 import { matMul, multiplyMat4Vec4 } from '../util/transitions.js';
+import { buildSpaceship } from "./spaceship_scene_node.js";
 
 
 export class OuterSpaceScene extends SceneBuilder.Scene {
@@ -55,10 +56,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const sun = this.init_sun();
     const planets = this.init_planets();
     const spaceship = this.init_spaceship();
+    const asteroid_belt = this.init_asteroid_belt();
     
     this.solar_system.sun = sun; // for easy access more than anything
     this.solar_system.planets = planets; // can make this more specific if needed
     this.spaceship = spaceship; // again, easy access if needed.
+    this.solar_system.asteroid_belt = asteroid_belt; // asteroid belt 
 
 
     this.normalize_distance(); // normalize the distances of all planets for viewing pleasure
@@ -70,8 +73,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // add all planets as children of the sun for positioning to carry through when moving scene.
       sun.add_child(p);
     });
+    asteroid_belt.forEach((a) => {
+      // add all asteroids as children of the sun for positioning to carry through when moving scene.
+      sun.add_child(a);
+    });
     this.add_node(spaceship); // spaceship to daddy sceen
-
   } // end function
 
   /**
@@ -89,7 +95,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     this.solar_system.planets.forEach((p) => {
       const normalizedDistance = p.data.distance_km / max_distance;
-      p.display_distance = Math.sqrt(normalizedDistance) * this.distance_const;
+      p.update_display_distance(Math.sqrt(normalizedDistance) * this.distance_const);
+    });
+
+    this.solar_system.asteroid_belt.forEach((a) => {
+      const normalizedDistance = a.data.distance_km / max_distance;
+      a.update_display_distance(Math.sqrt(normalizedDistance) * this.distance_const);
     });
   } // end function
 
@@ -109,8 +120,48 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     this.solar_system.planets.forEach((p) => {
       const normalized_radius = p.data.radius_km / max_radius;
-      p.display_radius = Math.sqrt(normalized_radius);
+      p.update_radius(Math.sqrt(normalized_radius));
     });
+
+    this.solar_system.asteroid_belt.forEach((a) => {
+      const normalized_radius = a.data.radius_km / max_radius;
+      a.update_radius(Math.sqrt(normalized_radius));
+    });
+  } // end function
+
+  /**
+   * 
+   */
+  init_asteroid_belt() {
+    const asteroids = [];
+
+    // TODO: may switch to diff mesh for all so that colors can be diff, but
+    // if texture mapping, color shouldn't matter, so same mesh is fine!
+
+    // for now, same mesh and material for all.
+    const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
+        1, // radius -- placeholder!
+        30, 30, // vSteps, uSteps
+        [0.2, 0.4, 0.9], 
+        0 // adding a texture bump mapping to these
+      )); // generate a basic planet mesh
+      const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
+          "ka": [0.3, 0.3, 0.3], 
+          "kd": [0.5, 0.5, 0.5],
+          "ks": [0.3, 0.3, 0.3], 
+          "shininess": 20, 
+          "metallic": 0,
+          "emissive": 0, 
+          "flat": false
+      });
+
+    for (let i = 0; i < 100; i++) {
+      const new_asteroid = new PlanetBuilder.AsteroidObstacle(); 
+      const texture = new SceneBuilder.Texture(this.renderer.gl, new_asteroid.data.texture_path);
+      new_asteroid.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
+      asteroids.push(new_asteroid);
+    } // end loop
+    return asteroids;
   } // end function
 
   /**
@@ -204,10 +255,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       this.solar_system.planets.forEach((p) => {
         p.update_orbit(this.day);
       });
+      this.solar_system.asteroid_belt.forEach((a) => {
+        a.update_orbit(this.day);
+      });
     } // end if
-
-    // TODO: the light position that goes with sun needs to be bound to the sun's new position!!!!!!!!!
-    // TODO: everything needs to have some sort of relative position tracking for collision detection (ASSUMEDLY)
 
     /**
      * w/s are a move forward/back.
@@ -243,54 +294,88 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const yaw = this.camera.rotate[1]; // the rotation around the y axis, left/right motion
     const pitch = this.camera.rotate[0]; // the rotation around the x axis, up/down tilting
 
+    
+    
+    // now, if a planet does collide, we want to alter the direction vector a bit
+    // planet_collide, if not null, returns the normalized directional vector
+    // from centroid A -> B (A is spaceship, B is a planet/sun).
+    // so we're going to subtract out the part of movement we don't want from the current
+    // Ry*Rx*[0, 0, -1]*V direction
+    // lets see if we collided with a planet
+    const planet_collide = this.spaceship_planet_collision_check();
+    // console.log(planet_collide);
+    let velocity = this.spaceship.velocity;
+
+    if (planet_collide) { 
+      const normal = planet_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
+      const penetration = planet_collide.overlap; // this is HOW MUCH we should push in the norm direction
+
+      // simply correct the position here before we apply the rotation of the direction vector
+      // this will push the scene in the opposing direction
+      this.camera.translate = [
+        this.camera.translate[0] - normal[0] * penetration,
+        this.camera.translate[1] - normal[1] * penetration,
+        this.camera.translate[2] - normal[2] * penetration
+      ];
+      
+      // // potential further smoothing?
+      // const dot = (normal[0] * velocity[0]) + (normal[1] *  velocity[1]) + (normal[2] *  velocity[2])
+      // const vn = [normal[0] * dot, normal[1] * dot, normal[2] * dot];
+
+      // if (dot <= 0) {
+      //   velocity[0] -= vn[0];  
+      //   velocity[1] -= vn[1];  
+      //   velocity[2] -= vn[2]; 
+      // }
+     
+    } // end if
+    // console.log(`velocity: ${velocity}`)
+
     // the calculations of how to move forward considering the direction of
     // my camera view at this moment. includes up/down/left/right direction in the motion.
     // can derive from using direction vector [0, 0, -1] (always move in negative z)
-    // and calculating R(y)*R(x)*[0, 0, -1]
+    // and calculating R(y)*R(x)*[0, 0, -1]*V
     // and that flips the direction in which to move the scene in terms of tranlation
     // with consideration to your current orientation, giving impression you are moving in direction you're pointed in.
-    const forward_x = -Math.sin(yaw) * Math.cos(pitch);
-    const forward_y = Math.sin(pitch);
-    const forward_z = Math.cos(yaw) * Math.cos(pitch); // flipping sign on this
-
-    // just fuckin around don't worry about this: 
-    // const forward_x = -Math.sin(yaw);
-    // const forward_y = Math.sin(pitch) * Math.cos(yaw);
-    // const forward_z = Math.cos(pitch) * Math.cos(yaw);
+    // this is the DIRECTION * HOW MUCH you should move the scene in.
+    // let forward_x = -Math.sin(yaw) * Math.cos(pitch) * this.spaceship.velocity[0];
+    // let forward_y = Math.sin(pitch) * this.spaceship.velocity[1];
+    // let forward_z = Math.cos(yaw) * Math.cos(pitch) * this.spaceship.velocity[2]; // flipping sign on this
+    let forward_x = -Math.sin(yaw) * Math.cos(pitch) * velocity[0];
+    let forward_y = Math.sin(pitch) * velocity[1];
+    let forward_z = Math.cos(yaw) * Math.cos(pitch) * velocity[2]; // flipping sign on this
+    
 
     // FOR IF YOU'RE GROUNDED ON A PLANE -- great for planet probably
     // const forward_x = -Math.sin(yaw);
     // const forward_y = 0;
     // const forward_z = Math.cos(yaw);
 
-    // forward motion -- 0.1 is speed
+    // forward motion
     if (frontend_data.w) {
       // move things backward
       this.camera.translate = [
-        this.camera.translate[0] + (this.spaceship.velocity[0] * forward_x),
-        this.camera.translate[1] + (this.spaceship.velocity[1] * forward_y),
-        this.camera.translate[2] + (this.spaceship.velocity[2] * forward_z)
+        this.camera.translate[0] + forward_x,
+        this.camera.translate[1] + forward_y,
+        this.camera.translate[2] + forward_z
       ];
     } // end if
 
-    // backward motion -- 0.1 is speed
+    // backward motion
     if (frontend_data.s) {
       // move things forward
       this.camera.translate = [
-        this.camera.translate[0] - (this.spaceship.velocity[0] * forward_x),
-        this.camera.translate[1] - (this.spaceship.velocity[1] * forward_y),
-        this.camera.translate[2] - (this.spaceship.velocity[2] * forward_z)
+        this.camera.translate[0] - forward_x,
+        this.camera.translate[1] - forward_y,
+        this.camera.translate[2] - forward_z
       ];
     } // end if
-    
+
+    // carry out all updates from last time
     super.update_all_transformations(); // update all the transformation nodes, using the oberridenguy below.
 
     // update the sun light position as the sun moves.
     this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
-
-    // centers have been updated by the above iteration.
-    // should be able to very basically see if i run into something.
-    this.check_for_planet_collision();
 
     // render call!
     super.render([0, 0, 0]);  // let the renderer do it's draw thing
@@ -301,31 +386,56 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    * check to see if any planet or sun position is within [1, 1, 1] of me at [0, 0, 0]
    * and simply print to console.
    */
-  check_for_planet_collision() {
+  spaceship_planet_collision_check() {
     const sun = this.solar_system.sun;
     const planets = this.solar_system.planets;
 
-    // radius of sun is 2.5, this is dirty, but you get it, testing.
-    // assuming for spaceship at 0, 0, -10 -- obviously need to generalize.
-    if (
-      Math.abs(sun.center[0]) < 2.5
-      && Math.abs(sun.center[1]) < 2.5 
-      && (Math.abs(sun.center[2]) < 12.5 && Math.abs(sun.center[2]) > 7.5)
-    ) {
-      console.log(`hit ${sun.data.name}`)
-    } // end if
-
-    // not accounting for special radius's below, won't be perfect:
-    planets.forEach((p) => {
-      if (
-        Math.abs(p.center[0]) < 1 
-        && Math.abs(p.center[1]) < 1 
-        && (Math.abs(p.center[2]) < 11 && Math.abs(p.center[2]) > 9)
-      ) {
-        console.log(`hit ${p.data.name}`)
+    // check for sun collision with ship
+    let n = []; let overlap = 0; let intersect = false;
+    for (const shape of this.spaceship.bounding_shape) {
+      if (shape.intersect(sun.bounding_shape)) {
+        console.log("spaceship hit sun");
+        const d = [
+          shape.center_x - sun.bounding_shape.center_x, 
+          shape.center_y - sun.bounding_shape.center_y, 
+          shape.center_z - sun.bounding_shape.center_z, 
+        ];
+        const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
+        const overlap_temp = shape.radius + sun.bounding_shape.radius - d_mag;
+        if (overlap_temp > overlap) { 
+          overlap = overlap_temp;
+          n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag]; 
+        } 
+        intersect = true;
       } // end if
-    }) // end loop
+    } // end loop
 
+    if (intersect) { return {normal: n, overlap: overlap}; }
+
+    // check for planet collisions
+    for (const shape of this.spaceship.bounding_shape) {
+      for (const p of planets) {
+        if (shape.intersect(p.bounding_shape)) {
+          console.log(`hit ${p.data.name}`)
+          const d = [
+            shape.center_x - p.bounding_shape.center_x, 
+            shape.center_y - p.bounding_shape.center_y, 
+            shape.center_z - p.bounding_shape.center_z, 
+          ];
+          const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
+          const overlap_temp = shape.radius + p.bounding_shape.radius - d_mag;
+          if (overlap_temp > overlap) { 
+            overlap = overlap_temp;
+            n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag]; 
+          } 
+          intersect = true;
+        } // end if
+      } // end loop
+    } // end loop
+
+    if (intersect) { return {normal: n, overlap: overlap}; }
+
+    return null;
   } // end function
 
 
@@ -344,14 +454,14 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
     // to make sure this works at all.
     if (!(parent.id === this.spaceship.id)) { // important! all nodes in spaceship should have this id for now...
-      const new_center_mtx = matMul(
+      const position_transforms = matMul(
         // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
         this.camera.get_view_matrix(),
         parent.transformation_matrix
       );
 
-      // set the new center based off of camera movements and the actual node movements.
-      parent.center = multiplyMat4Vec4(new_center_mtx, [0, 0, 0, 1]);
+      // update the center point and any other things that could effect.
+      parent.update_bounding_shape(position_transforms);
     } // end if
     
 
