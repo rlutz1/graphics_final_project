@@ -3,6 +3,7 @@ import * as MeshBuilder from "../util/mesh_generators.js";
 import * as PlanetBuilder from "./planet_scene_node.js";
 import * as SpaceshipBuilder from "./spaceship_scene_node.js";
 import { matMul, multiplyMat4Vec4 } from '../util/transitions.js';
+import { buildSpaceship } from "./spaceship_scene_node.js";
 
 
 export class OuterSpaceScene extends SceneBuilder.Scene {
