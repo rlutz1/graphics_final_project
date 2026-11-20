@@ -3,50 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>UNM CS 412/512 HW5</title>
-  <style>
-  .game-container {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-  }
-
-  #glcanvas {
-      display: block;
-  }
-
-  #crosshair {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 16px;
-      height: 16px;
-      pointer-events: none;
-      z-index: 10;
-  }
-
-  #crosshair::before,
-  #crosshair::after {
-      content: "";
-      position: absolute;
-      background: white;
-  }
-
-  #crosshair::before {
-      width: 2px;
-      height: 16px;
-      left: 7px;
-      top: 0;
-  }
-
-  #crosshair::after {
-      width: 16px;
-      height: 2px;
-      left: 0;
-      top: 7px;
-  }
-</style>
+  <link rel="stylesheet" href="crosshair.css">
 
 
 </head>
