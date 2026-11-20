@@ -154,6 +154,43 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
 
 } // end class
 
+export class BackgroundSceneNode extends SceneBuilder.SceneNode {
+
+  constructor(id="background", shader_id="phong_basic") {
+    super(id, shader_id); // takes care of some baseline stuff for now.
+
+    // this.start_day = Math.random() * 10000; // set this to whatever as a starting point for the orbit
+
+    // // default super call sets up: this.position = [0, 0, 0]
+    // this.orbit_rotation = [0, this.start_day, 0]; // special for rotation around sun.
+
+    // this.data = data; // grab the general data pack.
+    // // this.delta_time = 0; // time since last frame
+    // this.display_distance = 0; // distance from the sun, normalized for viewing.
+    // this.radius_distance = 0; // the radius of this planet, normalized for viewing.
+    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
+
+    // basic sphere bounding shape for the planet body
+    this.bounding_shape = new SceneBuilder.BoundingSphere({
+      center_x:  this.center[0],
+      center_y:  this.center[1],
+      center_z:  this.center[2],
+      radius: 1.0 // TODO don't like this, for tesing only
+    });
+  } // end constructor
+
+  /**
+   * wrapper to update the center of this planet, which affects the bounding box.
+   */
+  update_bounding_shape(transformation_matrix) {
+    // set the new center based off of camera movements and the actual node movements.
+    this.center = multiplyMat4Vec4(transformation_matrix, [0, 0, 0, 1]);
+    this.bounding_shape.center_x = this.center[0];
+    this.bounding_shape.center_y = this.center[1];
+    this.bounding_shape.center_z = this.center[2];
+  } // end function
+
+} // end class
 
 /**
  * for a basic asteroid creation.

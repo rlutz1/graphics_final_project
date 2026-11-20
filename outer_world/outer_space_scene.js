@@ -57,12 +57,13 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const planets = this.init_planets();
     const spaceship = this.init_spaceship();
     const asteroid_belt = this.init_asteroid_belt();
+    const background = this.init_background();
     
     this.solar_system.sun = sun; // for easy access more than anything
     this.solar_system.planets = planets; // can make this more specific if needed
     this.spaceship = spaceship; // again, easy access if needed.
     this.solar_system.asteroid_belt = asteroid_belt; // asteroid belt 
-
+    this.solar_system.background = background; // the background mimcry
 
     this.normalize_distance(); // normalize the distances of all planets for viewing pleasure
     this.normalize_radii(); // same thing here.
@@ -78,6 +79,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       sun.add_child(a);
     });
     this.add_node(spaceship); // spaceship to daddy sceen
+    this.add_node(background); // background
   } // end function
 
   /**
@@ -130,7 +132,29 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   } // end function
 
   /**
-   * 
+   * initialize the background mimckry
+   */
+  init_background() {
+    // TODO: not great to use basic spaceship
+    const background = new PlanetBuilder.BackgroundSceneNode("background", "spaceship_basic");
+    const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_sphere_mesh(
+        100, // radius -- placeholder!
+        0.1, 0.1, // vSteps, uSteps
+        [0.5, 0.5, 0.5]
+    )); // generate a basic sphere mesh
+    const material = new SceneBuilder.Material({ // create a material -- constants from liz's file
+        "ka": [0.7, 0.7, 0.7], 
+        "kd": [0.85, 0.85, 0.85],
+        "ks": [0.5, 0.5, 0.5], 
+        "shininess": 40
+    });
+
+    background.set_mesh(mesh).set_material(material); 
+    return background;
+  } // end function 
+
+  /**
+   * initialize the asteroid belt babies
    */
   init_asteroid_belt() {
     const asteroids = [];
