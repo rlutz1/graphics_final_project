@@ -11,7 +11,7 @@ import { mat4Identity, matMul, translate, rotate, scale } from '../util/transiti
 export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
   constructor(id = "spaceship", shader_id = "spaceship_basic") {
     super(id, shader_id);
-    this.position = [0, 0, -10];
+    this.position = [0, -0.4, -2];
     this.rotation = [0, 0, 0];
     this.scale = [0.8, 0.8, 0.8];
     this.velocity = [0.1, 0.1, 0.1]; // movement speed
