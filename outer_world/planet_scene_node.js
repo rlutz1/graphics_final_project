@@ -97,7 +97,6 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     this.bounding_shape.center_z = this.center[2];
   } // end function
 
-
   /**
    * update my transformation dumbly, simply calculate:
    * M_world_child = M_world_parent * M_local_child.
@@ -134,6 +133,8 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
       center_z:  this.center[2],
       radius: 2.5 // TODO don't like this, for tesing only
     });
+
+    // this.scale = [2, 2, 2] // potnetially. we'll see, it'd be nicer if things were a little bigger
   } // end constructor
 
   /**
@@ -164,7 +165,7 @@ export class AsteroidObstacle extends PlanetSceneNode {
     const distance = (Math.random() * 329100000) + 150000000; // random distance between mars and jupiter
     const orbit_period = (Math.random() * 1095) + 1095 // random orbit period between 3 - 6 years
     const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, texture_path: "./outer_world/textures/asteroid.jpg"}) 
-    console.log(data)
+    // console.log(data)
     super(id, shader_id, data);
   }
 } // end class

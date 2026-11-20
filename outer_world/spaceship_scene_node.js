@@ -20,14 +20,6 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     this.center = [...this.position, 1]; // this will ALWAYS be static on scene!
     this.velocity = [0.1, 0.1, 0.1]; // velocity in each direction (can tweak of course :) )
     this.rotation_speed = 0.03; // controls the rotation speed left/right 
-
-    // TODO
-    this.bounding_shape = new SceneBuilder.BoundingSphere({
-      center_x:  this.center[0],
-      center_y:  this.center[1],
-      center_z:  this.center[2],
-      radius: 0.5 // TODO don't like this, for tesing only
-    });
   }
 
   init(gl) {
@@ -42,6 +34,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
       "shininess": 128
     });
     this.set_mesh(mesh).set_material(material);
+    this.init_bounding_shape(); // initialize my bounders
     return this;
   } // end init
 
@@ -53,6 +46,57 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     const M_local = matMul(translation, rotation, scale_mtx);
     this.transformation_matrix = matMul(M_parent, M_local);
   } // end funcion
+
+  init_bounding_shape() {
+    // // TODO: must consider scale
+    // let min_z = 1000000; // arbitrary
+    // let max_z = -1000000;
+    // for (let i = 2; i < this.mesh.vertices.length; i += 3) {
+    //   if (this.mesh.vertices[i] < min_z) { min_z = this.mesh.vertices[i]; }
+    //   else if (this.mesh.vertices[i] > max_z) { max_z = this.mesh.vertices[i]; }
+    // }
+    // console.log(min_z, max_z)
+
+    // let min_y = 1000000; // arbitrary
+    // let max_y = -1000000;
+    // for (let i = 1; i < this.mesh.vertices.length; i += 3) {
+    //   if (this.mesh.vertices[i] < min_y) { min_y = this.mesh.vertices[i]; }
+    //   else if (this.mesh.vertices[i] > max_y) { max_y = this.mesh.vertices[i]; }
+    // }
+    // console.log(min_y, max_y)
+
+    // let min_x = 1000000; // arbitrary
+    // let max_x = -1000000;
+    // for (let i = 0; i < this.mesh.vertices.length; i += 3) {
+    //   if (this.mesh.vertices[i] < min_x) { min_x = this.mesh.vertices[i]; }
+    //   else if (this.mesh.vertices[i] > max_x) { max_x = this.mesh.vertices[i]; }
+    // }
+    // console.log(min_x, max_x)
+
+
+    this.bounding_shape = []
+    // TODO
+    const right_wing = new SceneBuilder.BoundingSphere({
+      center_x:  0.675 * this.scale[0],
+      center_y:  0 * this.scale[1],
+      center_z:  (-1 + this.center[2]) * this.scale[2],
+      radius: (0.65 * this.scale[0]) // TODO don't like this, for tesing only
+    });
+    const left_wing = new SceneBuilder.BoundingSphere({
+      center_x:  -0.675 * this.scale[0],
+      center_y:  0 * this.scale[1],
+      center_z:  (-1 + this.center[2]) * this.scale[2],
+      radius: (0.65 * this.scale[0]) // TODO don't like this, for tesing only
+    });
+    // const boundary = new SceneBuilder.BoundingSphere({
+    //   center_x:  0,
+    //   center_y:  0,
+    //   center_z:  -1 + this.position[2],
+    //   radius: 1.0 // TODO don't like this, for tesing only
+    // });
+    this.bounding_shape.push(right_wing);
+    this.bounding_shape.push(left_wing);
+  }
 } // end class
 
 /**

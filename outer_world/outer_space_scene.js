@@ -78,9 +78,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       sun.add_child(a);
     });
     this.add_node(spaceship); // spaceship to daddy sceen
-
-    console.log(this.roots)
-
   } // end function
 
   /**
@@ -306,7 +303,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // Ry*Rx*[0, 0, -1]*V direction
     // lets see if we collided with a planet
     const planet_collide = this.spaceship_planet_collision_check();
-    console.log(planet_collide);
+    // console.log(planet_collide);
     let velocity = this.spaceship.velocity;
 
     if (planet_collide) { 
@@ -332,7 +329,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // }
      
     } // end if
-    console.log(`velocity: ${velocity}`)
+    // console.log(`velocity: ${velocity}`)
 
     // the calculations of how to move forward considering the direction of
     // my camera view at this moment. includes up/down/left/right direction in the motion.
@@ -398,9 +395,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       console.log("spaceship hit sun");
       // return true;
       const d = [
-        this.spaceship.center[0] - sun.center[0], 
-        this.spaceship.center[1] - sun.center[1], 
-        this.spaceship.center[2] - sun.center[2], 
+        this.spaceship.bounding_shape.center_x - sun.bounding_shape.center_x, 
+        this.spaceship.bounding_shape.center_y - sun.bounding_shape.center_y, 
+        this.spaceship.bounding_shape.center_z - sun.bounding_shape.center_z, 
       ];
       const d_offset = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
       const d_mag = Math.sqrt(d_offset);
@@ -413,9 +410,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (this.spaceship.bounding_shape.intersect(p.bounding_shape)) {
         console.log(`hit ${p.data.name}`)
         const d = [
-          this.spaceship.center[0] - p.center[0], 
-          this.spaceship.center[1] - p.center[1], 
-          this.spaceship.center[2] - p.center[2], 
+          this.spaceship.bounding_shape.center_x - p.bounding_shape.center_x, 
+          this.spaceship.bounding_shape.center_y - p.bounding_shape.center_y, 
+          this.spaceship.bounding_shape.center_z - p.bounding_shape.center_z, 
         ];
         const d_sq = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
         const d_mag = Math.sqrt(d_sq);
