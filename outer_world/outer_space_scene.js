@@ -54,15 +54,18 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     // init sun and planets, etc
     const sun = this.init_sun();
-    const planets = this.init_planets();
-    const spaceship = this.init_spaceship();
-    const asteroid_belt = this.init_asteroid_belt();
-    const background = this.init_background();
-    
     this.solar_system.sun = sun; // for easy access more than anything
+    
+    const planets = this.init_planets();
     this.solar_system.planets = planets; // can make this more specific if needed
+    
+    const spaceship = this.init_spaceship();
     this.spaceship = spaceship; // again, easy access if needed.
+    
+    const asteroid_belt = this.init_asteroid_belt();
     this.solar_system.asteroid_belt = asteroid_belt; // asteroid belt 
+    
+    const background = this.init_background();
     this.solar_system.background = background; // the background mimcry
 
     this.normalize_distance(); // normalize the distances of all planets for viewing pleasure
@@ -153,6 +156,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     background.set_mesh(mesh).set_material(material).set_texture(texture); 
     background.scale = [75, 75, 75] // BIG BOY
+    background.bounding_shape.radius = 75; // update this as well
+    background.center = this.spaceship.center;
     
     return background;
   } // end function 

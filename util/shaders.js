@@ -501,7 +501,7 @@ export class SpaceshipShader extends PhongShader {
     // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
     // set gl attributes for the camera_matrices
     gl.uniformMatrix4fv(this.projection_loc, false, camera.get_projection_matrix());
-    gl.uniformMatrix4fv(this.model_view_loc, false, mat4Identity()); // do NOT apply the camera to this! 
+    gl.uniformMatrix4fv(this.model_view_loc, false, camera.get_view_matrix(false, false)); // do NOT apply ANY camera to this! 
 
     // only one light here. THE SUNNNNN
     const sun_light = lights[0];
@@ -582,13 +582,7 @@ export class SpaceBackgroundShader extends Shader {
     // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
     // set gl attributes for the camera_matrices
     gl.uniformMatrix4fv(this.projection_loc, false, camera.get_projection_matrix());
-    const view = camera.get_view_matrix();
-    // // for (let i = 12; i < 16; i+=1) {
-    // //   view[i] = 0;
-    // // }
-    // console.log(view)
-
-    gl.uniformMatrix4fv(this.model_view_loc, false, matMul(view, translate([-view[3], -view[7], -view[11]])));
+    gl.uniformMatrix4fv(this.model_view_loc, false, camera.get_view_matrix(true, false));
     // set gl for the global lights of the scene
     gl.uniform3fv(this.lights_loc, new Float32Array([])); // causes warning & potential for crash, not super clean
     // gl.disableVertexAttribArray(this.lights_loc);
