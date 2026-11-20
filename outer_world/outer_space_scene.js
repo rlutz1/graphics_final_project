@@ -414,23 +414,32 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     if (intersect) { return {normal: n, overlap: overlap}; }
 
-    // // check for planet collisions
-    // for (const shape of this.spaceship.bounding_shape) {
-    //   for (const p of planets) {
-    //     if (shape.intersect(p.bounding_shape)) {
-    //       console.log(`hit ${p.data.name}`)
-    //       const d = [
-    //         shape.center_x - p.bounding_shape.center_x, 
-    //         shape.center_y - p.bounding_shape.center_y, 
-    //         shape.center_z - p.bounding_shape.center_z, 
-    //       ];
-    //       const d_sq = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
-    //       const d_mag = Math.sqrt(d_sq);
-    //       const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
-    //       return {normal: n, d: d_mag, r_sum: shape.radius + p.bounding_shape.radius};
-    //     } // end if
-    //   } // end loop
-    // } // end loop
+    // check for planet collisions
+    for (const shape of this.spaceship.bounding_shape) {
+      for (const p of planets) {
+        if (shape.intersect(p.bounding_shape)) {
+          console.log(`hit ${p.data.name}`)
+          const d = [
+            shape.center_x - p.bounding_shape.center_x, 
+            shape.center_y - p.bounding_shape.center_y, 
+            shape.center_z - p.bounding_shape.center_z, 
+          ];
+          // const d_sq = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+          // const d_mag = Math.sqrt(d_sq);
+          // const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
+          // return {normal: n, d: d_mag, r_sum: shape.radius + p.bounding_shape.radius};
+          const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
+          const overlap_temp = shape.radius + p.bounding_shape.radius - d_mag;
+          if (overlap_temp > overlap) { 
+            overlap = overlap_temp;
+            n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag]; 
+          } 
+          intersect = true;
+        } // end if
+      } // end loop
+    } // end loop
+
+    if (intersect) { return {normal: n, overlap: overlap}; }
 
     return null;
   } // end function
