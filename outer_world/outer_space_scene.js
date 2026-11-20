@@ -308,7 +308,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     if (planet_collide) { 
       const normal = planet_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
-      const penetration = planet_collide.r_sum - planet_collide.d; // this is HOW MUCH we should push in the norm direction
+      const penetration = planet_collide.overlap; // this is HOW MUCH we should push in the norm direction
 
       // simply correct the position here before we apply the rotation of the direction vector
       // this will push the scene in the opposing direction
@@ -391,6 +391,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const planets = this.solar_system.planets;
 
     // check for sun collision with ship
+    let n = []; let overlap = 0; let intersect = false;
     for (const shape of this.spaceship.bounding_shape) {
       if (shape.intersect(sun.bounding_shape)) {
         console.log("spaceship hit sun");
@@ -400,57 +401,35 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           shape.center_y - sun.bounding_shape.center_y, 
           shape.center_z - sun.bounding_shape.center_z, 
         ];
-        const d_offset = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
-        const d_mag = Math.sqrt(d_offset);
-        const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
-        return {normal: n, d: d_mag, r_sum: shape.radius + sun.bounding_shape.radius};
+        // const d_offset = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+        const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
+        const overlap_temp = shape.radius + sun.bounding_shape.radius - d_mag;
+        if (overlap_temp > overlap) { 
+          overlap = overlap_temp;
+          n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag]; 
+        } 
+        intersect = true;
       } // end if
     } // end loop
-    // if (this.spaceship.bounding_shape.intersect(sun.bounding_shape)) {
-    //   console.log("spaceship hit sun");
-    //   // return true;
-    //   const d = [
-    //     this.spaceship.bounding_shape.center_x - sun.bounding_shape.center_x, 
-    //     this.spaceship.bounding_shape.center_y - sun.bounding_shape.center_y, 
-    //     this.spaceship.bounding_shape.center_z - sun.bounding_shape.center_z, 
-    //   ];
-    //   const d_offset = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
-    //   const d_mag = Math.sqrt(d_offset);
-    //   const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
-    //   return {normal: n, d: d_mag, r_sum: this.spaceship.bounding_shape.radius + sun.bounding_shape.radius};
-    // } // end if
 
-    for (const shape of this.spaceship.bounding_shape) {
-      for (const p of planets) {
-        if (shape.intersect(p.bounding_shape)) {
-          console.log(`hit ${p.data.name}`)
-          const d = [
-            shape.center_x - p.bounding_shape.center_x, 
-            shape.center_y - p.bounding_shape.center_y, 
-            shape.center_z - p.bounding_shape.center_z, 
-          ];
-          const d_sq = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
-          const d_mag = Math.sqrt(d_sq);
-          const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
-          return {normal: n, d: d_mag, r_sum: shape.radius + p.bounding_shape.radius};
-        } // end if
-      } // end loop
-    } // end loop
+    if (intersect) { return {normal: n, overlap: overlap}; }
 
-    // check for planet collisions
-    // for (const p of planets) {
-    //   if (this.spaceship.bounding_shape.intersect(p.bounding_shape)) {
-    //     console.log(`hit ${p.data.name}`)
-    //     const d = [
-    //       this.spaceship.bounding_shape.center_x - p.bounding_shape.center_x, 
-    //       this.spaceship.bounding_shape.center_y - p.bounding_shape.center_y, 
-    //       this.spaceship.bounding_shape.center_z - p.bounding_shape.center_z, 
-    //     ];
-    //     const d_sq = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
-    //     const d_mag = Math.sqrt(d_sq);
-    //     const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
-    //     return {normal: n, d: d_mag, r_sum: this.spaceship.bounding_shape.radius + p.bounding_shape.radius};
-    //   } // end if
+    // // check for planet collisions
+    // for (const shape of this.spaceship.bounding_shape) {
+    //   for (const p of planets) {
+    //     if (shape.intersect(p.bounding_shape)) {
+    //       console.log(`hit ${p.data.name}`)
+    //       const d = [
+    //         shape.center_x - p.bounding_shape.center_x, 
+    //         shape.center_y - p.bounding_shape.center_y, 
+    //         shape.center_z - p.bounding_shape.center_z, 
+    //       ];
+    //       const d_sq = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
+    //       const d_mag = Math.sqrt(d_sq);
+    //       const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
+    //       return {normal: n, d: d_mag, r_sum: shape.radius + p.bounding_shape.radius};
+    //     } // end if
+    //   } // end loop
     // } // end loop
 
     return null;
