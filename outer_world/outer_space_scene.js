@@ -155,7 +155,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           "flat": false
       });
 
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 100; i++) {
       const new_asteroid = new PlanetBuilder.AsteroidObstacle(); 
       const texture = new SceneBuilder.Texture(this.renderer.gl, new_asteroid.data.texture_path);
       new_asteroid.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
@@ -395,13 +395,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     for (const shape of this.spaceship.bounding_shape) {
       if (shape.intersect(sun.bounding_shape)) {
         console.log("spaceship hit sun");
-        // return true;
         const d = [
           shape.center_x - sun.bounding_shape.center_x, 
           shape.center_y - sun.bounding_shape.center_y, 
           shape.center_z - sun.bounding_shape.center_z, 
         ];
-        // const d_offset = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
         const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
         const overlap_temp = shape.radius + sun.bounding_shape.radius - d_mag;
         if (overlap_temp > overlap) { 
@@ -424,10 +422,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
             shape.center_y - p.bounding_shape.center_y, 
             shape.center_z - p.bounding_shape.center_z, 
           ];
-          // const d_sq = d[0]*d[0] + d[1]*d[1] + d[2]*d[2];
-          // const d_mag = Math.sqrt(d_sq);
-          // const n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag];
-          // return {normal: n, d: d_mag, r_sum: shape.radius + p.bounding_shape.radius};
           const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
           const overlap_temp = shape.radius + p.bounding_shape.radius - d_mag;
           if (overlap_temp > overlap) { 
