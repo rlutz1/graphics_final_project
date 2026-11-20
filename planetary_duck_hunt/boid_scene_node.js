@@ -8,7 +8,7 @@ import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat
  * idx, position, velocity, acceleration, etc. 
  */
 export class BoidSceneNode extends SceneBuilder.SceneNode {
-  constructor(id=null, shader_id="phong_basic") {
+  constructor(id=null, shader_id="texture_bump_mapping_basic") {
     super(id, shader_id); // takes care of some baseline stuff for now.
     // these are the hooks specific to the boid.
     // default super call sets up: this.position = [0, 0, 0]

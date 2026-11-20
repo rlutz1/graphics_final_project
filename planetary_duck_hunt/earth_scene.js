@@ -73,11 +73,12 @@ export class EarthScene extends SceneBuilder.Scene {
         "shininess": 51.2,
         "transparency": 1.0
     }); 
+    const texture = new SceneBuilder.Texture(this.renderer.gl, "./textures/skin.png");
 
     for (let i = 0; i < num_boids; i++) {
       // the id -> can map to idx from wasm module, but for now, using i to illustrate.
-      boid = new BoidSceneNode(`${i}`, "phong_basic"); // set up a simple hierarchy
-      boid.init(boid_mesh, boid_material, null); // init the nodes with their assets
+      boid = new BoidSceneNode(`${i}`, "texture_bump_mapping_basic"); // set up a simple hierarchy
+      boid.init(boid_mesh, boid_material, texture); // init the nodes with their assets
       
       
       const x = this.boidPositions[(i * this.boidDim)];
