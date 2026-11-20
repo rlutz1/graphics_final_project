@@ -1,6 +1,6 @@
 import * as SceneBuilder from "../util/scene_graph.js";
 import * as MeshBuilder from "../util/mesh_generators.js";
-import { mat4Identity, matMul, translate, rotate, scale } from '../util/transitions.js';
+import { mat4Identity, matMul, translate, rotate, scale, deg_to_rad } from '../util/transitions.js';
 
 /**
  * SpaceshipSceneNode
@@ -14,7 +14,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     super(id, shader);
 
     this.position = [0, 0, -5]; // base translation to my place in world
-    this.rotation = [0, 0, 0]; // rotation for effect
+    this.rotation = [deg_to_rad(20), 0, 0]; // rotation for effect
     this.scale = [0.8, 0.8, 0.8]; // scale down
 
     this.center = [...this.position, 1]; // this will ALWAYS be static on scene!
