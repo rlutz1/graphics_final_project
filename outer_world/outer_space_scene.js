@@ -137,10 +137,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   init_background() {
     // TODO: not great to use basic spaceship
     // const background = new PlanetBuilder.BackgroundSceneNode("background", "spaceship_basic");
-    const background = new PlanetBuilder.BackgroundSceneNode("background", "planet_basic");
+    const background = new PlanetBuilder.BackgroundSceneNode("background", "space_background_basic");
     const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_sphere_mesh(
-        65, // radius -- placeholder!
-        0.1, 0.1, // vSteps, uSteps
+        1, // radius -- placeholder!
+        0.05, 0.05, // vSteps, uSteps
         [0.5, 0.5, 0.5]
     )); // generate a basic sphere mesh
     const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
@@ -149,9 +149,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         "ks": [0.5, 0.5, 0.5], 
         "shininess": 40
     });
-    const texture = new SceneBuilder.Texture(this.renderer.gl, "./outer_world/textures/stars.jpg");
+    const texture = new SceneBuilder.Texture(this.renderer.gl, "./outer_world/textures/stars_color.jpg");
 
     background.set_mesh(mesh).set_material(material).set_texture(texture); 
+    background.scale = [75, 75, 75] // BIG BOY
     
     return background;
   } // end function 
