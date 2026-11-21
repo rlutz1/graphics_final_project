@@ -15,7 +15,9 @@ export class EarthScene extends SceneBuilder.Scene {
     // do whatever y'all want here, but, like, this sorta shit. these are all the root nodes of a scene.
     // they can be a straight up scene node or group scene node, whatever makes more sense to yall.
     this.boids = null; // this will end up being a dummy root node to hold all the boids. easier access here though than going through root node list.
-    
+    // ADDED BY THEO TO HOLD BOIDS AND ANIMATE MOVEMENT
+    this.boidNodes = []
+    this.lastFrameTime = null;
     // this.player = null;
     
     // init fields for the earth terrain
@@ -39,7 +41,8 @@ export class EarthScene extends SceneBuilder.Scene {
    * in this case, we're setting up the renderer through parent class,
    * setting camera, adding a basic point light, and initializing some shitty boids.
    */
-  init(renderer=null, aspect=1) {
+  // THEO MADE ASYNCHRONOUS TO LOAD BOIDS
+  async init(renderer=null, aspect=1) {
     super.init(renderer); // let the parent take care of basic bookeeping
 
     // init some shitty basics, lights, camera
@@ -57,10 +60,15 @@ export class EarthScene extends SceneBuilder.Scene {
     // init the terrain 
     this.init_terrain();
     
-    // TODO: init wasm module here?
+    this.Module = await createWASMModule();
+    this.Module._initializeBoids();
+    let numBoids = this.Module._getNumBoids();
     // initialize all nodes, bookeeping, etc in the scene.
-    // can give num boids -> comes from module?
-    this.init_boids();
+    this.boidDim = this.Module._getDim();
+    const numPositions = numBoids * this.boidDim;
+    this.boidPositions = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidPositions(), numPositions);
+    this.boidVelocities = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidVelocities(), numPositions);
+    this.init_boids(numBoids);
   } // end function
 
   /**
@@ -93,7 +101,8 @@ export class EarthScene extends SceneBuilder.Scene {
     this.terrain.position = [0, -(ground + this.eye_height), 0]; // shift planet based on terrain and eye height
   }
 
-  /**
+
+/**
    * turning & looking --> same from outer space
    * a/d change yaw ;; mouse changes pitch
    */
@@ -153,7 +162,8 @@ export class EarthScene extends SceneBuilder.Scene {
    * and customize, go wild -- it's very possible this will be needed to 
    * do more interesting things in the update_transformation_matrix which by default just does a TRS.
    */
-  init_boids(num_boids=5) {
+  // COMPLETELY REPLACED BY THEO
+  init_boids(num_boids) {
     this.boids = new SceneBuilder.GroupSceneNode(); // grouper node to keep it a little more organized
     let boid;
 
@@ -167,26 +177,51 @@ export class EarthScene extends SceneBuilder.Scene {
         "shininess": 51.2,
         "transparency": 1.0
     }); 
+    const texture = new SceneBuilder.Texture(this.renderer.gl, "./textures/skin.png");
 
     for (let i = 0; i < num_boids; i++) {
       // the id -> can map to idx from wasm module, but for now, using i to illustrate.
-      boid = new BoidSceneNode(`${i}`, "phong_basic"); // set up a simple hierarchy
-      boid.init(boid_mesh, boid_material, null); // init the nodes with their assets
+      boid = new BoidSceneNode(`${i}`, "texture_bump_mapping_basic"); // set up a simple hierarchy
+      boid.init(boid_mesh, boid_material, texture); // init the nodes with their assets
       
-      // below is a proof of concept of positioning. obv will be set by wasm shtuff.
-      const x = (Math.random() * 5) - 1; // -1 -> 1
-      const y = (Math.random() * 5) - 1; // -1 -> 1
-      let z = (Math.random() * 2) - 1; // -1 -> 1
-      if (this.camera instanceof SceneBuilder.PerspectiveCamera) {
-        // shove back the boid a bit -- z dimension matters here, if at z=0 it'll look like nothing's there.
-        z = -(Math.random() * 10) - 10; // -10 -> -20
-      } // end if
+      
+      const x = this.boidPositions[(i * this.boidDim)];
+      const y = this.boidPositions[(i * this.boidDim) + 1];
+      const z = this.boidPositions[(i * this.boidDim) + 2];
+
+      const vx = this.boidVelocities[(i * this.boidDim)];
+      const vy = this.boidVelocities[(i * this.boidDim) + 1];
+      const vz = this.boidVelocities[(i * this.boidDim) + 2];
+
+      // shove back the boid a bit -- z dimension matters here, if at z=0 it'll look like nothing's there. Will address 
+
       boid.position = [x, y, z];
+      boid.rotation = this.velocityToRotation(vx, vy, vz);
+      this.boidNodes.push(boid);
       this.boids.add_child(boid); // add boid as child of a dummy grouper node
     } // end loop
 
     this.add_node(this.boids); // add grouper node as a root node of the scene.
   } // end function
+  // HELPER ADDED BY THEO
+  velocityToRotation(vx, vy, vz) {
+    const mag = Math.sqrt(vx*vx + vy*vy + vz*vz);
+
+    if (mag < 1e-6) return null;
+
+    // Normalize velocity
+    vx /= mag;
+    vy /= mag;
+    vz /= mag;
+
+    // Rotate around X to account for vertical component
+    const rx = Math.atan2(vz, Math.sqrt(vx*vx + vy*vy));
+
+    // Rotate around Z to account for horizontal direction
+    const rz = -Math.atan2(vx, vy);
+
+    return [rx, 0, rz];
+  }
 
   /**
    * creating earth terrain (trying to atleast :P)
@@ -200,22 +235,65 @@ export class EarthScene extends SceneBuilder.Scene {
    * this is where any global game logic, scene component updates
    * should be occurring that need per-render-call updates.
    */
+  // THEO modified a bit here, mostly changed camera mechanics, then reverted 
+  // back cause im too stupid 
   render(frontend_data={}) {
+    const now = performance.now();
 
-    // per frame dt (change in time) --> delt_time 
-    const t = frontend_data.delta_time ?? 0;
-    const dt = this.last_time === null ? 0 : t - this.last_time;
-    this.last_time = t;
+    if (this.lastFrameTime !== null) {
+      const delT = (now - this.lastFrameTime) / 1000.0;
+      this.Module._advanceBoids(delT);
+      this.update_boids();
 
-    this.update_perspective(frontend_data, dt);
-    this.walk_update(frontend_data, dt);
-    this.camera_level();
-    this.update_sun();
+      this.update_perspective(frontend_data, delT);
+      this.walk_update(frontend_data, delT);
+      this.camera_level();
+      this.update_sun();
+    }
 
+    // MORE OF THEOS NOT WORKING CAMERA CODE
+    /*
+    const sensitivity = 0.002;
+    this.camera.yaw -= (frontend_data.mouse_dx || 0) * sensitivity;
+    this.camera.pitch -= (frontend_data.mouse_dy || 0) * sensitivity;
+    // Prevent the player from looking completely upside down.
+    const pitchLimit = Math.PI / 2 - 0.01;
+    this.camera.pitch = Math.max(
+      -pitchLimit,
+      Math.min(pitchLimit, this.camera.pitch)
+    ); */
+
+    this.lastFrameTime = now;
     super.update_all_transformations(); // update all transformation nodes.
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
     super.render(this.sky_color);  // let the renderer do it's draw thing
   } // end function
 
+  // BIRD BUSINESS (just grab positions/velocities from heap)
+  update_boids() {
+    for (let i = 0; i < this.boidNodes.length; i++) {
+      const offset = i * this.boidDim;
+
+      this.boidNodes[i].position = [
+        this.boidPositions[offset],
+        this.boidPositions[offset + 1],
+        this.boidPositions[offset + 2]
+      ];
+
+      this.boidNodes[i].velocity = [
+        this.boidVelocities[offset],
+        this.boidVelocities[offset + 1],
+        this.boidVelocities[offset + 2]
+      ];
+
+      const [vx, vy, vz] = this.boidNodes[i].velocity;
+
+      const rot = this.velocityToRotation(vx, vy, vz);
+
+      if (rot !== null) {
+          this.boidNodes[i].rotation = rot;
+      }
+    }
+  }
 } // end class

@@ -1,7 +1,6 @@
 import * as SceneBuilder from "../util/scene_graph.js";
 import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat4FromRows } from '../util/transitions.js';
 
-
 /**
  * this is basically the body of the boid. you could add wings as children
  * or something (BoidWingSceneNode, for example), but this would be the base. 
@@ -9,13 +8,14 @@ import { perspective, mat4Identity, ortho, matMul, translate, rotate, scale, mat
  * idx, position, velocity, acceleration, etc. 
  */
 export class BoidSceneNode extends SceneBuilder.SceneNode {
-  constructor(id=null, shader_id="phong_basic") {
+  constructor(id=null, shader_id="texture_bump_mapping_basic") {
     super(id, shader_id); // takes care of some baseline stuff for now.
     // these are the hooks specific to the boid.
     // default super call sets up: this.position = [0, 0, 0]
     this.idx = null; // or this.idx = atoi(id), know what i mean?
     this.velocity = [0, 0, 0];
     this.acceleration = [0, 0, 0];
+    this.scale = [0.07, 0.07, 0.07];
   } // end constructor
   
   /**
