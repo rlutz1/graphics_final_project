@@ -107,6 +107,105 @@ export const phong_basic = {
 } // end src
 
 /**
+ * BUMPYLAND BASIC 
+ * Terrain Shader
+ * phong_basic + ...
+ * - object poitions/normals stay as planet rotates
+ * - steep slopes 'blend'
+ * - octaves for noise value in f
+ * - fog details 
+ */
+export const bumpyland_basic = {
+  "vertex_shader": `#version 300 es
+      precision highp float; 
+
+      in vec3 aPosition;
+      in vec3 aNormal;
+      in vec3 aColor;
+
+      uniform mat4 uModelViewMatrix;
+      uniform mat4 uProjectionMatrix;
+
+      // allow for many matrices in a row
+      uniform mat4 uModelTransformationMatrix;
+
+      out vec3 vPosition;
+      out vec3 vNormal;
+      out vec3 vColor;
+      // added for object pos & normal
+      //out vec3 vObjPos;
+      //out vec3 vObjNormal;
+
+      void main() {
+          vec4 world = uModelTransformationMatrix * vec4(aPosition, 1.0);
+          vec3 n = transpose(inverse(mat3(uModelTransformationMatrix))) * aNormal;
+
+          vec4 p = uModelViewMatrix * world;
+          vPosition = p.xyz;
+          vNormal = transpose(inverse(mat3(uModelViewMatrix))) * n;
+
+          gl_Position = uProjectionMatrix * p;
+
+          vColor = aColor;
+          //vObjPos = aPosition;
+          //vObjNormal = aNormal;
+      }
+      `,
+    // fragment shader
+    "fragment_shader": `#version 300 es
+        precision highp float;
+
+        // struct to hold light parameters 
+        struct MaterialParams {
+          vec3 ka;
+          vec3 kd;
+          vec3 ks;
+          float shininess;
+          float transparency;
+        };
+
+        uniform MaterialParams uMaterialParams;
+
+        in vec3 vPosition;
+        in vec3 vNormal;
+        in vec3 vColor;
+        // same again for the object pos and normal
+        //in vec3 vObjPos;
+        //in vec3 vObjNormal;
+        
+        uniform vec3 uPointLights[50]; // points light positions in space
+        uniform int uNumPointLights; // how many point lights
+
+        out vec4 fragColor;
+
+        void main() {
+          vec3 N = normalize(vNormal); // ensure normalized
+          vec3 V = normalize(-vPosition); // camera sits at the origin
+
+          vec3 diffuse_acc = vec3(0.0);
+          vec3 spec_acc = vec3(0.0);
+
+          for (int i = 0; i < uNumPointLights; i++) {
+            vec3 L = normalize(uPointLights[i] - vPosition); // get l as vector from this point
+            vec3 R = reflect(-L, N); // r = 2(dot(n, l) * n - l) 
+            float diff = max(dot(N, L), 0.0); // diffuse max
+            float spec = pow(max(dot(V, R), 0.0), uMaterialParams.shininess); // specular max and power shininess
+            diffuse_acc += (uMaterialParams.kd * vColor) * diff;
+            spec_acc += (uMaterialParams.ks * vColor) * spec;
+          } // end loop 
+
+          fragColor = vec4(
+            (uMaterialParams.ka * vColor) +
+            diffuse_acc +
+            spec_acc,
+            uMaterialParams.transparency
+          );
+        }
+      `
+
+}
+
+/**
  * this works with both TextureBumpMappingShader and TextureNormalMappingShader.
  */
 export const texture_basic = {
