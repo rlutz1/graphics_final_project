@@ -38,8 +38,8 @@ export function mulberry32(a) {
  * 
  */
 export function spherePointPicking(rng) {
-    const theta = rng() * 2 - 1;
-    const phi = rng() * 2 * Math.PI;
+    const y = rng() * 2 - 1;
+    const theta = rng() * 2 * Math.PI;
     const r = Math.sqrt(1 - y * y);
 
     return [r * Math.cos(theta), y, r * Math.sin(theta)];
