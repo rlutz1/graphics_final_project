@@ -175,7 +175,7 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
     
     // rotation around arbitrary axis --> Rodrigues rotation formula
     // https://www.songho.ca/opengl/gl_rotate.html 
-    R = mat4FromRows(
+    const R = mat4FromRows(
       t * x * x + c    ,  t * x * y - s * z,  t * x * z + s * y,  0,
       t * x * y + s * z,  t * y * y + c    ,  t * y * z - s * x,  0,
       t * x * z - s * y,  t * y * z + s * x,  t * z * z + c    ,  0,
