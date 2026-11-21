@@ -295,6 +295,9 @@ export class Mesh {
     this.texels = texels;
     this.mapping = mapping;
 
+    // know to handle array
+    this.index_type = (indices instanceof Uint32Array) ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+
 
     // initialize whatever we have into a grabable buffer
     if (vertices) {this.vert_buff = this.init_buffer(vertices, gl); console.log("askjdnas")}
