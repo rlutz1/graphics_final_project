@@ -9,17 +9,15 @@ import { mat4Identity, matMul, translate, rotate, scale, deg_to_rad } from '../u
  * Scale it via display_scale to fit whatever scene you drop it into.
  */
 export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
-  
-  constructor(id="spaceship", shader="spaceship_basic") {
-    super(id, shader);
+  constructor(id = "spaceship", shader_id = "spaceship_basic") {
 
-    this.position = [0, 0, -5]; // base translation to my place in world
-    this.rotation = [deg_to_rad(20), 0, 0]; // rotation for effect
-    this.scale = [0.8, 0.8, 0.8]; // scale down
-
-    this.center = [...this.position, 1]; // this will ALWAYS be static on scene!
-    this.velocity = [0.1, 0.1, 0.1]; // velocity in each direction (can tweak of course :) )
-    this.rotation_speed = 0.03; // controls the rotation speed left/right 
+    super(id, shader_id);
+    this.position = [0, -0.4, -2];
+    this.rotation = [0, 0, 0];
+    this.scale = [0.8, 0.8, 0.8];
+    this.velocity = [0.1, 0.1, 0.1]; // movement speed
+    this.rotation_speed = 0.03; // turn speed
+    this.center = [...this.position, 1];
   }
 
   init(gl) {
