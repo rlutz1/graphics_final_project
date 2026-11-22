@@ -125,15 +125,20 @@
     curr_scene.init(renderer, aspect); // initialize the scene.
     
     let start_time = null;
+    let last_time = null;
     let delta_time;
+    let time_since_last_render;
 
     /**
      * render the scene.
      */
     function render(timestep) {
       if (!start_time) { start_time = timestep; }
+      if (!last_time) { last_time = timestep; }
       delta_time = (timestep - start_time) / 1000 // dt in seconds from front end
+      time_since_last_render = (timestep - last_time) / 1000; last_time = timestep; // tracking times since last render as well
       frontend_data.delta_time = delta_time; // make sure this is passed to the scenes, likely will be needed.
+      frontend_data.time_since_last_render = time_since_last_render; // pass this to the scene as well
       frontend_data.canvas_width = canvas.width; // add the canvas information for mouse interaction with the screen.
       frontend_data.canvas_height = canvas.height;
 

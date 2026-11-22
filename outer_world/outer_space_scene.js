@@ -297,11 +297,13 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // need to now deal with dynamic input affecting the 
       // world/"moving the spaceship" and hitting things.
       if (this.spaceship.hit_recovery) {
-        console.log("hit recovery mode")
-        this.spaceship.recovery_timer += frontend_data.delta_time;
+        // console.log("hit recovery mode")
+        this.spaceship.recovery_timer += frontend_data.time_since_last_render;
+        // console.log(this.spaceship.recovery_timer)
         if (this.spaceship.recovery_timer >= this.spaceship.recovery_time_limit) { 
           this.spaceship.hit_recovery = false;
           this.spaceship.recovery_timer = 0;
+          // console.log("reset")
         } // end if
         // carry out all updates from last time
         super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
@@ -309,7 +311,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
       } else {
         this.handle_input(frontend_data); // figure out how to move based on input
-        this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
+        this.handle_obstacle_collisions(frontend_data.delta_time); // also need to see if i hit an obstacle and do state changes/camera changes
         // TODO: the planet collision will trigger transitions, will merge and handle when time comes.
         this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
       } // end if
@@ -398,7 +400,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   /**
    * check for collision with obstacles in the scene.
    */
-  handle_obstacle_collisions() {
+  handle_obstacle_collisions(curr_time) {
     const obstacle_collide = this.obstacle_collision_check();
     if (obstacle_collide) {
       this.spaceship.health -= 1;
