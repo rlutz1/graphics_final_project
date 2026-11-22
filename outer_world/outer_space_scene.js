@@ -327,8 +327,45 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const yaw = this.camera.rotate[1]; // the rotation around the y axis, left/right motion
     const pitch = this.camera.rotate[0]; // the rotation around the x axis, up/down tilting
 
-    
-    
+    // the calculations of how to move forward considering the direction of
+    // my camera view at this moment. includes up/down/left/right direction in the motion.
+    // can derive from using direction vector [0, 0, -1] (always move in negative z)
+    // and calculating R(y)*R(x)*[0, 0, -1]*V
+    // and that flips the direction in which to move the scene in terms of tranlation
+    // with consideration to your current orientation, giving impression you are moving in direction you're pointed in.
+    // this is the DIRECTION * HOW MUCH you should move the scene in.
+    let forward_x = -Math.sin(yaw) * Math.cos(pitch) * this.spaceship.velocity[0];
+    let forward_y = Math.sin(pitch) * this.spaceship.velocity[1];
+    let forward_z = Math.cos(yaw) * Math.cos(pitch) * this.spaceship.velocity[2]; // flipping sign on this
+    // let forward_x = -Math.sin(yaw) * Math.cos(pitch) * velocity[0];
+    // let forward_y = Math.sin(pitch) * velocity[1];
+    // let forward_z = Math.cos(yaw) * Math.cos(pitch) * velocity[2]; // flipping sign on this
+
+    // forward motion
+    if (frontend_data.w) {
+      // move things backward
+      this.camera.translate = [
+        this.camera.translate[0] + forward_x,
+        this.camera.translate[1] + forward_y,
+        this.camera.translate[2] + forward_z
+      ];
+    } // end if
+
+    // backward motion
+    if (frontend_data.s) {
+      // move things forward
+      this.camera.translate = [
+        this.camera.translate[0] - forward_x,
+        this.camera.translate[1] - forward_y,
+        this.camera.translate[2] - forward_z
+      ];
+    } // end if
+
+    // carry out all updates from last time
+    super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+    // update the sun light position as the sun moves.
+    this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
+
     // now, if a planet does collide, we want to alter the direction vector a bit
     // planet_collide, if not null, returns the normalized directional vector
     // from centroid A -> B (A is spaceship, B is a planet/sun).
@@ -337,7 +374,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // lets see if we collided with a planet
     const planet_collide = this.spaceship_planet_collision_check();
     // console.log(planet_collide);
-    let velocity = this.spaceship.velocity;
+    // let velocity = this.spaceship.velocity;
 
     if (planet_collide) { 
       const normal = planet_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
@@ -362,53 +399,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // }
      
     } // end if
-    // console.log(`velocity: ${velocity}`)
-
-    // the calculations of how to move forward considering the direction of
-    // my camera view at this moment. includes up/down/left/right direction in the motion.
-    // can derive from using direction vector [0, 0, -1] (always move in negative z)
-    // and calculating R(y)*R(x)*[0, 0, -1]*V
-    // and that flips the direction in which to move the scene in terms of tranlation
-    // with consideration to your current orientation, giving impression you are moving in direction you're pointed in.
-    // this is the DIRECTION * HOW MUCH you should move the scene in.
-    // let forward_x = -Math.sin(yaw) * Math.cos(pitch) * this.spaceship.velocity[0];
-    // let forward_y = Math.sin(pitch) * this.spaceship.velocity[1];
-    // let forward_z = Math.cos(yaw) * Math.cos(pitch) * this.spaceship.velocity[2]; // flipping sign on this
-    let forward_x = -Math.sin(yaw) * Math.cos(pitch) * velocity[0];
-    let forward_y = Math.sin(pitch) * velocity[1];
-    let forward_z = Math.cos(yaw) * Math.cos(pitch) * velocity[2]; // flipping sign on this
-    
-
-    // FOR IF YOU'RE GROUNDED ON A PLANE -- great for planet probably
-    // const forward_x = -Math.sin(yaw);
-    // const forward_y = 0;
-    // const forward_z = Math.cos(yaw);
-
-    // forward motion
-    if (frontend_data.w) {
-      // move things backward
-      this.camera.translate = [
-        this.camera.translate[0] + forward_x,
-        this.camera.translate[1] + forward_y,
-        this.camera.translate[2] + forward_z
-      ];
-    } // end if
-
-    // backward motion
-    if (frontend_data.s) {
-      // move things forward
-      this.camera.translate = [
-        this.camera.translate[0] - forward_x,
-        this.camera.translate[1] - forward_y,
-        this.camera.translate[2] - forward_z
-      ];
-    } // end if
-
-    // carry out all updates from last time
-    super.update_all_transformations(); // update all the transformation nodes, using the oberridenguy below.
-
-    // update the sun light position as the sun moves.
-    this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
 
     // render call!
     super.render([0, 0, 0]);  // let the renderer do it's draw thing
