@@ -298,6 +298,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // world/"moving the spaceship" and hitting things.
     if (this.spaceship.hit_recovery) {
       console.log("hit recovery mode")
+      // carry out all updates from last time
+      super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+      // update the sun light position as the sun moves.
+      this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
     } else {
       this.handle_input(frontend_data); // figure out how to move based on input
       this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
@@ -390,9 +394,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   handle_obstacle_collisions() {
     const obstacle_collide = this.obstacle_collision_check();
     if (obstacle_collide) {
-      this.spaceship.hit_recovery = true;
       this.spaceship.health -= 1;
-      if (this.spaceship.health == 0) { this.game_over = true; }
+      if (this.spaceship.health == 0) { this.game_over = true; return;}
+      this.spaceship.hit_recovery = true;
+      this.spaceship.update_recovery_timer = 0;
     } // end if
   } // end function
 
