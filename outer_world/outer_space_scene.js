@@ -384,6 +384,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.translate[1] - normal[1] * penetration,
         this.camera.translate[2] - normal[2] * penetration
       ];
+
+      // carry out all updates from last time
+      super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+      // update the sun light position as the sun moves.
+      this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
       
       // // potential further smoothing?
       // const dot = (normal[0] * velocity[0]) + (normal[1] *  velocity[1]) + (normal[2] *  velocity[2])

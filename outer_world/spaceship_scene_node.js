@@ -93,10 +93,17 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
       center_z:  -3,
       radius: 0.3
     });
+    const back = new SceneBuilder.BoundingSphere({
+      center_x:  0,
+      center_y:  0,
+      center_z:  0,
+      radius: 0.3
+    });
 
     this.bounding_shape.push(right_wing);
     this.bounding_shape.push(left_wing);
     this.bounding_shape.push(nose);
+    this.bounding_shape.push(back);
   }
 } // end class
 
