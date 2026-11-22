@@ -209,6 +209,81 @@ export class AsteroidObstacle extends PlanetSceneNode {
   }
 } // end class
 
+/**
+ * for a basic random asteroid creation.
+ * treated like tiny rocky planets
+ */
+export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
+
+  constructor(id="random_obstacle", shader_id="planet_basic") {
+    super(id, shader_id); // takes care of some baseline stuff for now.
+
+    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
+    this.direction = [0, 0, 0];
+    this.velocity = [Math.random(), Math.random(), Math.random()]; // random velocity
+    this.lifetime = (Math.random() * 100) + 10; // randomish lifetime, at least 10 days in length
+    this.days_since_alive = 0; // tracking
+    this.dead = false;
+
+    // basic sphere bounding shape for the planet body
+    this.bounding_shape = new SceneBuilder.BoundingSphere({
+      center_x:  this.center[0],
+      center_y:  this.center[1],
+      center_z:  this.center[2],
+      radius: 1.0 // TODO don't like this, for tesing only
+    });
+  } // end constructor
+
+  /**
+   * wrapper to update the center of this planet, which affects the bounding box.
+   */
+  update_bounding_shape(transformation_matrix) {
+    // set the new center based off of camera movements and the actual node movements.
+    this.center = multiplyMat4Vec4(transformation_matrix, [0, 0, 0, 1]);
+    this.bounding_shape.center_x = this.center[0];
+    this.bounding_shape.center_y = this.center[1];
+    this.bounding_shape.center_z = this.center[2];
+  } // end function
+
+  /**
+   * update the trajectory of the asteroid
+   */
+  update_trajectory(day=0) {
+    this.days_since_alive += day;
+    if (this.days_since_alive >= this.lifetime) { this.dead = true; return; }
+    this.position = [
+      this.position[0] += (this.direction[0] * this.velocity[0]),
+      this.position[1] += (this.direction[1] * this.velocity[1]),
+      this.position[2] += (this.direction[2] * this.velocity[2])
+    ];
+  } // end function
+
+  set_trajectory(direction=[0, 0, 0]) {
+    this.direction = direction;
+  } // end function
+
+  /**
+   * update my transformation dumbly, simply calculate:
+   * M_world_child = M_world_parent * M_local_child.
+   * if want to change, extend the SceneNode and override, but you MUST
+   * set the transformation_matrix, otherwise nothing will happen/
+   * incorrect rendering.
+   */
+  update_transformation_matrix(M_parent) {
+    // scale for radius, rotate on axis, move away from origin, and rotate on orbital plane.
+    const translation = translate(this.position); // my position relative to the sun as origin
+    const rotation_axis = rotate(this.rotation); // my rotation on my axis
+    const scale_mtx = scale(this.scale); // any scaling (TODO: size based on radius)
+
+    // my local transformations
+    const M_local = matMul(translation, rotation_axis, scale_mtx);
+
+    // add my transformations to the world's
+    this.transformation_matrix = matMul(M_parent, M_local);
+  } // end function
+  
+} // end class
+
 
 /**
  * just placing these constants here.

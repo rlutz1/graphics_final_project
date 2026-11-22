@@ -17,7 +17,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.distance_const = 35; // a constant used in distance normalization.
     this.game_over = false;
     this.bounce_dir = [0, 0, 0];
-    // this.bounce_speed = [0.2, 0.2, 0.2];
     this.bounce_speed = [10, 10, 10];
   }
 
@@ -68,6 +67,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     
     const asteroid_belt = this.init_asteroid_belt();
     this.solar_system.asteroid_belt = asteroid_belt; // asteroid belt 
+
+    const random_obstacles = this.init_random_obstacles();
+    this.solar_system.random_obstacles = random_obstacles; // a grouper node with random obstacles
     
     const background = this.init_background();
     this.solar_system.background = background; // the background mimcry
@@ -86,6 +88,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       sun.add_child(a);
     });
     this.add_node(spaceship); // spaceship to daddy sceen
+    this.add_node(random_obstacles); // these can be their own root nodes
     this.add_node(background); // background
   } // end function
 
@@ -136,6 +139,30 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       const normalized_radius = a.data.radius_km / max_radius;
       a.update_radius(Math.sqrt(normalized_radius));
     });
+  } // end function
+
+  /**
+   * create a new grouper node for all the randoms
+   */
+  init_random_obstacles() {
+     const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
+        1, // radius -- placeholder!
+        30, 30, // vSteps, uSteps
+        [0.2, 0.4, 0.9], 
+        0 // adding a texture bump mapping to these
+      )); // generate a basic planet mesh
+      const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
+          "ka": [0.3, 0.3, 0.3], 
+          "kd": [0.5, 0.5, 0.5],
+          "ks": [0.3, 0.3, 0.3], 
+          "shininess": 20, 
+          "metallic": 0,
+          "emissive": 0, 
+          "flat": false
+      });
+    const random_group = new SceneBuilder.GroupSceneNode();
+    random_group.set_mesh(mesh).set_material(material);
+    return random_group; // grouper node to keep it a little more organized
   } // end function
 
   /**
@@ -295,6 +322,19 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.solar_system.asteroid_belt.forEach((a) => {
           a.update_orbit(this.day);
         });
+        this.solar_system.random_obstacles.children.forEach((o) => {
+          o.update_trajectory(this.day);
+        });
+      } // end if
+
+      const random_chance_obstacle = Math.random();
+      if (random_chance_obstacle > 0.5) {
+        // add a random obtacle to the scene for EXCITMENT
+        const new_obstacle = new PlanetBuilder.RandomAsteroidObstacle()
+        new_obstacle.set_mesh(this.solar_system.random_obstacles.mesh).set_material(this.solar_system.random_obstacles.material);
+        new_obstacle.position = [5, 5, -20]
+        new_obstacle.update_trajectory(this.spaceship.position);
+        this.solar_system.random_obstacles.add_child(new_obstacle);
       } // end if
 
       // need to now deal with dynamic input affecting the 
@@ -323,7 +363,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           this.bounce_speed[1] * dampen,
           this.bounce_speed[2] * dampen
         ];
-        console.log(this.bounce_speed)
 
         // we can have this on if we want to allow movement during the hit period! just leaving here for testing for a minute.
         // this.handle_input(frontend_data); // figure out how to move based on input
@@ -508,6 +547,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    */
   obstacle_collision_check() {
     const asteroids = this.solar_system.asteroid_belt;
+    
     // randoms....
 
     // check for asteroid collision with ship
@@ -609,7 +649,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // everything but the player will need position updates, and that requires ALL transformation matrices.
     // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
     // to make sure this works at all.
-    if (!(parent.id === this.spaceship.id)) { // important! all nodes in spaceship should have this id for now...
+    if (!(parent.id === this.spaceship.id) && !(parent instanceof(SceneBuilder.GroupSceneNode))) { // important! all nodes in spaceship should have this id for now...
       const position_transforms = matMul(
         // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
         this.camera.get_view_matrix(),
