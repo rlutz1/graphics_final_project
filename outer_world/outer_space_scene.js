@@ -301,48 +301,22 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // world/"moving the spaceship" and hitting things.
       // TODO: don't need to update_all_transforms every time, it's over kill, replace with necessary center changer only.
       if (this.spaceship.hit_recovery) {
-
+        // update the recovery timer 
         this.spaceship.recovery_timer += frontend_data.time_since_last_render;
         if (this.spaceship.recovery_timer >= this.spaceship.recovery_time_limit) { 
-          this.spaceship.hit_recovery = false;
-          this.spaceship.recovery_timer = 0;
-          // console.log("reset")
+          this.spaceship.hit_recovery = false; // reset the state
+          this.spaceship.recovery_timer = 0; // reset the recovery timer to 0 for next hit.
         } // end if
 
+        // moving everything away from me in the direction identified by the normal of the collision detector.
+        // not accounting for direction of the movement of the object right now.
         this.camera.translate = [
           this.camera.translate[0] - (this.bounce_dir[0] * this.bounce_speed[0] * frontend_data.time_since_last_render),
           this.camera.translate[1] - (this.bounce_dir[1] * this.bounce_speed[1] * frontend_data.time_since_last_render),
           this.camera.translate[2] - (this.bounce_dir[2] * this.bounce_speed[2] * frontend_data.time_since_last_render)
         ];
 
-        // left rotate
-        if (frontend_data.a) {
-          this.camera.rotate = [
-            this.camera.rotate[0],
-            (this.camera.rotate[1] - this.spaceship.rotation_speed) % (2 * Math.PI), 
-            this.camera.rotate[2]
-          ]
-        } // end if
-
-        // right rotate
-        if (frontend_data.d) {
-          this.camera.rotate = [
-            this.camera.rotate[0],
-            (this.camera.rotate[1] + this.spaceship.rotation_speed) % (2 * Math.PI),
-            this.camera.rotate[2]
-          ]
-        } // end if
-
-        // set the pitch angle to an angle that is specified by the y coordinate of the mouse
-        if (frontend_data.mouse_y) {
-          const normalized_y = (2 * frontend_data.mouse_y / frontend_data.canvas_height) - 1; // normalize to [-1, 1]
-          const max_pitch = Math.PI / 2 - 0.01; // - 0.01 to avoid a wrap around
-          this.camera.rotate[0] = normalized_y * max_pitch; // make a degree in radians
-        } // end if
-
-        // velocity.x * (1 - velocity.damping)
-
-        // dampen down
+        // dampen down with each render to come to a clean slowing.
         const dampen = 0.99;
         this.bounce_speed = [
           this.bounce_speed[0] * dampen,
@@ -351,8 +325,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         ];
         console.log(this.bounce_speed)
 
-
-
+        // we can have this on if we want to allow movement during the hit period! just leaving here for testing for a minute.
+        // this.handle_input(frontend_data); // figure out how to move based on input
+        // // carry out all updates from last time
+        // super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+        // // update the sun light position as the sun moves.
+        // this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
 
         // THIS WILL BE CHANGED TO SCENE TRANSITION AND NEED TO HANDLE SOME STUFF
         this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
@@ -396,11 +374,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    * normal movement through the scene because i haven't been hit by anything.
    */
   handle_input(frontend_data) {
-    /**
-     * w/s are a move forward/back.
-     * a/d are left/right rotation
-     * mouse on screen registers only up/down tilt, turning y position on canvas to a degree in radians.
-     */
+    // w/s are a move forward/back.
+    // a/d are left/right rotation
+    // mouse on screen registers only up/down tilt, turning y position on canvas to a degree in radians.
 
     // left rotate
     if (frontend_data.a) {
