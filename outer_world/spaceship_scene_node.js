@@ -18,6 +18,10 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     this.velocity = [0.1, 0.1, 0.1]; // movement speed
     this.rotation_speed = 0.03; // turn speed
     this.center = [...this.position, 1];
+
+    // adding a state and health points for adding actual obstacles
+    this.health = 5; // initial health points
+    this.hit_recovery = false; // state control for in a "hit recovery state"
   }
 
   init(gl) {
@@ -46,7 +50,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
   } // end funcion
 
   init_bounding_shape() {
-    // // TODO: must consider scale
+    // 
     // let min_z = 1000000; // arbitrary
     // let max_z = -1000000;
     // for (let i = 2; i < this.mesh.vertices.length; i += 3) {

@@ -293,6 +293,25 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       });
     } // end if
 
+    if (this.spaceship.hit_recovery) {
+      console.log("hit recovery mode")
+    } else {
+      this.handle_input(frontend_data); // figure out how to move based on input
+      this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
+      // TODO: the planet collision will trigger transitions, will merge and handle when time comes.
+      this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
+    } // end if
+
+    
+
+    // render call!
+    super.render([0, 0, 0]);  // let the renderer do it's draw thing
+  } // end function
+
+  /**
+   * normal movement through the scene because i haven't been hit by anything.
+   */
+  handle_input(frontend_data) {
     /**
      * w/s are a move forward/back.
      * a/d are left/right rotation
@@ -362,7 +381,18 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
     // update the sun light position as the sun moves.
     this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
+  } // end function
 
+  handle_obstacle_collisions() {
+    // TODO
+  } // end function
+
+  /**
+   * handle a planet collision. this will end up triggering a scene transition.
+   * so needs to be accounted for at a later point. removing this to clean out the 
+   * scene render call a bit.
+   */
+  handle_planet_collisions() {
     // now, if a planet does collide, we want to alter the direction vector a bit
     // planet_collide, if not null, returns the normalized directional vector
     // from centroid A -> B (A is spaceship, B is a planet/sun).
@@ -401,9 +431,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // }
      
     } // end if
-
-    // render call!
-    super.render([0, 0, 0]);  // let the renderer do it's draw thing
   } // end function
 
   /**
