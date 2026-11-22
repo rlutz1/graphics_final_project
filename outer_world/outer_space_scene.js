@@ -145,23 +145,24 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    * create a new grouper node for all the randoms
    */
   init_random_obstacles() {
-     const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
-        1, // radius -- placeholder!
-        30, 30, // vSteps, uSteps
-        [0.2, 0.4, 0.9], 
-        0 // adding a texture bump mapping to these
-      )); // generate a basic planet mesh
-      const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-          "ka": [0.3, 0.3, 0.3], 
-          "kd": [0.5, 0.5, 0.5],
-          "ks": [0.3, 0.3, 0.3], 
-          "shininess": 20, 
-          "metallic": 0,
-          "emissive": 0, 
-          "flat": false
-      });
+    const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
+      1, // radius -- placeholder!
+      30, 30, // vSteps, uSteps
+      [0.2, 0.4, 0.9], 
+      0 // adding a texture bump mapping to these
+    )); // generate a basic planet mesh
+    const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
+      "ka": [0.3, 0.3, 0.3], 
+      "kd": [0.5, 0.5, 0.5],
+      "ks": [0.3, 0.3, 0.3], 
+      "shininess": 20, 
+      "metallic": 0,
+      "emissive": 0, 
+      "flat": false
+    });
+    const texture = new SceneBuilder.Texture(this.renderer.gl, "./outer_world/textures/asteroid.jpg"); // todo -- pull this out
     const random_group = new SceneBuilder.GroupSceneNode();
-    random_group.set_mesh(mesh).set_material(material);
+    random_group.set_mesh(mesh).set_material(material).set_texture(texture);
     return random_group; // grouper node to keep it a little more organized
   } // end function
 
@@ -221,7 +222,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     for (let i = 0; i < 100; i++) {
       const new_asteroid = new PlanetBuilder.AsteroidObstacle(); 
-      const texture = new SceneBuilder.Texture(this.renderer.gl, new_asteroid.data.texture_path);
+      const texture = new SceneBuilder.Texture(this.renderer.gl, new_asteroid.data.texture_path); // todo -- pull this out
       new_asteroid.set_mesh(mesh).set_material(material).set_texture(texture); // TODO: texture set here.
       asteroids.push(new_asteroid);
     } // end loop
@@ -331,9 +332,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (random_chance_obstacle > 0.5) {
         // add a random obtacle to the scene for EXCITMENT
         const new_obstacle = new PlanetBuilder.RandomAsteroidObstacle()
-        new_obstacle.set_mesh(this.solar_system.random_obstacles.mesh).set_material(this.solar_system.random_obstacles.material);
+        new_obstacle
+          .set_mesh(this.solar_system.random_obstacles.mesh)
+          .set_material(this.solar_system.random_obstacles.material)
+          .set_texture(this.solar_system.random_obstacles.textures);
         new_obstacle.position = [5, 5, -20]
-        new_obstacle.update_trajectory(this.spaceship.position);
+        new_obstacle.update_trajectory([0, 0, 0]);
         this.solar_system.random_obstacles.add_child(new_obstacle);
       } // end if
 
