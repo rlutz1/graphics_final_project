@@ -17,7 +17,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.distance_const = 35; // a constant used in distance normalization.
     this.game_over = false;
     this.bounce_dir = [0, 0, 0];
-    this.bounce_speed = [0.2, 0.2, 0.2]
+    // this.bounce_speed = [0.2, 0.2, 0.2];
+    this.bounce_speed = [10, 10, 10];
   }
 
   /**
@@ -314,12 +315,23 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           this.camera.translate[2] - (this.bounce_dir[2] * this.bounce_speed[2] * frontend_data.time_since_last_render)
         ];
 
-        // this.bounce_speed = [
-        //   this.bounce_speed[0] / 2,
-        //   this.bounce_speed[1] / 2,
-        //   this.bounce_speed[2] / 2
-        // ];
+        // set the pitch angle to an angle that is specified by the y coordinate of the mouse
+        if (frontend_data.mouse_y) {
+          const normalized_y = (2 * frontend_data.mouse_y / frontend_data.canvas_height) - 1; // normalize to [-1, 1]
+          const max_pitch = Math.PI / 2 - 0.01; // - 0.01 to avoid a wrap around
+          this.camera.rotate[0] = normalized_y * max_pitch; // make a degree in radians
+        } // end if
 
+        // velocity.x * (1 - velocity.damping)
+
+        // dampen down
+        const dampen = 0.99;
+        this.bounce_speed = [
+          this.bounce_speed[0] * dampen,
+          this.bounce_speed[1] * dampen,
+          this.bounce_speed[2] * dampen
+        ];
+        console.log(this.bounce_speed)
 
 
 
@@ -332,7 +344,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         // update the sun light position as the sun moves.
         this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
       } else {
-        this.bounce_speed = [2, 2, 2]; // reset
+        // this.bounce_speed = [0.2, 0.2, 0.2]; // reset
+        this.bounce_speed = [10, 10, 10];
         this.handle_input(frontend_data); // figure out how to move based on input
         // carry out all updates from last time
         super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
