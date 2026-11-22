@@ -352,7 +352,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         //   (Math.random() * 20) + 50
         // ];
         const theta = Math.random() * (2 * Math.PI);
-        const phi =  Math.random() * (Math.PI);
+        const phi =  Math.random() * (2 * Math.PI);
         const init_position = [ // init position on the circumference of the background
           this.solar_system.background.scale[0] * Math.sin(phi) * Math.cos(theta),
           this.solar_system.background.scale[1] * Math.sin(phi) * Math.sin(theta),
