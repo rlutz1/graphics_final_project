@@ -353,17 +353,24 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         // ];
         const theta = Math.random() * (2 * Math.PI);
         const phi =  Math.random() * (Math.PI);
-        const init_position = [
+        const init_position = [ // init position on the circumference of the background
           this.solar_system.background.scale[0] * Math.sin(phi) * Math.cos(theta),
           this.solar_system.background.scale[1] * Math.sin(phi) * Math.sin(theta),
           this.solar_system.background.scale[2] * Math.cos(phi),
         ];
-
+        
         new_obstacle.position = init_position;
+        // new_obstacle.set_trajectory([
+        //   this.spaceship.position[0] - init_position[0],
+        //   this.spaceship.position[1] - init_position[1],
+        //   this.spaceship.position[2] - init_position[2]
+        // ]);
+
+        // rando trajectory
         new_obstacle.set_trajectory([
-          this.spaceship.position[0] - init_position[0],
-          this.spaceship.position[1] - init_position[1],
-          this.spaceship.position[2] - init_position[2]
+          Math.random() - init_position[0],
+          Math.random() - init_position[1],
+          Math.random() - init_position[2]
         ]);
         this.solar_system.random_obstacles.add_child(new_obstacle);
       } // end if
