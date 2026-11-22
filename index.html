@@ -50,7 +50,8 @@
       "s": false,
       "d": false,
       mouse_dx: 0,
-      mouse_dy: 0
+      mouse_dy: 0,
+      "mouse_left": false
     };
 
     // example: keys.w = true on pressing
@@ -61,6 +62,20 @@
     // example: keys.w = false on not pressing
     window.addEventListener('keyup', (event) => {
       frontend_data[event.key] = false;
+    });
+
+    window.addEventListener('mousedown', (event) => {
+      if (event.button === 0) {
+        frontend_data.mouse_left = true;
+        console.log("Left mouse button pressed!");
+      }
+    });
+
+    window.addEventListener('mouseup', (event) => {
+      if (event.button === 0) {
+        frontend_data.mouse_left = false;
+        console.log("Left mouse button released!");
+      }
     });
 
     // for use in event handling/ui -- returns 

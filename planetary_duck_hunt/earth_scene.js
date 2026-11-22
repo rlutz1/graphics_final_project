@@ -131,6 +131,7 @@ export class EarthScene extends SceneBuilder.Scene {
       this.update_boids();
 
       this.move_player(frontend_data, delT);
+      this.shoot_gun(frontend_data, delT);
     }
     // Mouse look: update camera orientation.
     const sensitivity = 0.002;
@@ -184,9 +185,21 @@ export class EarthScene extends SceneBuilder.Scene {
   move_player(keys_pressed, delT) {
     const speed = 3.0 * delT;
 
-    if (keys_pressed["w"]) this.camera.position[2] -= speed;
+    if (keys_pressed["w"]) {
+      this.camera.position[2] -= speed;
+    }
     if (keys_pressed["s"]) this.camera.position[2] += speed;
     if (keys_pressed["a"]) this.camera.position[0] -= speed;
     if (keys_pressed["d"]) this.camera.position[0] += speed;
   }
+
+  shoot_gun(keys_pressed, delT ) {
+    const speed = 3.0 * delT;
+
+    //console.log("Current inputs:", keys_pressed);
+    //console.log("shoot_gun has been called");
+    if(keys_pressed["mouse_left"]) console.log("hello");
+
+  }
+
 } // end class
