@@ -180,7 +180,6 @@ export class EarthScene extends SceneBuilder.Scene {
     const texture = new SceneBuilder.Texture(this.renderer.gl, "./textures/skin.png");
 
     for (let i = 0; i < num_boids; i++) {
-      // the id -> can map to idx from wasm module, but for now, using i to illustrate.
       boid = new BoidSceneNode(`${i}`, "texture_bump_mapping_basic"); // set up a simple hierarchy
       boid.init(boid_mesh, boid_material, texture); // init the nodes with their assets
       
@@ -193,15 +192,13 @@ export class EarthScene extends SceneBuilder.Scene {
       const vy = this.boidVelocities[(i * this.boidDim) + 1];
       const vz = this.boidVelocities[(i * this.boidDim) + 2];
 
-      // shove back the boid a bit -- z dimension matters here, if at z=0 it'll look like nothing's there. Will address 
-
-      boid.position = [x, y, z];
+      boid.position = [x, y+(this.terrain.radius+1), z];
       boid.rotation = this.velocityToRotation(vx, vy, vz);
       this.boidNodes.push(boid);
       this.boids.add_child(boid); // add boid as child of a dummy grouper node
     } // end loop
 
-    this.add_node(this.boids); // add grouper node as a root node of the scene.
+    this.terrain.add_child(this.boids);
   } // end function
   // HELPER ADDED BY THEO
   velocityToRotation(vx, vy, vz) {
@@ -251,18 +248,6 @@ export class EarthScene extends SceneBuilder.Scene {
       this.update_sun();
     }
 
-    // MORE OF THEOS NOT WORKING CAMERA CODE
-    /*
-    const sensitivity = 0.002;
-    this.camera.yaw -= (frontend_data.mouse_dx || 0) * sensitivity;
-    this.camera.pitch -= (frontend_data.mouse_dy || 0) * sensitivity;
-    // Prevent the player from looking completely upside down.
-    const pitchLimit = Math.PI / 2 - 0.01;
-    this.camera.pitch = Math.max(
-      -pitchLimit,
-      Math.min(pitchLimit, this.camera.pitch)
-    ); */
-
     this.lastFrameTime = now;
     super.update_all_transformations(); // update all transformation nodes.
     // yada yada, do whatever the scene needs to do at a global scale,
@@ -277,7 +262,7 @@ export class EarthScene extends SceneBuilder.Scene {
 
       this.boidNodes[i].position = [
         this.boidPositions[offset],
-        this.boidPositions[offset + 1],
+        this.boidPositions[offset + 1]+(this.terrain.radius+1),
         this.boidPositions[offset + 2]
       ];
 
