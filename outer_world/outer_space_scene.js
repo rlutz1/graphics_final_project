@@ -282,35 +282,42 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   render(frontend_data={}) {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
+    if (!this.game_over) {
+      // update the time on all planets so orbits can be updated correctly
+      if (frontend_data.delta_time) {
+        this.day = (frontend_data.delta_time * this.days_per_second);
+        this.solar_system.planets.forEach((p) => {
+          p.update_orbit(this.day);
+        });
+        this.solar_system.asteroid_belt.forEach((a) => {
+          a.update_orbit(this.day);
+        });
+      } // end if
 
-    // update the time on all planets so orbits can be updated correctly
-    if (frontend_data.delta_time) {
-      this.day = (frontend_data.delta_time * this.days_per_second);
-      this.solar_system.planets.forEach((p) => {
-        p.update_orbit(this.day);
-      });
-      this.solar_system.asteroid_belt.forEach((a) => {
-        a.update_orbit(this.day);
-      });
+      // need to now deal with dynamic input affecting the 
+      // world/"moving the spaceship" and hitting things.
+      if (this.spaceship.hit_recovery) {
+        console.log("hit recovery mode")
+        this.spaceship.recovery_timer += frontend_data.delta_time;
+        if (this.spaceship.recovery_timer >= this.spaceship.recovery_time_limit) { 
+          this.spaceship.hit_recovery = false;
+          this.spaceship.recovery_timer = 0;
+        } // end if
+        // carry out all updates from last time
+        super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+        // update the sun light position as the sun moves.
+        this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
+      } else {
+        this.handle_input(frontend_data); // figure out how to move based on input
+        this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
+        // TODO: the planet collision will trigger transitions, will merge and handle when time comes.
+        this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
+      } // end if
+
+      // render call!
+      super.render([0, 0, 0]);  // let the renderer do it's draw thing
     } // end if
-
-    // need to now deal with dynamic input affecting the 
-    // world/"moving the spaceship" and hitting things.
-    if (this.spaceship.hit_recovery) {
-      console.log("hit recovery mode")
-      // carry out all updates from last time
-      super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-      // update the sun light position as the sun moves.
-      this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
-    } else {
-      this.handle_input(frontend_data); // figure out how to move based on input
-      this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
-      // TODO: the planet collision will trigger transitions, will merge and handle when time comes.
-      this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
-    } // end if
-
-    // render call!
-    super.render([0, 0, 0]);  // let the renderer do it's draw thing
+    
   } // end function
 
   /**
@@ -397,7 +404,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       this.spaceship.health -= 1;
       if (this.spaceship.health == 0) { this.game_over = true; return;}
       this.spaceship.hit_recovery = true;
-      this.spaceship.update_recovery_timer = 0;
+      this.spaceship.recovery_timer = 0;
     } // end if
   } // end function
 

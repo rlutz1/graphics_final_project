@@ -22,6 +22,8 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     // adding a state and health points for adding actual obstacles
     this.health = 5; // initial health points
     this.hit_recovery = false; // state control for in a "hit recovery state"
+    this.recovery_timer = 0; // timer for recovery
+    this.recovery_time_limit = 10; // n seconds in recovery mode
   }
 
   init(gl) {
