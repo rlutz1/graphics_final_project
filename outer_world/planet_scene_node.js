@@ -221,8 +221,9 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
 
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
     this.direction = [0, 0, 0];
-    this.velocity = [Math.random(), Math.random(), Math.random()]; // random velocity
-    this.lifetime = (Math.random() * 50) + 30; // randomish lifetime, at least 10 days in length
+    const rando_velocity = Math.random();
+    this.velocity = [rando_velocity, rando_velocity, rando_velocity]; // random velocity
+    this.lifetime = (Math.random() * 50) + 30; // randomish lifetime, at least n days in length
     this.dead = false; // should i be removed from scene
 
     // basic sphere bounding shape for the planet body
@@ -253,7 +254,7 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
     this.position = [
       this.position[0] += (this.direction[0] * this.velocity[0]),
       this.position[1] += (this.direction[1] * this.velocity[1]),
-      this.position[2] -= (this.direction[2] * this.velocity[2])
+      this.position[2] += (this.direction[2] * this.velocity[2])
     ];
   } // end function
 

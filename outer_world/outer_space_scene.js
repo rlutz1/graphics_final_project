@@ -346,12 +346,24 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           .set_mesh(this.solar_system.random_obstacles.mesh)
           .set_material(this.solar_system.random_obstacles.material)
           .set_texture(this.solar_system.random_obstacles.textures);
-        const init_position = [5, 5, -20];
+        // const init_position = [
+        //   (Math.random() * 20) + 50, 
+        //   (Math.random() * 20) + 50, 
+        //   (Math.random() * 20) + 50
+        // ];
+        const theta = Math.random() * (2 * Math.PI);
+        const phi =  Math.random() * (Math.PI);
+        const init_position = [
+          this.solar_system.background.scale[0] * Math.sin(phi) * Math.cos(theta),
+          this.solar_system.background.scale[1] * Math.sin(phi) * Math.sin(theta),
+          this.solar_system.background.scale[2] * Math.cos(phi),
+        ];
+
         new_obstacle.position = init_position;
         new_obstacle.set_trajectory([
-          init_position[0] - this.spaceship.position[0],
-          init_position[1] - this.spaceship.position[1],
-          init_position[2] - this.spaceship.position[2]
+          this.spaceship.position[0] - init_position[0],
+          this.spaceship.position[1] - init_position[1],
+          this.spaceship.position[2] - init_position[2]
         ]);
         this.solar_system.random_obstacles.add_child(new_obstacle);
       } // end if
@@ -507,11 +519,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       this.spaceship.hit_recovery = true;
       this.spaceship.recovery_timer = 0;
 
-
       const normal = obstacle_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
-      const penetration = obstacle_collide.overlap; // this is HOW MUCH we should push in the norm direction
-
-      // return [normal[0] * penetration, normal[1] * penetration, normal[0] * penetration]
       return normal;
     } // end if
     return null;
@@ -542,21 +550,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.translate[1] - normal[1] * penetration,
         this.camera.translate[2] - normal[2] * penetration
       ];
-
-      // // carry out all updates from last time
-      // super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-      // // update the sun light position as the sun moves.
-      // this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
-      
-      // // potential further smoothing?
-      // const dot = (normal[0] * velocity[0]) + (normal[1] *  velocity[1]) + (normal[2] *  velocity[2])
-      // const vn = [normal[0] * dot, normal[1] * dot, normal[2] * dot];
-
-      // if (dot <= 0) {
-      //   velocity[0] -= vn[0];  
-      //   velocity[1] -= vn[1];  
-      //   velocity[2] -= vn[2]; 
-      // }
      
     } // end if
   } // end function
@@ -566,6 +559,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
    */
   obstacle_collision_check() {
     const asteroids = this.solar_system.asteroid_belt;
+    const randoms = this.solar_system.random_obstacles.children;
     
     // randoms....
 
@@ -575,6 +569,28 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       for (const a of asteroids) {
         if (shape.intersect(a.bounding_shape)) {
           console.log(`hit ${a.data.name}`)
+          const d = [
+            shape.center_x - a.bounding_shape.center_x, 
+            shape.center_y - a.bounding_shape.center_y, 
+            shape.center_z - a.bounding_shape.center_z, 
+          ];
+          const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
+          const overlap_temp = shape.radius + a.bounding_shape.radius - d_mag;
+          if (overlap_temp > overlap) { 
+            overlap = overlap_temp;
+            n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag]; 
+          } 
+          intersect = true;
+        } // end if
+      } // end loop
+    } // end loop
+
+    if (intersect) { return {normal: n, overlap: overlap}; }
+
+    for (const shape of this.spaceship.bounding_shape) {
+      for (const a of randoms) {
+        if (shape.intersect(a.bounding_shape)) {
+          console.log(`hit ${a.id}`)
           const d = [
             shape.center_x - a.bounding_shape.center_x, 
             shape.center_y - a.bounding_shape.center_y, 
