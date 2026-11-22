@@ -297,23 +297,43 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // need to now deal with dynamic input affecting the 
       // world/"moving the spaceship" and hitting things.
       if (this.spaceship.hit_recovery) {
-        // console.log("hit recovery mode")
+
         this.spaceship.recovery_timer += frontend_data.time_since_last_render;
-        // console.log(this.spaceship.recovery_timer)
         if (this.spaceship.recovery_timer >= this.spaceship.recovery_time_limit) { 
           this.spaceship.hit_recovery = false;
           this.spaceship.recovery_timer = 0;
           // console.log("reset")
         } // end if
+
+
+        // THIS WILL BE CHANGED TO SCENE TRANSITION AND NEED TO HANDLE SOME STUFF
+        this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
+       
         // carry out all updates from last time
         super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
         // update the sun light position as the sun moves.
         this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
       } else {
         this.handle_input(frontend_data); // figure out how to move based on input
-        this.handle_obstacle_collisions(frontend_data.delta_time); // also need to see if i hit an obstacle and do state changes/camera changes
+        // carry out all updates from last time
+        super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+        // update the sun light position as the sun moves.
+        this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
+
+        this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
         // TODO: the planet collision will trigger transitions, will merge and handle when time comes.
+        // carry out all updates from last time
+        // super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+        // // update the sun light position as the sun moves.
+        // this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
+
+
+        // THIS WILL BE CHANGED TO SCENE TRANSITION STUFF LATER
         this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
+        // carry out all updates from last time
+        super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+        // update the sun light position as the sun moves.
+        this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
       } // end if
 
       // render call!
@@ -390,17 +410,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.translate[2] - forward_z
       ];
     } // end if
-
-    // carry out all updates from last time
-    super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-    // update the sun light position as the sun moves.
-    this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
   } // end function
 
   /**
    * check for collision with obstacles in the scene.
    */
-  handle_obstacle_collisions(curr_time) {
+  handle_obstacle_collisions() {
     const obstacle_collide = this.obstacle_collision_check();
     if (obstacle_collide) {
       this.spaceship.health -= 1;
@@ -423,8 +438,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // Ry*Rx*[0, 0, -1]*V direction
     // lets see if we collided with a planet
     const planet_collide = this.spaceship_planet_collision_check();
-    // console.log(planet_collide);
-    // let velocity = this.spaceship.velocity;
 
     if (planet_collide) { 
       const normal = planet_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
@@ -438,10 +451,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.translate[2] - normal[2] * penetration
       ];
 
-      // carry out all updates from last time
-      super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-      // update the sun light position as the sun moves.
-      this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
+      // // carry out all updates from last time
+      // super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+      // // update the sun light position as the sun moves.
+      // this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
       
       // // potential further smoothing?
       // const dot = (normal[0] * velocity[0]) + (normal[1] *  velocity[1]) + (normal[2] *  velocity[2])
