@@ -15,6 +15,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.day = 0; // days passing.
     this.days_per_second = 30; // how to register how many days occur in a second for planet orbits
     this.distance_const = 35; // a constant used in distance normalization.
+    this.game_over = false;
   }
 
   /**
@@ -293,6 +294,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       });
     } // end if
 
+    // need to now deal with dynamic input affecting the 
+    // world/"moving the spaceship" and hitting things.
     if (this.spaceship.hit_recovery) {
       console.log("hit recovery mode")
     } else {
@@ -301,8 +304,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // TODO: the planet collision will trigger transitions, will merge and handle when time comes.
       this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
     } // end if
-
-    
 
     // render call!
     super.render([0, 0, 0]);  // let the renderer do it's draw thing
@@ -383,8 +384,16 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
   } // end function
 
+  /**
+   * check for collision with obstacles in the scene.
+   */
   handle_obstacle_collisions() {
-    // TODO
+    const obstacle_collide = this.obstacle_collision_check();
+    if (obstacle_collide) {
+      this.spaceship.hit_recovery = true;
+      this.spaceship.health -= 1;
+      if (this.spaceship.health == 0) { this.game_over = true; }
+    } // end if
   } // end function
 
   /**
@@ -431,6 +440,40 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       // }
      
     } // end if
+  } // end function
+
+  /**
+   * checking all the obstacles for a collision
+   */
+  obstacle_collision_check() {
+    const asteroids = this.solar_system.asteroid_belt;
+    // randoms....
+
+    // check for asteroid collision with ship
+    let n = []; let overlap = 0; let intersect = false;
+    for (const shape of this.spaceship.bounding_shape) {
+      for (const a of asteroids) {
+        if (shape.intersect(a.bounding_shape)) {
+          console.log(`hit ${a.data.name}`)
+          const d = [
+            shape.center_x - a.bounding_shape.center_x, 
+            shape.center_y - a.bounding_shape.center_y, 
+            shape.center_z - a.bounding_shape.center_z, 
+          ];
+          const d_mag = Math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]);
+          const overlap_temp = shape.radius + a.bounding_shape.radius - d_mag;
+          if (overlap_temp > overlap) { 
+            overlap = overlap_temp;
+            n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag]; 
+          } 
+          intersect = true;
+        } // end if
+      } // end loop
+    } // end loop
+
+    if (intersect) { return {normal: n, overlap: overlap}; }
+
+    return null;
   } // end function
 
   /**
