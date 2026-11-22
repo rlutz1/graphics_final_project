@@ -16,6 +16,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.days_per_second = 30; // how to register how many days occur in a second for planet orbits
     this.distance_const = 35; // a constant used in distance normalization.
     this.game_over = false;
+    this.bounce_dir = [0, 0, 0];
+    this.bounce_speed = [0.2, 0.2, 0.2]
   }
 
   /**
@@ -296,6 +298,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
       // need to now deal with dynamic input affecting the 
       // world/"moving the spaceship" and hitting things.
+      // TODO: don't need to update_all_transforms every time, it's over kill, replace with necessary center changer only.
       if (this.spaceship.hit_recovery) {
 
         this.spaceship.recovery_timer += frontend_data.time_since_last_render;
@@ -304,6 +307,21 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           this.spaceship.recovery_timer = 0;
           // console.log("reset")
         } // end if
+
+        this.camera.translate = [
+          this.camera.translate[0] - (this.bounce_dir[0] * this.bounce_speed[0] * frontend_data.time_since_last_render),
+          this.camera.translate[1] - (this.bounce_dir[1] * this.bounce_speed[1] * frontend_data.time_since_last_render),
+          this.camera.translate[2] - (this.bounce_dir[2] * this.bounce_speed[2] * frontend_data.time_since_last_render)
+        ];
+
+        // this.bounce_speed = [
+        //   this.bounce_speed[0] / 2,
+        //   this.bounce_speed[1] / 2,
+        //   this.bounce_speed[2] / 2
+        // ];
+
+
+
 
 
         // THIS WILL BE CHANGED TO SCENE TRANSITION AND NEED TO HANDLE SOME STUFF
@@ -314,13 +332,14 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         // update the sun light position as the sun moves.
         this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
       } else {
+        this.bounce_speed = [2, 2, 2]; // reset
         this.handle_input(frontend_data); // figure out how to move based on input
         // carry out all updates from last time
         super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
         // update the sun light position as the sun moves.
         this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
 
-        this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
+        this.bounce_dir = this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
         // TODO: the planet collision will trigger transitions, will merge and handle when time comes.
         // carry out all updates from last time
         // super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
@@ -422,7 +441,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (this.spaceship.health == 0) { this.game_over = true; return;}
       this.spaceship.hit_recovery = true;
       this.spaceship.recovery_timer = 0;
+
+
+      const normal = obstacle_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
+      const penetration = obstacle_collide.overlap; // this is HOW MUCH we should push in the norm direction
+
+      // return [normal[0] * penetration, normal[1] * penetration, normal[0] * penetration]
+      return normal;
     } // end if
+    return null;
   } // end function
 
   /**
