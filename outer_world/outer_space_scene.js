@@ -315,6 +315,24 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           this.camera.translate[2] - (this.bounce_dir[2] * this.bounce_speed[2] * frontend_data.time_since_last_render)
         ];
 
+        // left rotate
+        if (frontend_data.a) {
+          this.camera.rotate = [
+            this.camera.rotate[0],
+            (this.camera.rotate[1] - this.spaceship.rotation_speed) % (2 * Math.PI), 
+            this.camera.rotate[2]
+          ]
+        } // end if
+
+        // right rotate
+        if (frontend_data.d) {
+          this.camera.rotate = [
+            this.camera.rotate[0],
+            (this.camera.rotate[1] + this.spaceship.rotation_speed) % (2 * Math.PI),
+            this.camera.rotate[2]
+          ]
+        } // end if
+
         // set the pitch angle to an angle that is specified by the y coordinate of the mouse
         if (frontend_data.mouse_y) {
           const normalized_y = (2 * frontend_data.mouse_y / frontend_data.canvas_height) - 1; // normalize to [-1, 1]
