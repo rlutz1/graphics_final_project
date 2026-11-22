@@ -13,7 +13,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     this.solar_system = null; // the solar system in an accessible way.
     this.day = 0; // days passing.
-    this.days_per_second = 30; // how to register how many days occur in a second for planet orbits
+    this.days_per_second = 10; // how to register how many days occur in a second for planet orbits
     this.distance_const = 35; // a constant used in distance normalization.
     this.game_over = false;
     this.bounce_dir = [0, 0, 0];
@@ -174,15 +174,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // const background = new PlanetBuilder.BackgroundSceneNode("background", "spaceship_basic");
     const background = new PlanetBuilder.BackgroundSceneNode("background", "space_background_basic");
     const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_sphere_mesh(
-        1, // radius -- placeholder!
-        0.05, 0.05, // vSteps, uSteps
-        [0.5, 0.5, 0.5]
+      1, // radius -- placeholder!
+      0.05, 0.05, // vSteps, uSteps
+      [0.5, 0.5, 0.5]
     )); // generate a basic sphere mesh
     const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-        "ka": [0.7, 0.7, 0.7], 
-        "kd": [0.85, 0.85, 0.85],
-        "ks": [0.5, 0.5, 0.5], 
-        "shininess": 40
+      "ka": [0.7, 0.7, 0.7], 
+      "kd": [0.85, 0.85, 0.85],
+      "ks": [0.5, 0.5, 0.5], 
+      "shininess": 40
     });
     const texture = new SceneBuilder.Texture(this.renderer.gl, "./outer_world/textures/stars_color.jpg");
 
@@ -247,13 +247,13 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         0 // adding a texture bump mapping to these
       )); // generate a basic planet mesh
       const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-          "ka": [0.3, 0.3, 0.3], 
-          "kd": [0.85, 0.85, 0.85],
-          "ks": [0.5, 0.5, 0.5], 
-          "shininess": 40, 
-          "metallic": 0,
-          "emissive": 0, 
-          "flat": false
+        "ka": [0.3, 0.3, 0.3], 
+        "kd": [0.85, 0.85, 0.85],
+        "ks": [0.5, 0.5, 0.5], 
+        "shininess": 40, 
+        "metallic": 0,
+        "emissive": 0, 
+        "flat": false
       });
 
     for (const [planet, data] of Object.entries(PlanetBuilder.PLANET_DATA)) {
@@ -281,13 +281,13 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       0 // color for now, texture later! TODO
     )); // generate a basic planet mesh
     const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-        "ka": [0.0, 0.0, 0.0], 
-        "kd": [0.0, 0.0, 0.0],
-        "ks": [0.0, 0.0, 0.0], 
-        "shininess": 1, 
-        "metallic": 0,
-        "emissive": 1.0, 
-        "flat": false
+      "ka": [0.0, 0.0, 0.0], 
+      "kd": [0.0, 0.0, 0.0],
+      "ks": [0.0, 0.0, 0.0], 
+      "shininess": 1, 
+      "metallic": 0,
+      "emissive": 1.0, 
+      "flat": false
     });
     const texture = new SceneBuilder.VideoTexture(this.renderer.gl, PlanetBuilder.SUN_DATA.sun.texture_path);
 
@@ -323,21 +323,36 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.solar_system.asteroid_belt.forEach((a) => {
           a.update_orbit(this.day);
         });
+
+        const clean_up = []
         this.solar_system.random_obstacles.children.forEach((o) => {
-          o.update_trajectory(this.day);
+          if (o.dead) {
+            clean_up.push(o);
+          } else {
+            o.update_trajectory(this.day);
+          } // end if
         });
+        for (const dead_obstacle of clean_up) {
+          this.solar_system.random_obstacles.remove_child(dead_obstacle);
+          // console.log("removing")
+        } // end loop
       } // end if
 
-      const random_chance_obstacle = Math.random();
-      if (random_chance_obstacle > 0.5) {
+      if (Math.random() > 0.95) {
         // add a random obtacle to the scene for EXCITMENT
-        const new_obstacle = new PlanetBuilder.RandomAsteroidObstacle()
+        const new_obstacle = new PlanetBuilder.RandomAsteroidObstacle();
+        new_obstacle.lifetime += this.day; // when they die and can be removed from the scnee for funsies
         new_obstacle
           .set_mesh(this.solar_system.random_obstacles.mesh)
           .set_material(this.solar_system.random_obstacles.material)
           .set_texture(this.solar_system.random_obstacles.textures);
-        new_obstacle.position = [5, 5, -20]
-        new_obstacle.update_trajectory([0, 0, 0]);
+        const init_position = [5, 5, -20];
+        new_obstacle.position = init_position;
+        new_obstacle.set_trajectory([
+          init_position[0] - this.spaceship.position[0],
+          init_position[1] - this.spaceship.position[1],
+          init_position[2] - this.spaceship.position[2]
+        ]);
         this.solar_system.random_obstacles.add_child(new_obstacle);
       } // end if
 
