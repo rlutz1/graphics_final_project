@@ -337,9 +337,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     let forward_x = -Math.sin(yaw) * Math.cos(pitch) * this.spaceship.velocity[0];
     let forward_y = Math.sin(pitch) * this.spaceship.velocity[1];
     let forward_z = Math.cos(yaw) * Math.cos(pitch) * this.spaceship.velocity[2]; // flipping sign on this
-    // let forward_x = -Math.sin(yaw) * Math.cos(pitch) * velocity[0];
-    // let forward_y = Math.sin(pitch) * velocity[1];
-    // let forward_z = Math.cos(yaw) * Math.cos(pitch) * velocity[2]; // flipping sign on this
 
     // forward motion
     if (frontend_data.w) {
