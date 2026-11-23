@@ -214,16 +214,16 @@ export class AsteroidObstacle extends PlanetSceneNode {
  */
 export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
 
-  constructor(id="random_obstacle", shader_id="planet_basic") {
+  constructor(id="random_obstacle", shader_id="random_obstacle_basic") {
     super(id, shader_id); // takes care of some baseline stuff for now.
-    const radius = (Math.random()) + 0.1; // radius between certain val -- not necessarily historically accurate
+    const radius = (Math.random()) + 1; // radius between certain val -- not necessarily historically accurate
     this.scale = [radius, radius, radius];
 
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
     this.direction = [0, 0, 0];
     const rando_velocity = Math.random();
     this.velocity = [rando_velocity, rando_velocity, rando_velocity]; // random velocity
-    this.lifetime = (Math.random() * 50) + 30; // randomish lifetime, at least n days in length
+    this.lifetime = (Math.random() * 50) + 100; // randomish lifetime, at least n days in length
     this.dead = false; // should i be removed from scene
 
     // basic sphere bounding shape for the planet body
@@ -273,11 +273,11 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
   update_transformation_matrix(M_parent) {
     // scale for radius, rotate on axis, move away from origin, and rotate on orbital plane.
     const translation = translate(this.position); // my position relative to the sun as origin
-    const rotation_axis = rotate(this.rotation); // my rotation on my axis
+    // const rotation_axis = rotate(this.rotation); // my rotation on my axis
     const scale_mtx = scale(this.scale); // any scaling (TODO: size based on radius)
 
     // my local transformations
-    const M_local = matMul(translation, rotation_axis, scale_mtx);
+    const M_local = matMul(translation, scale_mtx);
 
     // add my transformations to the world's
     this.transformation_matrix = matMul(M_parent, M_local);

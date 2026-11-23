@@ -483,6 +483,15 @@ export class PlanetShader extends Shader {
   } // end function
 } // end class
 
+export class RandomObstacleShader extends PlanetShader {
+  load(node, camera, lights, gl) {
+    super.load(node, camera, lights, gl); // do all the normal things
+    // EXCEPT -- ignore translations, include rotations like the background
+    // gl.uniformMatrix4fv(this.uMVM, false, camera.get_view_matrix(true, false));
+    // gl.uniformMatrix4fv(this.uMVM, false, camera.get_view_matrix());
+  } // end function
+} // end class
+
 /**
  * two things this accounts for. it is essentially a basic phong shader but:
  * + it uses identity every time instead of the camera.get_view_matrix.
@@ -661,5 +670,6 @@ export const SHADER_MAP = {
   "texture_normal_mapping_basic": TextureNormalMappingShader, 
   "planet_basic": PlanetShader, // for ya planets
   "spaceship_basic": SpaceshipShader, // a basic starter (basically just general phong) using sun as single point light and ignoring cam view
-  "space_background_basic": SpaceBackgroundShader // for the space background texture mapping because i need to not clobber others
+  "space_background_basic": SpaceBackgroundShader, // for the space background texture mapping because i need to not clobber others
+  "random_obstacle_basic": RandomObstacleShader // trust, for randoms. quick and dirty for testing
 } // end shader map
