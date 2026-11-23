@@ -356,7 +356,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         const init_position = [ // init position on the circumference of the background
           this.solar_system.background.scale[0] * Math.sin(phi) * Math.cos(theta) - this.camera.translate[0],
           this.solar_system.background.scale[1] * Math.sin(phi) * Math.sin(theta) - this.camera.translate[1],
-          this.solar_system.background.scale[2] * Math.cos(phi) + this.camera.translate[2],
+          this.solar_system.background.scale[2] * Math.cos(phi) - this.camera.translate[2],
         ];
         
         console.log(init_position)
