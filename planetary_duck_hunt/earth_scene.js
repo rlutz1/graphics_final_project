@@ -192,7 +192,9 @@ export class EarthScene extends SceneBuilder.Scene {
       const vy = this.boidVelocities[(i * this.boidDim) + 1];
       const vz = this.boidVelocities[(i * this.boidDim) + 2];
 
-      boid.position = [x, y+(this.terrain.radius+1), z];
+      const scale = 1.5;
+
+      boid.position = [scale*x, y+(this.terrain.radius+1), scale* z];
       boid.rotation = this.velocityToRotation(vx, vy, vz);
       this.boidNodes.push(boid);
       this.boids.add_child(boid); // add boid as child of a dummy grouper node
@@ -260,10 +262,11 @@ export class EarthScene extends SceneBuilder.Scene {
     for (let i = 0; i < this.boidNodes.length; i++) {
       const offset = i * this.boidDim;
 
+      const scale = 4;
       this.boidNodes[i].position = [
-        this.boidPositions[offset],
+        this.boidPositions[offset]*scale,
         this.boidPositions[offset + 1]+(this.terrain.radius+1),
-        this.boidPositions[offset + 2]
+        this.boidPositions[offset + 2]*scale
       ];
 
       this.boidNodes[i].velocity = [
