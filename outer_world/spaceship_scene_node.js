@@ -9,15 +9,17 @@ import { mat4Identity, matMul, translate, rotate, scale, deg_to_rad } from '../u
  * Scale it via display_scale to fit whatever scene you drop it into.
  */
 export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
-  constructor(id = "spaceship", shader_id = "spaceship_basic") {
+  
+  constructor(id="spaceship", shader="spaceship_basic") {
+    super(id, shader);
 
-    super(id, shader_id);
-    this.position = [0, -0.4, -2];
-    this.rotation = [0, 0, 0];
-    this.scale = [0.8, 0.8, 0.8];
-    this.velocity = [0.1, 0.1, 0.1]; // movement speed
-    this.rotation_speed = 0.03; // turn speed
-    this.center = [...this.position, 1];
+    this.position = [0, 0, -5]; // base translation to my place in world
+    this.rotation = [deg_to_rad(20), 0, 0]; // rotation for effect
+    this.scale = [0.8, 0.8, 0.8]; // scale down
+
+    this.center = [...this.position, 1]; // this will ALWAYS be static on scene!
+    this.velocity = [0.1, 0.1, 0.1]; // velocity in each direction (can tweak of course :) )
+    this.rotation_speed = 0.03; // controls the rotation speed left/right 
   }
 
   init(gl) {
@@ -75,35 +77,34 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     this.bounding_shape = []
     // TODO
     const right_wing = new SceneBuilder.BoundingSphere({
-      center_x:  0.675,
-      center_y:  this.center[1],
-      center_z:  -2,
-      radius: 0.6 // TODO don't like this, for tesing only
+      center_x:  0.675 * this.scale[0],
+      center_y:  0 * this.scale[1],
+      center_z:  (-1 + this.center[2]) * this.scale[2],
+      radius: (0.65 * this.scale[0]) // TODO don't like this, for tesing only
     });
     const left_wing = new SceneBuilder.BoundingSphere({
-      center_x:  -0.675,
-      center_y:  this.center[1],
-      center_z:  -2,
-      radius: 0.6 // TODO don't like this, for tesing only
+      center_x:  -0.675 * this.scale[0],
+      center_y:  0 * this.scale[1],
+      center_z:  (-1 + this.center[2]) * this.scale[2],
+      radius: (0.65 * this.scale[0]) // TODO don't like this, for tesing only
     });
     // TODO this needs to account for rotation here haha
     const nose = new SceneBuilder.BoundingSphere({
-      center_x:  0,
-      center_y:  0,
-      center_z:  -3,
-      radius: 0.3
-    });
-    const back = new SceneBuilder.BoundingSphere({
-      center_x:  0,
-      center_y:  0,
-      center_z:  0,
-      radius: 0.3
+      center_x:  0 * this.scale[0],
+      center_y:  0.2 * this.scale[1],
+      center_z:  (-3.0 + this.center[2]) * this.scale[2],
+      radius: (0.5 * this.scale[0]) // TODO don't like this, for tesing only
     });
 
+    // const boundary = new SceneBuilder.BoundingSphere({
+    //   center_x:  0,
+    //   center_y:  0,
+    //   center_z:  -1 + this.position[2],
+    //   radius: 1.0 // TODO don't like this, for tesing only
+    // });
     this.bounding_shape.push(right_wing);
     this.bounding_shape.push(left_wing);
     this.bounding_shape.push(nose);
-    this.bounding_shape.push(back);
   }
 } // end class
 

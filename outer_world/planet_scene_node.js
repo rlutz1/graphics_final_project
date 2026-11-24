@@ -30,10 +30,8 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
   constructor(id="planet", shader_id="planet_basic", data=null) {
     super(id, shader_id); // takes care of some baseline stuff for now.
 
-    this.start_day = Math.random() * 10000; // set this to whatever as a starting point for the orbit
-
     // default super call sets up: this.position = [0, 0, 0]
-    this.orbit_rotation = [0, this.start_day, 0]; // special for rotation around sun.
+    this.orbit_rotation = [0, 0, 0]; // special for rotation around sun.
 
     this.data = data; // grab the general data pack.
     // this.delta_time = 0; // time since last frame
@@ -55,9 +53,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
    * amount.
    */
   update_orbit(day=0) {
-    // this.day = day;
-    const angle = ((this.start_day + day) / this.data.orbit_period) * 2 * Math.PI;
-    // const angle  = 0
+    const angle = (day / this.data.orbit_period) * 2 * Math.PI;
     this.orbit_rotation = [0, angle, 0]; // y rotation around the sun
   } // end function 
 
@@ -154,37 +150,6 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
 
 } // end class
 
-/**
- * wrapper on a big sphere the is texture mapped with stars for a nicer
- * than just plain black.
- */
-export class BackgroundSceneNode extends SceneBuilder.SceneNode {
-
-  constructor(id="background", shader_id="phong_basic") {
-    super(id, shader_id); // takes care of some baseline stuff for now.
-    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
-
-    // basic sphere bounding shape for the planet body
-    this.bounding_shape = new SceneBuilder.BoundingSphere({
-      center_x:  this.center[0],
-      center_y:  this.center[1],
-      center_z:  this.center[2],
-      radius: 1.0 // TODO don't like this, for testing only
-    });
-  } // end constructor
-
-  /**
-   * wrapper to update the center of this planet, which affects the bounding box.
-   */
-  update_bounding_shape(transformation_matrix) {
-    // set the new center based off of camera movements and the actual node movements.
-    this.center = multiplyMat4Vec4(transformation_matrix, [0, 0, 0, 1]);
-    this.bounding_shape.center_x = this.center[0];
-    this.bounding_shape.center_y = this.center[1];
-    this.bounding_shape.center_z = this.center[2];
-  } // end function
-
-} // end class
 
 /**
  * for a basic asteroid creation.
@@ -196,16 +161,12 @@ export class BackgroundSceneNode extends SceneBuilder.SceneNode {
  */
 export class AsteroidObstacle extends PlanetSceneNode {
   constructor(id="asteroid", shader_id="planet_basic") {
-    const radius = (Math.random() * 5000) + 1000; // radius between certain val -- not necessarily historically accurate
-    const buffer = 100000000; // offset from those planets; this is set by feel, can change
-    const min_distance = PLANET_DATA.mars.distance_km + buffer;
-    const max_distance = PLANET_DATA.jupiter.distance_km - buffer;
-    const distance = Math.random() * (max_distance - min_distance) + min_distance;
-
+    const radius = (Math.random() * 2000) + 1000; // radius between 100 - 530 km (1000 - 3000)
+    const distance = (Math.random() * 329100000) + 150000000; // random distance between mars and jupiter
     const orbit_period = (Math.random() * 1095) + 1095 // random orbit period between 3 - 6 years
-    const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, texture_path: "./outer_world/textures/asteroid.jpg"});
+    const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, texture_path: "./outer_world/textures/asteroid.jpg"}) 
+    // console.log(data)
     super(id, shader_id, data);
-    this.start_day = Math.random() * 10000
   }
 } // end class
 

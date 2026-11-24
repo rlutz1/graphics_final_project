@@ -15,6 +15,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.day = 0; // days passing.
     this.days_per_second = 30; // how to register how many days occur in a second for planet orbits
     this.distance_const = 35; // a constant used in distance normalization.
+
+    this.transition = null;
+    this.fade = 0;
+    this.is_over = false;
   }
 
   /**
@@ -54,19 +58,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     // init sun and planets, etc
     const sun = this.init_sun();
-    this.solar_system.sun = sun; // for easy access more than anything
-    
     const planets = this.init_planets();
-    this.solar_system.planets = planets; // can make this more specific if needed
-    
     const spaceship = this.init_spaceship();
-    this.spaceship = spaceship; // again, easy access if needed.
-    
     const asteroid_belt = this.init_asteroid_belt();
-    this.solar_system.asteroid_belt = asteroid_belt; // asteroid belt 
     
-    const background = this.init_background();
-    this.solar_system.background = background; // the background mimcry
+    this.solar_system.sun = sun; // for easy access more than anything
+    this.solar_system.planets = planets; // can make this more specific if needed
+    this.spaceship = spaceship; // again, easy access if needed.
+    this.solar_system.asteroid_belt = asteroid_belt; // asteroid belt 
+
 
     this.normalize_distance(); // normalize the distances of all planets for viewing pleasure
     this.normalize_radii(); // same thing here.
@@ -82,7 +82,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       sun.add_child(a);
     });
     this.add_node(spaceship); // spaceship to daddy sceen
-    this.add_node(background); // background
   } // end function
 
   /**
@@ -135,35 +134,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   } // end function
 
   /**
-   * initialize the background mimckry
-   */
-  init_background() {
-    // TODO: not great to use basic spaceship
-    // const background = new PlanetBuilder.BackgroundSceneNode("background", "spaceship_basic");
-    const background = new PlanetBuilder.BackgroundSceneNode("background", "space_background_basic");
-    const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_sphere_mesh(
-        1, // radius -- placeholder!
-        0.05, 0.05, // vSteps, uSteps
-        [0.5, 0.5, 0.5]
-    )); // generate a basic sphere mesh
-    const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-        "ka": [0.7, 0.7, 0.7], 
-        "kd": [0.85, 0.85, 0.85],
-        "ks": [0.5, 0.5, 0.5], 
-        "shininess": 40
-    });
-    const texture = new SceneBuilder.Texture(this.renderer.gl, "./outer_world/textures/stars_color.jpg");
-
-    background.set_mesh(mesh).set_material(material).set_texture(texture); 
-    background.scale = [75, 75, 75] // BIG BOY
-    background.bounding_shape.radius = 75; // update this as well
-    background.center = this.spaceship.center;
-    
-    return background;
-  } // end function 
-
-  /**
-   * initialize the asteroid belt babies
+   * 
    */
   init_asteroid_belt() {
     const asteroids = [];
@@ -282,6 +253,28 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
 
+    // The transition
+    if (this.transition)
+    {
+      const tr = this.transition;
+      if (tr.start == null)
+      {
+        tr.start = frontend_data.delta_time; // for tracking the fade
+      }
+      const t = Math.min((frontend_data.delta_time - tr.start) / tr.duration, 1);
+      
+      const ease = t * t * (3 - 2 * t);
+      this.camera.fov = tr.start_fov * (1 - 0.9 * ease); // Narrow the FOV
+      this.fade = ease;
+
+      if (t >= 1)
+      {
+        this.is_over = true;
+      }
+
+      frontend_data = {}; // empty the frontend data while rendering
+    }
+
     // update the time on all planets so orbits can be updated correctly
     if (frontend_data.delta_time) {
       this.day = (frontend_data.delta_time * this.days_per_second);
@@ -327,6 +320,43 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const yaw = this.camera.rotate[1]; // the rotation around the y axis, left/right motion
     const pitch = this.camera.rotate[0]; // the rotation around the x axis, up/down tilting
 
+    
+    
+    // now, if a planet does collide, we want to alter the direction vector a bit
+    // planet_collide, if not null, returns the normalized directional vector
+    // from centroid A -> B (A is spaceship, B is a planet/sun).
+    // so we're going to subtract out the part of movement we don't want from the current
+    // Ry*Rx*[0, 0, -1]*V direction
+    // lets see if we collided with a planet
+    const planet_collide = this.spaceship_planet_collision_check();
+    // console.log(planet_collide);
+    let velocity = this.spaceship.velocity;
+
+    if (planet_collide) { 
+      const normal = planet_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
+      const penetration = planet_collide.overlap; // this is HOW MUCH we should push in the norm direction
+
+      // simply correct the position here before we apply the rotation of the direction vector
+      // this will push the scene in the opposing direction
+      this.camera.translate = [
+        this.camera.translate[0] - normal[0] * penetration,
+        this.camera.translate[1] - normal[1] * penetration,
+        this.camera.translate[2] - normal[2] * penetration
+      ];
+      
+      // // potential further smoothing?
+      // const dot = (normal[0] * velocity[0]) + (normal[1] *  velocity[1]) + (normal[2] *  velocity[2])
+      // const vn = [normal[0] * dot, normal[1] * dot, normal[2] * dot];
+
+      // if (dot <= 0) {
+      //   velocity[0] -= vn[0];  
+      //   velocity[1] -= vn[1];  
+      //   velocity[2] -= vn[2]; 
+      // }
+     
+    } // end if
+    // console.log(`velocity: ${velocity}`)
+
     // the calculations of how to move forward considering the direction of
     // my camera view at this moment. includes up/down/left/right direction in the motion.
     // can derive from using direction vector [0, 0, -1] (always move in negative z)
@@ -334,9 +364,18 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // and that flips the direction in which to move the scene in terms of tranlation
     // with consideration to your current orientation, giving impression you are moving in direction you're pointed in.
     // this is the DIRECTION * HOW MUCH you should move the scene in.
-    let forward_x = -Math.sin(yaw) * Math.cos(pitch) * this.spaceship.velocity[0];
-    let forward_y = Math.sin(pitch) * this.spaceship.velocity[1];
-    let forward_z = Math.cos(yaw) * Math.cos(pitch) * this.spaceship.velocity[2]; // flipping sign on this
+    // let forward_x = -Math.sin(yaw) * Math.cos(pitch) * this.spaceship.velocity[0];
+    // let forward_y = Math.sin(pitch) * this.spaceship.velocity[1];
+    // let forward_z = Math.cos(yaw) * Math.cos(pitch) * this.spaceship.velocity[2]; // flipping sign on this
+    let forward_x = -Math.sin(yaw) * Math.cos(pitch) * velocity[0];
+    let forward_y = Math.sin(pitch) * velocity[1];
+    let forward_z = Math.cos(yaw) * Math.cos(pitch) * velocity[2]; // flipping sign on this
+    
+
+    // FOR IF YOU'RE GROUNDED ON A PLANE -- great for planet probably
+    // const forward_x = -Math.sin(yaw);
+    // const forward_y = 0;
+    // const forward_z = Math.cos(yaw);
 
     // forward motion
     if (frontend_data.w) {
@@ -359,52 +398,28 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     } // end if
 
     // carry out all updates from last time
-    super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+    super.update_all_transformations(); // update all the transformation nodes, using the oberridenguy below.
+
     // update the sun light position as the sun moves.
     this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
-
-    // now, if a planet does collide, we want to alter the direction vector a bit
-    // planet_collide, if not null, returns the normalized directional vector
-    // from centroid A -> B (A is spaceship, B is a planet/sun).
-    // so we're going to subtract out the part of movement we don't want from the current
-    // Ry*Rx*[0, 0, -1]*V direction
-    // lets see if we collided with a planet
-    const planet_collide = this.spaceship_planet_collision_check();
-    // console.log(planet_collide);
-    // let velocity = this.spaceship.velocity;
-
-    if (planet_collide) { 
-      const normal = planet_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
-      const penetration = planet_collide.overlap; // this is HOW MUCH we should push in the norm direction
-
-      // simply correct the position here before we apply the rotation of the direction vector
-      // this will push the scene in the opposing direction
-      this.camera.translate = [
-        this.camera.translate[0] - normal[0] * penetration,
-        this.camera.translate[1] - normal[1] * penetration,
-        this.camera.translate[2] - normal[2] * penetration
-      ];
-
-      // carry out all updates from last time
-      super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-      // update the sun light position as the sun moves.
-      this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
-      
-      // // potential further smoothing?
-      // const dot = (normal[0] * velocity[0]) + (normal[1] *  velocity[1]) + (normal[2] *  velocity[2])
-      // const vn = [normal[0] * dot, normal[1] * dot, normal[2] * dot];
-
-      // if (dot <= 0) {
-      //   velocity[0] -= vn[0];  
-      //   velocity[1] -= vn[1];  
-      //   velocity[2] -= vn[2]; 
-      // }
-     
-    } // end if
 
     // render call!
     super.render([0, 0, 0]);  // let the renderer do it's draw thing
   } // end function
+
+  start_transition()
+  {
+    if (this.transition)
+    {
+      return;
+    }
+    this.transition = 
+    {
+      start : null,
+      duration : 2,
+      start_fov: this.camera.fov
+    };
+  }
 
   /**
    * this is basically a tester for now.
@@ -442,6 +457,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       for (const p of planets) {
         if (shape.intersect(p.bounding_shape)) {
           console.log(`hit ${p.data.name}`)
+          this.start_transition(); // if any planets
           const d = [
             shape.center_x - p.bounding_shape.center_x, 
             shape.center_y - p.bounding_shape.center_y, 

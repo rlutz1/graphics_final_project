@@ -1,5 +1,5 @@
 import * as SourceDicts from './shader_sources.js';
-import { normalMat, multiplyMat4, mat4Identity, matMul, translate } from './transitions.js';
+import { normalMat, multiplyMat4, mat4Identity } from './transitions.js';
 
 /**
  * this file is to contain a mapping of id -> shader (BOTTOM OF FILE). 
@@ -501,7 +501,7 @@ export class SpaceshipShader extends PhongShader {
     // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
     // set gl attributes for the camera_matrices
     gl.uniformMatrix4fv(this.projection_loc, false, camera.get_projection_matrix());
-    gl.uniformMatrix4fv(this.model_view_loc, false, camera.get_view_matrix(false, false)); // do NOT apply ANY camera to this! 
+    gl.uniformMatrix4fv(this.model_view_loc, false, mat4Identity()); // do NOT apply the camera to this! 
 
     // only one light here. THE SUNNNNN
     const sun_light = lights[0];
@@ -537,112 +537,7 @@ export class SpaceshipShader extends PhongShader {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
     
   } // end function
-} // end class
-
-export class SpaceBackgroundShader extends Shader {
-  constructor(gl) {
-    super(SourceDicts.texture_basic.vertex_shader, SourceDicts.texture_basic.fragment_shader, gl);
-    // camera and light items (may be able to pull out into the renderer if consistent.)
-    this.model_view_loc = gl.getUniformLocation(this.program, "uModelViewMatrix"); 
-    this.projection_loc = gl.getUniformLocation(this.program, "uProjectionMatrix"); 
-    this.lights_loc = gl.getUniformLocation(this.program, "uPointLights");
-    this.num_lights_loc =  gl.getUniformLocation(this.program, "uNumPointLights"); 
-
-    // some lighting specific locations
-    this.material_params_loc = {};
-    this.material_params_loc["ka"] = gl.getUniformLocation(this.program, 'uMaterialParams.ka');
-    this.material_params_loc["kd"] = gl.getUniformLocation(this.program, 'uMaterialParams.kd');
-    this.material_params_loc["ks"] = gl.getUniformLocation(this.program, 'uMaterialParams.ks');
-    this.material_params_loc["shininess"] = gl.getUniformLocation(this.program, 'uMaterialParams.shininess');
-    this.material_params_loc["transparency"] = gl.getUniformLocation(this.program, 'uMaterialParams.transparency');
-
-    // more meshy information here.
-    this.pos_loc = gl.getAttribLocation(this.program, "aPosition");
-    this.norm_loc = gl.getAttribLocation(this.program, "aNormal");
-    this.color_loc = gl.getAttribLocation(this.program, "aColor");
-    this.node_transforms_loc = gl.getUniformLocation(this.program, "uModelTransformationMatrix"); 
-
-    // additionally: tangent and texel coords, texture pieces
-    this.tangent_loc = gl.getAttribLocation(this.program, "aTangent");
-    this.texel_loc = gl.getAttribLocation(this.program, "aTexCoord");
-    this.texture_loc = gl.getUniformLocation(this.program, "uTexture");
-    this.mapping_loc = gl.getUniformLocation(this.program, "uMapping");
-  }
-
-  /**
-   * shader is here to (1) hold the compiled shader program.
-   * and (2) bind and load up the buffers that it is aware of.
-   * this is intended highly customizable to whatever shader you want to build.
-   * just implement a new shader with load() and draw() and set the id in the node.
-   */
-  load(node, camera, lights, gl) {
-    // from object
-    gl.useProgram(this.program);
-
-    // TODO: pull this out if its general enough to the renderer so don't have to keep setting on load
-    // set gl attributes for the camera_matrices
-    gl.uniformMatrix4fv(this.projection_loc, false, camera.get_projection_matrix());
-    gl.uniformMatrix4fv(this.model_view_loc, false, camera.get_view_matrix(true, false));
-    // set gl for the global lights of the scene
-    gl.uniform3fv(this.lights_loc, new Float32Array([])); // causes warning & potential for crash, not super clean
-    // gl.disableVertexAttribArray(this.lights_loc);
-    gl.uniform1i(this.num_lights_loc, 0);
-
-    // set this nodes transformation matrix
-    gl.uniformMatrix4fv(this.node_transforms_loc, false, node.transformation_matrix);
-
-    // set up material information for the phong shader
-    gl.uniform3fv(this.material_params_loc["ka"], node.material.ka);
-    gl.uniform3fv(this.material_params_loc["kd"], node.material.kd);
-    gl.uniform3fv(this.material_params_loc["ks"], node.material.ks);
-    gl.uniform1f(this.material_params_loc["shininess"], node.material.shininess);
-    gl.uniform1f(this.material_params_loc["transparency"], node.material.transparency);
-
-    // set the texture type
-    gl.uniform1i(this.mapping_loc, 0);
-
-    // set up the texture
-    gl.activeTexture(gl.TEXTURE0); 
-    gl.bindTexture(gl.TEXTURE_2D, node.texture.get_texture());
-
-    // vertex/positions buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.vert_buff);
-    gl.enableVertexAttribArray(this.pos_loc);
-    gl.vertexAttribPointer(this.pos_loc, 3, gl.FLOAT, false, 0, 0);
-
-    // norm buffer setup
-    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.norm_buff);
-    gl.enableVertexAttribArray(this.norm_loc);
-    gl.vertexAttribPointer(this.norm_loc, 3, gl.FLOAT, false, 0, 0);
-
-    // color buffer
-    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.color_buff);
-    gl.enableVertexAttribArray(this.color_loc);
-    gl.vertexAttribPointer(this.color_loc, 3, gl.FLOAT, false, 0, 0);
-
-    // additionally: add the tnagent and tex information from mesh
-    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.tangent_buff);
-    gl.enableVertexAttribArray(this.tangent_loc);
-    gl.vertexAttribPointer(this.tangent_loc, 3, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, node.mesh.tex_buff);
-    gl.enableVertexAttribArray(this.texel_loc);
-    gl.vertexAttribPointer(this.texel_loc, 2, gl.FLOAT, false, 0, 0);
-
-    // index buffer for drawing as triangles
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
-
-  } // end function
-
-  /**
-   * define how to draw with this shader.
-   */
-  draw(node, gl) {
-    // draw the node.
-    gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
-  } // end function
-
-} // end class
+}
 
 
 // ==============================================
@@ -660,6 +555,5 @@ export const SHADER_MAP = {
   "texture_bump_mapping_basic": TextureBumpMappingShader, // TODO: collapse these and use the mesh setter
   "texture_normal_mapping_basic": TextureNormalMappingShader, 
   "planet_basic": PlanetShader, // for ya planets
-  "spaceship_basic": SpaceshipShader, // a basic starter (basically just general phong) using sun as single point light and ignoring cam view
-  "space_background_basic": SpaceBackgroundShader // for the space background texture mapping because i need to not clobber others
+  "spaceship_basic": SpaceshipShader // a basic starter (basically just general phong) using sun as single point light.
 } // end shader map
