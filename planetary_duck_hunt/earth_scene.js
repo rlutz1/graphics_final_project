@@ -105,10 +105,10 @@ export class EarthScene extends SceneBuilder.Scene {
     let pitch = this.camera.rotate[0];
     let yaw = this.camera.rotate[1];
 
-    if(frontend_data.a) yaw -= this.turn_speed * dt; // turning left
-    if(frontend_data.d) yaw += this.turn_speed * dt; // turn right
+    // if(frontend_data.a) yaw -= this.turn_speed * dt; // turning left
+    // if(frontend_data.d) yaw += this.turn_speed * dt; // turn right
 
-    yaw %= 2 * Math.PI;
+    // yaw %= 2 * Math.PI;
 
     // y of the mouse on the canvas --> allow looking up or down 
     if(frontend_data.mouse_y !== undefined){
@@ -116,6 +116,13 @@ export class EarthScene extends SceneBuilder.Scene {
       const max_pitch = Math.PI / 2 - 0.01;
       pitch = normalized_y * max_pitch;
     }
+
+    if (frontend_data.mouse_x !== undefined) {
+      const normalized_x = (2 * frontend_data.mouse_x / frontend_data.canvas_width) - 1;
+      const max_pitch = Math.PI - 0.01;
+      yaw = normalized_x * max_pitch;
+    }
+
     this.camera.rotate = [pitch, yaw, 0];
   }
 
@@ -125,14 +132,22 @@ export class EarthScene extends SceneBuilder.Scene {
    */
   walk_update(frontend_data, dt){
     let direction = 0;
-    if (frontend_data.w) direction += 1;
-    if (frontend_data.s) direction -= 1;
+    if (frontend_data.w) direction -= 1;
+    if (frontend_data.s) direction += 1;
     if (direction === 0) return;
-
+    const pitch = this.camera.rotate[0];
     const yaw = this.camera.rotate[1];
+
+    console.log(this.camera.rotate)
     const forward = [Math.sin(yaw), 0, -Math.cos(yaw)]; //where the camera faces 
 
-    const axis = [-forward[2], 0, forward[0]]; // forward x up 
+    const forward_x = -Math.sin(yaw) * Math.cos(pitch);
+    const forward_y = Math.sin(pitch);
+    const forward_z = Math.cos(yaw) * Math.cos(pitch); // flipping sign on this
+
+    // const axis = [-forward[2], 0, forward[0]]; // forward x up 
+    // const axis = [forward_x, 0, forward_z]
+    const axis = [-forward_z, 0, forward_x]
 
     const angle = direction * (this.walk_speed * dt) / this.terrain.radius;
 

@@ -123,13 +123,16 @@
       frontend_data.shoot = true;
     });
     let mouseY = canvas.height / 2;
+    let mouseX = canvas.width / 2;
 
     document.addEventListener("mousemove", (event) => {
       if (document.pointerLockElement === canvas) {
         mouseY += event.movementY;
+        mouseX += event.movementX;
 
         // Clamp vertical look to the canvas
         mouseY = Math.max(0, Math.min(canvas.height, mouseY));
+        mouseX = Math.max(0, Math.min(canvas.width, mouseX));
       }
     });
 // END CHANGES
@@ -178,6 +181,7 @@
 
       // ADDED BY THEO 
       frontend_data.mouse_y = mouseY;
+      frontend_data.mouse_x = mouseX;
 
       curr_scene.render(frontend_data);
       frontend_data.shoot = false;
