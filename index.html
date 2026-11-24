@@ -51,7 +51,8 @@
       "s": false,
       "d": false,
       mouse_x: 0,
-      mouse_y: 0
+      mouse_y: 0,
+      shoot: false
     };
 
     // example: keys.w = true on pressing
@@ -114,7 +115,12 @@
     
   // THEO CHANGES TO MOUSE BEHAVIOR BELOW:
     canvas.addEventListener("click", () => {
-      canvas.requestPointerLock();
+      if (document.pointerLockElement !== canvas) {
+        canvas.requestPointerLock();
+        return;
+    }
+
+      frontend_data.shoot = true;
     });
     let mouseY = canvas.height / 2;
 
@@ -174,6 +180,7 @@
       frontend_data.mouse_y = mouseY;
 
       curr_scene.render(frontend_data);
+      frontend_data.shoot = false;
       requestAnimationFrame(render);
     } // end render
 

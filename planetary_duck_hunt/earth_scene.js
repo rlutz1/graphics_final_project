@@ -12,13 +12,11 @@ export class EarthScene extends SceneBuilder.Scene {
   constructor() {
     super(); // takes care of base initialization fields.
 
-    // do whatever y'all want here, but, like, this sorta shit. these are all the root nodes of a scene.
-    // they can be a straight up scene node or group scene node, whatever makes more sense to yall.
-    this.boids = null; // this will end up being a dummy root node to hold all the boids. easier access here though than going through root node list.
+    this.boids = null; // dummy root node to hold all the boids
     // ADDED BY THEO TO HOLD BOIDS AND ANIMATE MOVEMENT
-    this.boidNodes = []
+    this.boidNodes = [];
+    this.deadBirds = [];
     this.lastFrameTime = null;
-    // this.player = null;
     
     // init fields for the earth terrain
     this.terrain = null; // dummy root for terrain
@@ -50,20 +48,18 @@ export class EarthScene extends SceneBuilder.Scene {
       "aspect": aspect, // since my canvas is not square
       "fov": Math.PI / 3, // make it a bit wider --> can change but want to try
       "far": 400 // test and change if needed 
-
     }))
 
     // add some light to the scene --> use sun & sun position
-    //this.add_light(new SceneBuilder.PointLight({"position": [0, 5, 5]}));
     this.sun = this.add_light(new SceneBuilder.PointLight({"position": [...this.sun_pos]}))
     
     // init the terrain 
     this.init_terrain();
     
+    // ADDED BY THEO TO INIT BOIDS
     this.Module = await createWASMModule();
     this.Module._initializeBoids();
     let numBoids = this.Module._getNumBoids();
-    // initialize all nodes, bookeeping, etc in the scene.
     this.boidDim = this.Module._getDim();
     const numPositions = numBoids * this.boidDim;
     this.boidPositions = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidPositions(), numPositions);
@@ -87,7 +83,6 @@ export class EarthScene extends SceneBuilder.Scene {
 
     // call function to shift camera to ground level
     this.camera_level();
-    
   }
 
   /**
@@ -176,7 +171,7 @@ export class EarthScene extends SceneBuilder.Scene {
         "ks": [0.508273, 0.508273, 0.508273],
         "shininess": 51.2,
         "transparency": 1.0
-    }); 
+    });
     const texture = new SceneBuilder.Texture(this.renderer.gl, "./textures/skin.png");
 
     for (let i = 0; i < num_boids; i++) {
@@ -202,7 +197,7 @@ export class EarthScene extends SceneBuilder.Scene {
 
     this.terrain.add_child(this.boids);
   } // end function
-  // HELPER ADDED BY THEO
+  // HELPER ADDED BY THEO TO ROTATE CONES
   velocityToRotation(vx, vy, vz) {
     const mag = Math.sqrt(vx*vx + vy*vy + vz*vz);
 
@@ -243,6 +238,7 @@ export class EarthScene extends SceneBuilder.Scene {
       const delT = (now - this.lastFrameTime) / 1000.0;
       this.Module._advanceBoids(delT);
       this.update_boids();
+      this.update_dead_birds(delT);
 
       this.update_perspective(frontend_data, delT);
       this.walk_update(frontend_data, delT);
@@ -252,14 +248,14 @@ export class EarthScene extends SceneBuilder.Scene {
 
     this.lastFrameTime = now;
     super.update_all_transformations(); // update all transformation nodes.
-    // yada yada, do whatever the scene needs to do at a global scale,
-    // such as run collision detection with player, did i hit a boid, etc.
+    if (frontend_data.shoot) this.shoot();
     super.render(this.sky_color);  // let the renderer do it's draw thing
   } // end function
 
   // BIRD BUSINESS (just grab positions/velocities from heap)
   update_boids() {
     for (let i = 0; i < this.boidNodes.length; i++) {
+      if (!this.boidNodes[i]) continue;
       const offset = i * this.boidDim;
 
       const scale = 4;
@@ -280,8 +276,114 @@ export class EarthScene extends SceneBuilder.Scene {
       const rot = this.velocityToRotation(vx, vy, vz);
 
       if (rot !== null) {
-          this.boidNodes[i].rotation = rot;
+        this.boidNodes[i].rotation = rot;
       }
     }
+  }
+
+
+
+  // SHOOTING FUNCTIONS ADDED BY THEO
+  rayHitsSphere(origin, direction, center, radius) {
+    const oc = [
+      origin[0] - center[0],
+      origin[1] - center[1],
+      origin[2] - center[2]
+    ];
+
+    const b = 2 * (
+      oc[0] * direction[0] +
+      oc[1] * direction[1] +
+      oc[2] * direction[2]
+    );
+
+    const c =
+      oc[0] * oc[0] +
+      oc[1] * oc[1] +
+      oc[2] * oc[2] -
+      radius * radius;
+
+    const discriminant = b*b - 4*c;
+
+    if (discriminant < 0) return null;
+
+    const t = (-b - Math.sqrt(discriminant)) / 2;
+
+    return t >= 0 ? t : null;
+  }
+
+  shoot() {
+    const origin = [0,0,0];
+    const direction = this.get_shoot_direction();
+
+    let closestBird = null;
+    let closestDistance = Infinity;
+
+    for (let i = 0; i < this.boidNodes.length; i++) {
+      const bird = this.boidNodes[i];
+
+      if (!bird) continue;
+
+      const matrix = bird.transformation_matrix;
+
+      const center = [
+        matrix[12],
+        matrix[13],
+        matrix[14]
+      ];
+
+      const distance = this.rayHitsSphere(
+        origin,
+        direction,
+        center,
+        0.5
+      );
+
+      if (distance !== null && distance < closestDistance) {
+        closestDistance = distance;
+        closestBird = i;
+      }
+    }
+
+    if (closestBird !== null) {
+      const bird = this.boidNodes[closestBird];
+
+      this.deadBirds.push({
+        node: bird,
+        velocity: [0, 0, 0],
+        fallSpeed: 0
+      });
+
+      this.boidNodes[closestBird] = null;
+
+      console.log("another opp down", closestBird);
+    }
+  }
+
+  update_dead_birds(delT) {
+    const groundY = this.terrain.radius;
+
+    for (const dead of this.deadBirds) {
+      dead.fallSpeed += 9.8 * delT;
+
+      dead.node.position[1] -= dead.fallSpeed * delT;
+
+      // Stop when the bird reaches the ground
+      if (dead.node.position[1] <= groundY) {
+        dead.node.position[1] = groundY;
+        dead.fallSpeed = 0;
+      }
+    }
+}
+
+  get_shoot_direction() {
+    const pitch = this.camera.rotate[0];
+    const yaw = this.camera.rotate[1];
+
+    return [
+      Math.sin(yaw) * Math.cos(pitch),
+      -Math.sin(pitch),
+      -Math.cos(yaw) * Math.cos(pitch)
+    ];
   }
 } // end class
