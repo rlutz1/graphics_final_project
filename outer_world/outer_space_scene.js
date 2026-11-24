@@ -17,7 +17,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.distance_const = 35; // a constant used in distance normalization.
     this.game_over = false; // general control for hit too many times
     this.random_obstacle_spawn_chance = 0.8; // if random number gen over 0.8, spawn a rando
-    this.hit_point_ui_el = null; // an html element to alter based on the hit points of the 
+    this.hit_point_ui_el = null; // an html element to alter based on the hit points of the hit points
+    this.location_ui_el = null; // for updating the location on transition
 
     this.transition = null;
     this.fade = 0;
@@ -355,6 +356,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.fade = ease;
 
         if (t >= 1) {
+          // ui stuff
+          this.location_ui_el.innerText = `Current Location: ${this.transition.planet}`;
+          this.hit_point_ui_el.style.display = "none"; // can remove if we still want this visible.
           this.is_over = true;
         } // end if
 
@@ -429,14 +433,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   /**
    * start a transition to a planet scene.
    */
-  start_transition() {
+  start_transition(planet) {
     if (this.transition) {
       return;
     } // end if
     this.transition = {
       start : null,
       duration : 2,
-      start_fov: this.camera.fov
+      start_fov: this.camera.fov,
+      planet: planet // for ui response
     };
   } // end function
 
@@ -608,6 +613,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.translate[2] - normal[2] * penetration
       ];
      
+      this.start_transition(planet_collide.planet); // TRIGGER transition
+      // update ui
+      this.location_ui_el.innerText = `Entering: ${planet_collide.planet}`;
+
     } // end if
   } // end function
 
@@ -677,7 +686,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const planets = this.solar_system.planets;
 
     // check for sun collision with ship
-    let n = []; let overlap = 0; let intersect = false;
+    let n = []; let overlap = 0; let intersect = false; let name = "";
     for (const shape of this.spaceship.bounding_shape) {
       if (shape.intersect(sun.bounding_shape)) {
         console.log("spaceship hit sun");
@@ -693,17 +702,17 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
           n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag]; 
         } 
         intersect = true;
+        name = "Sun";
       } // end if
     } // end loop
 
-    if (intersect) { return {normal: n, overlap: overlap}; }
+    if (intersect) { return {normal: n, overlap: overlap, planet: name}; }
 
     // check for planet collisions
-    for (const shape of this.spaceship.bounding_shape) {
-      for (const p of planets) {
+    for (const p of planets) {
+      for (const shape of this.spaceship.bounding_shape) {
         if (shape.intersect(p.bounding_shape)) {
           console.log(`hit ${p.data.name}`)
-          this.start_transition(); // TRIGGER transition
           const d = [
             shape.center_x - p.bounding_shape.center_x, 
             shape.center_y - p.bounding_shape.center_y, 
@@ -716,11 +725,13 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
             n = [d[0]/d_mag, d[1]/d_mag, d[2]/d_mag]; 
           } 
           intersect = true;
+          name = p.data.name;
+          break; // stop at the first one.
         } // end if
       } // end loop
     } // end loop
 
-    if (intersect) { return {normal: n, overlap: overlap}; }
+    if (intersect) { return {normal: n, overlap: overlap, planet: name}; }
 
     return null;
   } // end function

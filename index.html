@@ -114,6 +114,7 @@
 
     // i'm just going to let space have this html element to update, lol
     space.hit_point_ui_el = document.getElementById("hit_points");
+    space.location_ui_el = document.getElementById("current_location");
 
      /**
      * rendering manager is a lightweight, simple
@@ -130,8 +131,8 @@
     //next_scene = space;
 
     // for potential transition testing.
-     curr_scene = space;
-     next_scene = earth; 
+    curr_scene = space;
+    next_scene = earth; 
 
     curr_scene.init(renderer, aspect); // initialize the scene.
     
