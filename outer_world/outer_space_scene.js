@@ -145,14 +145,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       } // end if
     } // end loop
 
+    const scaler = 1;
     this.solar_system.planets.forEach((p) => {
       const normalized_radius = p.data.radius_km / max_radius;
-      p.update_radius(Math.sqrt(normalized_radius));
+      p.update_radius(Math.sqrt(normalized_radius) * scaler);
     });
 
     this.solar_system.asteroid_belt.forEach((a) => {
       const normalized_radius = a.data.radius_km / max_radius;
-      a.update_radius(Math.sqrt(normalized_radius));
+      a.update_radius(Math.sqrt(normalized_radius) * scaler);
     });
   } // end function
 
