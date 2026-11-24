@@ -31,7 +31,10 @@
 
   <div style="display: flex; justify-content: center; align-items: center;">
     <div style="display: flex; flex-direction: column; gap: 10px;">
-      <canvas id="glcanvas" width="1200" height="600"></canvas>
+      <div class="game-container">
+        <canvas id="glcanvas" width="1200" height="600"></canvas>
+      <div id="crosshair"></div>
+</div>
     </div>
   </div>
 
@@ -43,7 +46,8 @@
   <!-- ======================================================= -->
   <!-- CUSTOM SCRIPTS                                          -->
   <!-- ======================================================= -->
-  
+  <script src="./planetary_duck_hunt/Cbuild/boidRunner.js"></script>
+
   <!-- keep track of pressed/unpressed/general tracking in a dict -->
   <!-- passed to scene on render call. we can customize what's held -->
   <!-- here as needed. -->
@@ -54,7 +58,10 @@
       "w": false,
       "a": false,
       "s": false,
-      "d": false
+      "d": false,
+      mouse_x: 0,
+      mouse_y: 0,
+      shoot: false
     };
 
     // example: keys.w = true on pressing
@@ -76,6 +83,16 @@
             let y = event.clientY - rect.top;
             return {x: x, y: y}
     } // end function
+
+    // ADDED BY THEO BUT AS EXPLAINED BELOW COMMENTED OUT BECAUSE I COULD NOT GET IT WORKING
+    // FPS mouse style, track movement between frame, accumulating movement until next render call
+    /*
+    let mouseDX = 0;
+    let mouseDY = 0;
+
+    // Mouse sensitivity controls how quickly the camera rotates.
+    // Larger values = faster camera movement.
+    const mouseSensitivity = 0.002;*/
     
   </script>
 
@@ -93,13 +110,41 @@
     if (!gl) alert("WebGL2 not supported");
         const aspect = canvas.width / canvas.height;
 
-    // get mouse position on screen for whatever you need.
-    canvas.addEventListener('mousemove', (event) => {
+    // commenting out as it kind of breaks the fps style mouse, but will maybe need it for space?
+    // breaks it because we need the pointer lock, but that uses relative coord, not absolute
+    //get mouse position on screen for whatever you need.
+    
+    /*canvas.addEventListener('mousemove', (event) => {
       const pos = getMousePosition(canvas, event);
 
       frontend_data.mouse_x = pos.x;
       frontend_data.mouse_y = pos.y;
+    });*/ 
+
+    
+  // THEO CHANGES TO MOUSE BEHAVIOR BELOW:
+    canvas.addEventListener("click", () => {
+      if (document.pointerLockElement !== canvas) {
+        canvas.requestPointerLock();
+        return;
+    }
+
+      frontend_data.shoot = true;
     });
+    let mouseY = canvas.height / 2;
+    let mouseX = canvas.width / 2;
+
+    document.addEventListener("mousemove", (event) => {
+      if (document.pointerLockElement === canvas) {
+        mouseY += event.movementY;
+        mouseX += event.movementX;
+
+        // Clamp vertical look to the canvas
+        mouseY = Math.max(0, Math.min(canvas.height, mouseY));
+        mouseX = Math.max(0, Math.min(canvas.width, mouseX));
+      }
+    });
+// END CHANGES
 
     let curr_scene = null; // the current scene to be rendered.
     let next_scene = null; // next scene up in the queue to be rendered.
@@ -144,7 +189,7 @@
     /**
      * render the scene.
      */
-    function render(timestep) {
+    async function render(timestep) {
       if (!start_time) { start_time = timestep; }
       if (!last_time) { last_time = timestep; }
       delta_time = (timestep - start_time) / 1000 // dt in seconds from front end
@@ -153,6 +198,9 @@
       frontend_data.time_since_last_render = time_since_last_render; // time SINCE the last render
       frontend_data.canvas_width = canvas.width; // add the canvas information for mouse interaction with the screen.
       frontend_data.canvas_height = canvas.height;
+      frontend_data.mouse_y = mouseY; // for theo/planet, no touchy
+      frontend_data.mouse_x = mouseX;
+      frontend_data.shoot = false;
 
       // console.log(frontend_data); // TESTING
 
@@ -168,13 +216,26 @@
         next_scene = temp_scene;
         // Initialize the new scene if not already initialized
         if (!curr_scene.initialized) {
-          curr_scene.init(renderer, aspect);
+          if(curr_scene !== space) { await curr_scene.init(renderer, aspect); } 
+          else { curr_scene.init(renderer, aspect); }
         } // end if 
       } // end if
-
+   
       curr_scene.render(frontend_data);
+  
       requestAnimationFrame(render);
     } // end render
+
+    // // MODIFIED BY THEO
+    // // Initialize the scene before starting the render loop.
+    // // Awaiting init ensures the WASM module and boid data are ready.
+    // async function startGame() {
+    //   await curr_scene.init(renderer, aspect);
+
+    //   requestAnimationFrame(render);
+    // }
+
+    // startGame();
 
     // Initialize when page loads
     window.onload = function () {

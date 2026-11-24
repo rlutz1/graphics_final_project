@@ -121,8 +121,8 @@ export class Shader {
  * an example of how to implement a custom shader.
  */
 export class PhongShader extends Shader {
-  constructor(gl) {
-    super(SourceDicts.phong_basic.vertex_shader, SourceDicts.phong_basic.fragment_shader, gl);
+  constructor(gl, sources = SourceDicts.phong_basic) {
+    super(sources.vertex_shader, sources.fragment_shader, gl);
     // camera and light items (may be able to pull out into the renderer if consistent.)
     this.model_view_loc = gl.getUniformLocation(this.program, "uModelViewMatrix"); 
     this.projection_loc = gl.getUniformLocation(this.program, "uProjectionMatrix"); 
@@ -197,10 +197,20 @@ export class PhongShader extends Shader {
    */
   draw(node, gl) {
     // draw the node.
-    gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, node.mesh.index_type ?? gl.UNSIGNED_SHORT, 0);
   } // end function
 
 } // end class
+
+/**
+ * shader for the bumpy terrain 
+ * right now it's just phong with the bumpyland_basic source
+ */
+export class TerrainShader extends PhongShader {
+  constructor(gl) {
+    super(gl, SourceDicts.bumpyland_basic);
+  }
+} 
 
 /**
  * just call with a basic phong shader.
@@ -657,6 +667,7 @@ export class SpaceBackgroundShader extends Shader {
 
 export const SHADER_MAP = {
   "phong_basic": PhongShader,
+  "bumpyland_basic": TerrainShader,
   "texture_bump_mapping_basic": TextureBumpMappingShader, // TODO: collapse these and use the mesh setter
   "texture_normal_mapping_basic": TextureNormalMappingShader, 
   "planet_basic": PlanetShader, // for ya planets
