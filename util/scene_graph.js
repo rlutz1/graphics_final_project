@@ -713,6 +713,18 @@ export class SpaceCamera extends PerspectiveCamera {
     } // end if
   } // end function
 
+  perturb() {
+    const perterbation = 0.3;
+    this.translate = [
+      // this.translate[0] + (Math.random() * 2 - 1),
+      // this.translate[1] + (Math.random() * 2 - 1),
+      // this.translate[2]
+      this.translate[0] + (Math.random() * perterbation - perterbation / 2),
+      this.translate[1] + (Math.random() * perterbation - perterbation / 2),
+      this.translate[2]
+    ]
+  }
+
 } // end class
 
 
