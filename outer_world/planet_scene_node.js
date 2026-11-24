@@ -202,7 +202,7 @@ export class AsteroidObstacle extends PlanetSceneNode {
  */
 export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
 
-  constructor(id="random_obstacle", shader_id="random_obstacle_basic") {
+  constructor(id="random_obstacle", shader_id="planet_basic") {
     super(id, shader_id); // takes care of some baseline stuff for now.
     const radius = (Math.random()) + 1; // radius between certain val -- not necessarily historically accurate
     this.scale = [radius, radius, radius];
@@ -234,7 +234,8 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
   } // end function
 
   /**
-   * update the trajectory of the asteroid
+   * update the trajectory of the asteroid -- travels in this direction over
+   * time until dead.
    */
   update_trajectory(day=0) {
     if (day >= this.lifetime) { this.dead = true; return; }
@@ -245,6 +246,9 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
     ];
   } // end function
 
+  /**
+   * normalize and set this as the direction to travel in
+   */
   set_trajectory(direction=[0, 0, 0]) {
     const mag = Math.sqrt(direction[0]*direction[0] + direction[1]*direction[1] + direction[2]*direction[2]);
     this.direction = [direction[0]/mag, direction[1]/mag, direction[2]/mag];
@@ -260,7 +264,6 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
   update_transformation_matrix(M_parent) {
     // scale for radius, rotate on axis, move away from origin, and rotate on orbital plane.
     const translation = translate(this.position); // my position relative to the sun as origin
-    // const rotation_axis = rotate(this.rotation); // my rotation on my axis
     const scale_mtx = scale(this.scale); // any scaling (TODO: size based on radius)
 
     // my local transformations

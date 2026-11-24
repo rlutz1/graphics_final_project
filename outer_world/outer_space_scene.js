@@ -380,7 +380,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
             this.spaceship.curr_bounce_speed[2] * this.spaceship.bounce_dampen
           ];
 
-          this.camera.perturb(); // test
+          this.camera.perturb(); // perturb the camera a little but additional to the current camera motions
           // carry out all updates from last time
           this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
         } // end if
