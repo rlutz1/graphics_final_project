@@ -167,7 +167,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       0 // adding a texture bump mapping to these
     )); // generate a basic planet mesh
     const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-      "ka": [0.3, 0.3, 0.3], 
+      "ka": [0.4, 0.4, 0.4], 
       "kd": [0.5, 0.5, 0.5],
       "ks": [0.3, 0.3, 0.3], 
       "shininess": 20, 
@@ -199,7 +199,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       "ks": [0.5, 0.5, 0.5], 
       "shininess": 40
     });
-    const texture = new SceneBuilder.Texture(this.renderer.gl, "./outer_world/textures/stars_color.jpg");
+    const texture = new SceneBuilder.Texture(this.renderer.gl, "./outer_world/textures/blue_nebulae_1.png"); // neat
+    // const texture = new SceneBuilder.Texture(this.renderer.gl, "./outer_world/textures/stars_better.png"); // also neat, darker but harder to see
+
 
     background.set_mesh(mesh).set_material(material).set_texture(texture); 
     background.scale = [75, 75, 75] // BIG BOY
@@ -231,7 +233,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         0 // adding a texture bump mapping to these
       )); // generate a basic planet mesh
       const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-          "ka": [0.3, 0.3, 0.3], 
+          "ka": [0.4, 0.4, 0.4], 
           "kd": [0.5, 0.5, 0.5],
           "ks": [0.3, 0.3, 0.3], 
           "shininess": 20, 
@@ -267,8 +269,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         0 // adding a texture bump mapping to these
       )); // generate a basic planet mesh
       const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-        "ka": [0.3, 0.3, 0.3], 
-        "kd": [0.85, 0.85, 0.85],
+        "ka": [0.45, 0.45, 0.45], 
+        "kd": [0.9, 0.9, 0.9],
         "ks": [0.5, 0.5, 0.5], 
         "shininess": 40, 
         "metallic": 0,

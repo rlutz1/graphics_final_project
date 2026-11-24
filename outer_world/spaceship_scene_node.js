@@ -15,7 +15,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     this.position = [0, -0.4, -2];
     this.rotation = [0, 0, 0];
     this.scale = [0.8, 0.8, 0.8];
-    this.velocity = [0.3, 0.3, 0.3]; // movement speed
+    this.velocity = [0.1, 0.1, 0.1]; // movement speed
     this.rotation_speed = 0.03; // turn speed
     this.center = [...this.position, 1];
 
