@@ -713,17 +713,26 @@ export class SpaceCamera extends PerspectiveCamera {
     } // end if
   } // end function
 
+  /**
+   * super basic "perturb" this camera by shacking anything
+   * that is translated in the scene by a small amount.
+   * meant to be used on the hit to indicate you're in a state of 
+   * invincibility.
+   */
   perturb() {
-    const perterbation = 0.3;
-    this.translate = [
-      // this.translate[0] + (Math.random() * 2 - 1),
-      // this.translate[1] + (Math.random() * 2 - 1),
-      // this.translate[2]
-      this.translate[0] + (Math.random() * perterbation - perterbation / 2),
-      this.translate[1] + (Math.random() * perterbation - perterbation / 2),
-      this.translate[2]
-    ]
-  }
+    const perterbation = 0.05;
+    // this.translate = [
+    //   this.translate[0] + (Math.random() * perterbation - perterbation / 2),
+    //   this.translate[1] + (Math.random() * perterbation - perterbation / 2),
+    //   this.translate[2]
+    // ];
+    // cheaty: but this will perturb everything since everything rotates--the background is the tricky one
+    this.rotate = [
+      this.rotate[0] + (Math.random() * perterbation - perterbation / 2),
+      this.rotate[1] + (Math.random() * perterbation - perterbation / 2),
+      this.rotate[2]
+    ];
+  } // end function
 
 } // end class
 
