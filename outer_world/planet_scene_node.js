@@ -171,18 +171,6 @@ export class BackgroundSceneNode extends SceneBuilder.SceneNode {
       radius: 1.0 // TODO don't like this, for testing only
     });
   } // end constructor
-
-  /**
-   * wrapper to update the center of this planet, which affects the bounding box.
-   */
-  update_bounding_shape(transformation_matrix) {
-    // set the new center based off of camera movements and the actual node movements.
-    this.center = multiplyMat4Vec4(transformation_matrix, [0, 0, 0, 1]);
-    this.bounding_shape.center_x = this.center[0];
-    this.bounding_shape.center_y = this.center[1];
-    this.bounding_shape.center_z = this.center[2];
-  } // end function
-
 } // end class
 
 /**
@@ -218,11 +206,10 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
     super(id, shader_id); // takes care of some baseline stuff for now.
     const radius = (Math.random()) + 1; // radius between certain val -- not necessarily historically accurate
     this.scale = [radius, radius, radius];
-
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
     this.direction = [0, 0, 0];
-    const rando_velocity = Math.random();
-    this.velocity = [rando_velocity, rando_velocity, rando_velocity]; // random velocity
+    const rando_speed = Math.random() + 0.1;
+    this.velocity = [rando_speed, rando_speed, rando_speed]; // random speed
     this.lifetime = (Math.random() * 50) + 100; // randomish lifetime, at least n days in length
     this.dead = false; // should i be removed from scene
 

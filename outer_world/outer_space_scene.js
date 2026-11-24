@@ -2,7 +2,7 @@ import * as SceneBuilder from "../util/scene_graph.js";
 import * as MeshBuilder from "../util/mesh_generators.js";
 import * as PlanetBuilder from "./planet_scene_node.js";
 import * as SpaceshipBuilder from "./spaceship_scene_node.js";
-import { matMul, multiplyMat4Vec4 } from '../util/transitions.js';
+import { matMul, mat4Identity } from '../util/transitions.js';
 import { buildSpaceship } from "./spaceship_scene_node.js";
 
 
@@ -16,8 +16,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.days_per_second = 10; // how to register how many days occur in a second for planet orbits
     this.distance_const = 35; // a constant used in distance normalization.
     this.game_over = false;
-    this.bounce_dir = [0, 0, 0];
-    this.bounce_speed = [10, 10, 10];
+    this.random_obstacle_spawn_chance = 0.8;
   }
 
   /**
@@ -188,8 +187,13 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     background.set_mesh(mesh).set_material(material).set_texture(texture); 
     background.scale = [75, 75, 75] // BIG BOY
-    background.bounding_shape.radius = 75; // update this as well
     background.center = this.spaceship.center;
+    background.position = this.spaceship.position;
+    // update this as well in case i use it
+    background.bounding_shape.radius = 75; 
+    background.bounding_shape.center_x = this.spaceship.center[0];
+    background.bounding_shape.center_y = this.spaceship.center[1];
+    background.bounding_shape.center_z = this.spaceship.center[2];
     
     return background;
   } // end function 
@@ -314,62 +318,22 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
     if (!this.game_over) {
+
+      
       // update the time on all planets so orbits can be updated correctly
       if (frontend_data.delta_time) {
-        this.day = (frontend_data.delta_time * this.days_per_second);
-        this.solar_system.planets.forEach((p) => {
-          p.update_orbit(this.day);
-        });
-        this.solar_system.asteroid_belt.forEach((a) => {
-          a.update_orbit(this.day);
-        });
-
-        const clean_up = []
-        this.solar_system.random_obstacles.children.forEach((o) => {
-          if (o.dead) {
-            clean_up.push(o);
-          } else {
-            o.update_trajectory(this.day);
-          } // end if
-        });
-        for (const dead_obstacle of clean_up) {
-          this.solar_system.random_obstacles.remove_child(dead_obstacle);
-          // console.log("removing")
-        } // end loop
+        this.day = (frontend_data.delta_time * this.days_per_second); // update the day of the system
+        this.update_solar_system();
       } // end if
 
-      if (Math.random() > 0.8) {
-        // add a random obtacle to the scene for EXCITMENT
-        const new_obstacle = new PlanetBuilder.RandomAsteroidObstacle();
-        new_obstacle.lifetime += this.day; // when they die and can be removed from the scnee for funsies
-        new_obstacle
-          .set_mesh(this.solar_system.random_obstacles.mesh)
-          .set_material(this.solar_system.random_obstacles.material)
-          .set_texture(this.solar_system.random_obstacles.textures);
-        // const init_position = [
-        //   (Math.random() * 20) + 50, 
-        //   (Math.random() * 20) + 50, 
-        //   (Math.random() * 20) + 50
-        // ];
-        const theta = Math.random() * (2 * Math.PI);
-        const phi =  Math.random() * (Math.PI);
-        const init_position = [ // init position on the circumference of the background
-          this.solar_system.background.scale[0] * Math.sin(phi) * Math.cos(theta) - this.camera.translate[0],
-          this.solar_system.background.scale[1] * Math.sin(phi) * Math.sin(theta) - this.camera.translate[1],
-          this.solar_system.background.scale[2] * Math.cos(phi) - this.camera.translate[2],
-        ];
-        
-        console.log(init_position)
-        new_obstacle.position = init_position;
-
-        // rando trajectory
-        new_obstacle.set_trajectory([
-          Math.random() * 2 - 1, // -1, 1
-          Math.random() * 2 - 1,
-          Math.random() * 2 - 1
-        ]);
-        this.solar_system.random_obstacles.add_child(new_obstacle);
+      if (Math.random() > this.random_obstacle_spawn_chance) {
+        this.spawn_new_obstacle();
       } // end if
+
+      // handle input
+      this.handle_input(frontend_data); // figure out how to move based on input
+      // carry out all updates from last time
+      this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
 
       // need to now deal with dynamic input affecting the 
       // world/"moving the spaceship" and hitting things.
@@ -377,70 +341,103 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       if (this.spaceship.hit_recovery) {
         // update the recovery timer 
         this.spaceship.recovery_timer += frontend_data.time_since_last_render;
+
+        // if we don't need to be in this state anymore, reset all things.
         if (this.spaceship.recovery_timer >= this.spaceship.recovery_time_limit) { 
           this.spaceship.hit_recovery = false; // reset the state
           this.spaceship.recovery_timer = 0; // reset the recovery timer to 0 for next hit.
+          this.spaceship.curr_bounce_speed = this.spaceship.init_bounce_speed; // reset the speed
+          this.spaceship.bounce_dir = [0, 0, 0]; // for clarity
+        } else {
+          // moving everything away from me in the direction identified by the normal of the collision detector.
+          // not accounting for direction of the movement of the object right now.
+          this.camera.translate = [
+            this.camera.translate[0] - (this.spaceship.bounce_dir[0] * this.spaceship.curr_bounce_speed[0] * frontend_data.time_since_last_render),
+            this.camera.translate[1] - (this.spaceship.bounce_dir[1] * this.spaceship.curr_bounce_speed[1] * frontend_data.time_since_last_render),
+            this.camera.translate[2] - (this.spaceship.bounce_dir[2] * this.spaceship.curr_bounce_speed[2] * frontend_data.time_since_last_render)
+          ];
+
+          // dampen down with each render to come to a clean slowing.
+          this.spaceship.curr_bounce_speed = [
+            this.spaceship.curr_bounce_speed[0] * this.spaceship.bounce_dampen,
+            this.spaceship.curr_bounce_speed[1] * this.spaceship.bounce_dampen,
+            this.spaceship.curr_bounce_speed[2] * this.spaceship.bounce_dampen
+          ];
+
+          // carry out all updates from last time
+          this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
         } // end if
-
-        // moving everything away from me in the direction identified by the normal of the collision detector.
-        // not accounting for direction of the movement of the object right now.
-        this.camera.translate = [
-          this.camera.translate[0] - (this.bounce_dir[0] * this.bounce_speed[0] * frontend_data.time_since_last_render),
-          this.camera.translate[1] - (this.bounce_dir[1] * this.bounce_speed[1] * frontend_data.time_since_last_render),
-          this.camera.translate[2] - (this.bounce_dir[2] * this.bounce_speed[2] * frontend_data.time_since_last_render)
-        ];
-
-        // dampen down with each render to come to a clean slowing.
-        const dampen = 0.99;
-        this.bounce_speed = [
-          this.bounce_speed[0] * dampen,
-          this.bounce_speed[1] * dampen,
-          this.bounce_speed[2] * dampen
-        ];
-
-        // we can have this on if we want to allow movement during the hit period! just leaving here for testing for a minute.
-        // this.handle_input(frontend_data); // figure out how to move based on input
-        // // carry out all updates from last time
-        // super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-        // // update the sun light position as the sun moves.
-        // this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
-
-        // THIS WILL BE CHANGED TO SCENE TRANSITION AND NEED TO HANDLE SOME STUFF
-        this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
-       
-        // carry out all updates from last time
-        super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-        // update the sun light position as the sun moves.
-        this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
       } else {
-        // this.bounce_speed = [0.2, 0.2, 0.2]; // reset
-        this.bounce_speed = [10, 10, 10];
-        this.handle_input(frontend_data); // figure out how to move based on input
-        // carry out all updates from last time
-        super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-        // update the sun light position as the sun moves.
-        this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
-
-        this.bounce_dir = this.handle_obstacle_collisions(); // also need to see if i hit an obstacle and do state changes/camera changes
-        // TODO: the planet collision will trigger transitions, will merge and handle when time comes.
-        // carry out all updates from last time
-        // super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-        // // update the sun light position as the sun moves.
-        // this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
-
-
-        // THIS WILL BE CHANGED TO SCENE TRANSITION STUFF LATER
-        this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
-        // carry out all updates from last time
-        super.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-        // update the sun light position as the sun moves.
-        this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
+        this.handle_obstacle_collisions(); // need to see if i hit an obstacle and do state changes
       } // end if
+
+      // THIS WILL BE CHANGED TO SCENE TRANSITION STUFF LATER
+      this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
+      // carry out all updates from last time
+      this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
 
       // render call!
       super.render([0, 0, 0]);  // let the renderer do it's draw thing
     } // end if
     
+  } // end function
+
+  /**
+   * generally, update anything that is moving dynamically
+   * over time.
+   */
+  update_solar_system() {
+    this.solar_system.planets.forEach((p) => {
+      p.update_orbit(this.day);
+    });
+    this.solar_system.asteroid_belt.forEach((a) => {
+      a.update_orbit(this.day);
+    });
+
+    const clean_up = []
+    this.solar_system.random_obstacles.children.forEach((o) => {
+      if (o.dead) {
+        clean_up.push(o);
+      } else {
+        o.update_trajectory(this.day);
+      } // end if
+    });
+    for (const dead_obstacle of clean_up) {
+      this.solar_system.random_obstacles.remove_child(dead_obstacle);
+    } // end loop
+  } // end function
+
+  /**
+   * spawn a new obstacle on the circumference of the background sphere
+   * with a random speed, trajectory and sizing. for fun.
+   */
+  spawn_new_obstacle() {
+    // add a random obtacle to the scene for EXCITMENT
+    const new_obstacle = new PlanetBuilder.RandomAsteroidObstacle();
+    new_obstacle.lifetime += this.day; // when they die and can be removed from the scene for funsies
+    new_obstacle
+      .set_mesh(this.solar_system.random_obstacles.mesh)
+      .set_material(this.solar_system.random_obstacles.material)
+      .set_texture(this.solar_system.random_obstacles.textures);
+
+    // use parametric form to pick a random point on the circumference of the background
+    // also, must allow camera translation passed through to the obstacle for avoidance movement
+    // BUT must negate the current translation for generation to stay around the player.
+    const theta = Math.random() * (2 * Math.PI);
+    const phi =  Math.random() * (Math.PI);
+    const x = this.solar_system.background.position[0] + this.solar_system.background.scale[0] * Math.sin(phi) * Math.cos(theta) - this.camera.translate[0];
+    const y = this.solar_system.background.position[1] + this.solar_system.background.scale[1] * Math.sin(phi) * Math.sin(theta) - this.camera.translate[1];
+    const z = this.solar_system.background.position[2] + this.solar_system.background.scale[2] * Math.cos(phi) - this.camera.translate[2];
+    // init position on the circumference of the background (sphere)
+    new_obstacle.position = [x, y, z];
+
+    // rando trajectory -- will be normalized
+    new_obstacle.set_trajectory([
+      Math.random() * 2 - 1, // -1, 1
+      Math.random() * 2 - 1,
+      Math.random() * 2 - 1
+    ]);
+    this.solar_system.random_obstacles.add_child(new_obstacle);
   } // end function
 
   /**
@@ -517,15 +514,13 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   handle_obstacle_collisions() {
     const obstacle_collide = this.obstacle_collision_check();
     if (obstacle_collide) {
-      this.spaceship.health -= 1;
+      this.spaceship.health -= 1; // dec health
       if (this.spaceship.health == 0) { this.game_over = true; return;}
-      this.spaceship.hit_recovery = true;
-      this.spaceship.recovery_timer = 0;
-
-      const normal = obstacle_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
-      return normal;
+      this.spaceship.hit_recovery = true; // in hit recovery state
+      this.spaceship.recovery_timer = 0; // set timer to 0
+      this.spaceship.curr_bounce_speed = this.spaceship.init_bounce_speed; // reset speed
+      this.spaceship.bounce_dir = obstacle_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
     } // end if
-    return null;
   } // end function
 
   /**
@@ -563,8 +558,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   obstacle_collision_check() {
     const asteroids = this.solar_system.asteroid_belt;
     const randoms = this.solar_system.random_obstacles.children;
-    
-    // randoms....
 
     // check for asteroid collision with ship
     let n = []; let overlap = 0; let intersect = false;
@@ -687,7 +680,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // everything but the player will need position updates, and that requires ALL transformation matrices.
     // i don't love this -- likely some cleanup of calculation duplication wanted here, but testing
     // to make sure this works at all.
-    if (!(parent.id === this.spaceship.id) && !(parent instanceof(SceneBuilder.GroupSceneNode))) { // important! all nodes in spaceship should have this id for now...
+    if (
+      !(parent.id === this.spaceship.id) 
+      && !(parent.id === this.solar_system.background.id)
+      && !(parent instanceof(SceneBuilder.GroupSceneNode))
+    ) { // important! all nodes in spaceship should have this id for now...
       const position_transforms = matMul(
         // this.camera.get_projection_matrix(), // this is not wanted for this center point updating.
         this.camera.get_view_matrix(),
@@ -704,6 +701,15 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.update_transformations(c, parent.transformation_matrix);
       });
     } // end if
+  } // end function
+
+  /**
+   * update all transformations on the scene.
+   */
+  update_all_transformations() {
+    super.update_all_transformations(); // let parent implementation run
+    // update this for lighting
+    this.sun_light.position = [this.solar_system.sun.center[0], this.solar_system.sun.center[1], this.solar_system.sun.center[2]];
   } // end function
 
 

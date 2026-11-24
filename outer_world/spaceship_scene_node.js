@@ -24,6 +24,10 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     this.hit_recovery = false; // state control for in a "hit recovery state"
     this.recovery_timer = 0; // timer for recovery
     this.recovery_time_limit = 5; // n seconds in recovery mode
+    this.bounce_dir = [0, 0, 0]; // bounce direction -- depends on the hit
+    this.init_bounce_speed = [10, 10, 10]; // bounce starting speed
+    this.curr_bounce_speed = this.init_bounce_speed; // one used for dampening
+    this.bounce_dampen = 0.99; // curr_bound_speed * dampen each render while in hit recovery
   }
 
   init(gl) {
