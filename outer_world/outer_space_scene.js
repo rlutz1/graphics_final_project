@@ -342,85 +342,83 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // such as run collision detection with player, did i hit a boid, etc.
     if (!this.game_over) {
 
-      // The transition
-      if (this.transition)
-      {
+      // transition to another planet on collide
+      if (this.transition) {
         const tr = this.transition;
-        if (tr.start == null)
-        {
+        if (tr.start == null) {
           tr.start = frontend_data.delta_time; // for tracking the fade
-        }
+        } // end if
         const t = Math.min((frontend_data.delta_time - tr.start) / tr.duration, 1);
         
         const ease = t * t * (3 - 2 * t);
         this.camera.fov = tr.start_fov * (1 - 0.9 * ease); // Narrow the FOV
         this.fade = ease;
 
-        if (t >= 1)
-        {
+        if (t >= 1) {
           this.is_over = true;
-        }
+        } // end if
 
         frontend_data = {}; // empty the frontend data while rendering
-      }
 
-      
-      // update the time on all planets so orbits can be updated correctly
-      if (frontend_data.delta_time) {
-        this.day = (frontend_data.delta_time * this.days_per_second); // update the day of the system
-        this.update_solar_system();
-      } // end if
-
-      if (Math.random() > this.random_obstacle_spawn_chance) {
-        this.spawn_new_obstacle();
-      } // end if
-
-      // handle input
-      this.handle_input(frontend_data); // figure out how to move based on input
-      // carry out all updates from last time
-      this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-
-      // need to now deal with dynamic input affecting the 
-      // world/"moving the spaceship" and hitting things.
-      // TODO: don't need to update_all_transforms every time, it's over kill, replace with necessary center changer only.
-      if (this.spaceship.hit_recovery) {
-        // update the recovery timer 
-        this.spaceship.recovery_timer += frontend_data.time_since_last_render;
-
-        // if we don't need to be in this state anymore, reset all things.
-        if (this.spaceship.recovery_timer >= this.spaceship.recovery_time_limit) { 
-          this.spaceship.hit_recovery = false; // reset the state
-          this.spaceship.recovery_timer = 0; // reset the recovery timer to 0 for next hit.
-          this.spaceship.curr_bounce_speed = this.spaceship.init_bounce_speed; // reset the speed
-          this.spaceship.bounce_dir = [0, 0, 0]; // for clarity
-        } else {
-          // moving everything away from me in the direction identified by the normal of the collision detector.
-          // not accounting for direction of the movement of the object right now.
-          this.camera.translate = [
-            this.camera.translate[0] - (this.spaceship.bounce_dir[0] * this.spaceship.curr_bounce_speed[0] * frontend_data.time_since_last_render),
-            this.camera.translate[1] - (this.spaceship.bounce_dir[1] * this.spaceship.curr_bounce_speed[1] * frontend_data.time_since_last_render),
-            this.camera.translate[2] - (this.spaceship.bounce_dir[2] * this.spaceship.curr_bounce_speed[2] * frontend_data.time_since_last_render)
-          ];
-
-          // dampen down with each render to come to a clean slowing.
-          this.spaceship.curr_bounce_speed = [
-            this.spaceship.curr_bounce_speed[0] * this.spaceship.bounce_dampen,
-            this.spaceship.curr_bounce_speed[1] * this.spaceship.bounce_dampen,
-            this.spaceship.curr_bounce_speed[2] * this.spaceship.bounce_dampen
-          ];
-
-          this.camera.perturb(); // perturb the camera a little but additional to the current camera motions
-          // carry out all updates from last time
-          this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+      } else { // otherwise, carry on with processing, no transition
+        // update the time on all planets so orbits can be updated correctly
+        if (frontend_data.delta_time) {
+          this.day = (frontend_data.delta_time * this.days_per_second); // update the day of the system
+          this.update_solar_system();
         } // end if
-      } else {
-        this.handle_obstacle_collisions(); // need to see if i hit an obstacle and do state changes
-      } // end if
 
-      // THIS WILL BE CHANGED TO SCENE TRANSITION STUFF LATER
-      this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
-      // carry out all updates from last time
-      this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+        if (Math.random() > this.random_obstacle_spawn_chance) {
+          this.spawn_new_obstacle();
+        } // end if
+
+        // handle input
+        this.handle_input(frontend_data); // figure out how to move based on input
+        // carry out all updates from last time
+        this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+
+        // need to now deal with dynamic input affecting the 
+        // world/"moving the spaceship" and hitting things.
+        // TODO: don't need to update_all_transforms every time, it's over kill, replace with necessary center changer only.
+        if (this.spaceship.hit_recovery) {
+          // update the recovery timer 
+          this.spaceship.recovery_timer += frontend_data.time_since_last_render;
+
+          // if we don't need to be in this state anymore, reset all things.
+          if (this.spaceship.recovery_timer >= this.spaceship.recovery_time_limit) { 
+            this.spaceship.hit_recovery = false; // reset the state
+            this.spaceship.recovery_timer = 0; // reset the recovery timer to 0 for next hit.
+            this.spaceship.curr_bounce_speed = this.spaceship.init_bounce_speed; // reset the speed
+            this.spaceship.bounce_dir = [0, 0, 0]; // for clarity
+          } else {
+            // moving everything away from me in the direction identified by the normal of the collision detector.
+            // not accounting for direction of the movement of the object right now.
+            this.camera.translate = [
+              this.camera.translate[0] - (this.spaceship.bounce_dir[0] * this.spaceship.curr_bounce_speed[0] * frontend_data.time_since_last_render),
+              this.camera.translate[1] - (this.spaceship.bounce_dir[1] * this.spaceship.curr_bounce_speed[1] * frontend_data.time_since_last_render),
+              this.camera.translate[2] - (this.spaceship.bounce_dir[2] * this.spaceship.curr_bounce_speed[2] * frontend_data.time_since_last_render)
+            ];
+
+            // dampen down with each render to come to a clean slowing.
+            this.spaceship.curr_bounce_speed = [
+              this.spaceship.curr_bounce_speed[0] * this.spaceship.bounce_dampen,
+              this.spaceship.curr_bounce_speed[1] * this.spaceship.bounce_dampen,
+              this.spaceship.curr_bounce_speed[2] * this.spaceship.bounce_dampen
+            ];
+
+            this.camera.perturb(); // perturb the camera a little but additional to the current camera motions
+            // carry out all updates from last time
+            this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+          } // end if
+        } else {
+          this.handle_obstacle_collisions(); // need to see if i hit an obstacle and do state changes
+        } // end if
+
+        // THIS WILL BE CHANGED TO SCENE TRANSITION STUFF LATER
+        this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
+        // carry out all updates from last time
+        this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
+
+      } // end if
 
       // render call!
       super.render([0, 0, 0]);  // let the renderer do it's draw thing
@@ -428,19 +426,19 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     
   } // end function
 
-  start_transition()
-  {
-    if (this.transition)
-    {
+  /**
+   * start a transition to a planet scene.
+   */
+  start_transition() {
+    if (this.transition) {
       return;
-    }
-    this.transition = 
-    {
+    } // end if
+    this.transition = {
       start : null,
       duration : 2,
       start_fov: this.camera.fov
     };
-  }
+  } // end function
 
   /**
    * generally, update anything that is moving dynamically
