@@ -1,0 +1,117 @@
+
+
+/**
+ * FULL DISCLOSURE: the following css is from chatgpt.
+ * wanted a better look, but didn't deem spending hours on css 
+ * styling as a worthwhile place to spend actual brainpower --
+ * as opposed to the actual graphic scenes.
+ */
+
+/* RETRO SCI-FI / ALIEN COMPUTER STYLE */
+
+:root {
+  --bg: #050a07;
+  --green: #7cff9b;
+  --bright: #b4ffc2;
+  --mid: #42b86a;
+  --dim: #245b36;
+  --border: #27653a;
+}
+
+body {
+  background: var(--bg);
+  color: var(--green);
+  font-family: "Courier New", monospace;
+}
+
+/* Main headings */
+
+h1, h2, h3 {
+  color: var(--bright);
+  font-family: "Courier New", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-shadow:
+    0 0 4px rgba(124, 255, 155, 0.7),
+    0 0 12px rgba(66, 184, 106, 0.35);
+}
+
+h1 {
+  font-size: 2.5rem;
+  letter-spacing: 0.18em;
+}
+
+h2 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+/* Body text */
+
+p {
+  color: var(--green);
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+/* Secondary / technical text */
+
+small, .secondary {
+  color: var(--mid);
+  letter-spacing: 0.08em;
+}
+
+/* Terminal-style text */
+
+.terminal {
+  background: #020503;
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  box-shadow:
+    0 0 12px rgba(66, 184, 106, 0.12),
+    inset 0 0 20px rgba(66, 184, 106, 0.04);
+}
+
+/* this is from roxanne */
+.terminal_small {
+  background: #020503;
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  box-shadow:
+    0 0 12px rgba(66, 184, 106, 0.12),
+    inset 0 0 20px rgba(66, 184, 106, 0.04);
+}
+
+.terminal_header {
+  background: #020503;
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  box-shadow:
+    0 0 12px rgba(66, 184, 106, 0.12),
+    inset 0 0 20px rgba(66, 184, 106, 0.04);
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* Dividers */
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+/* Highlighted text */
+
+strong {
+  color: var(--bright);
+  text-shadow: 0 0 6px rgba(124, 255, 155, 0.5);
+}
+
+/**
+ * end ai slop
+ */

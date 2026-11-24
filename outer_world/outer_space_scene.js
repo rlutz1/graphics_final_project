@@ -15,8 +15,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.day = 0; // days passing.
     this.days_per_second = 10; // how to register how many days occur in a second for planet orbits
     this.distance_const = 35; // a constant used in distance normalization.
-    this.game_over = false;
-    this.random_obstacle_spawn_chance = 0.8;
+    this.game_over = false; // general control for hit too many times
+    this.random_obstacle_spawn_chance = 0.8; // if random number gen over 0.8, spawn a rando
+    this.hit_point_ui_el = null; // an html element to alter based on the hit points of the 
   }
 
   /**
@@ -63,6 +64,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     
     const spaceship = this.init_spaceship();
     this.spaceship = spaceship; // again, easy access if needed.
+    this.update_hit_point_display(); // update the ui for this
     
     const asteroid_belt = this.init_asteroid_belt();
     this.solar_system.asteroid_belt = asteroid_belt; // asteroid belt 
@@ -89,6 +91,20 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.add_node(spaceship); // spaceship to daddy sceen
     this.add_node(random_obstacles); // these can be their own root nodes
     this.add_node(background); // background
+  } // end function
+
+  /**
+   * update the html element with the current hit points
+   * left on the spaceship
+   */
+  update_hit_point_display() {
+    if (this.hit_point_ui_el && this.spaceship) {
+      if (this.spaceship.health == 0) {
+        this.hit_point_ui_el.innerText = `Ship Health Remaining: NONE`;
+      } else {
+        this.hit_point_ui_el.innerText = `Ship Health Remaining: ${this.spaceship.health}`;
+      } // end if
+    } // end if
   } // end function
 
   /**
@@ -515,6 +531,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const obstacle_collide = this.obstacle_collision_check();
     if (obstacle_collide) {
       this.spaceship.health -= 1; // dec health
+      this.update_hit_point_display(); // update ui
       if (this.spaceship.health == 0) { this.game_over = true; return;}
       this.spaceship.hit_recovery = true; // in hit recovery state
       this.spaceship.recovery_timer = 0; // set timer to 0

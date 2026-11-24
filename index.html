@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>UNM CS 412/512 HW5</title>
+  <title>UNM CS 412/512 Final Project</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -17,8 +17,17 @@
   <!-- justify-content: center; /* Centers horizontally */
   align-items: center;     /* Centers vertically */
   height: 100vh;     -->
-  <div style="display: flex; justify-content: center; align-items: center;">
-    <h1>Space Duck Hunt: The Birdening</h1>
+  <div class="terminal_header">
+    <h1>Bird is Opps</h1>
+    <!-- change this on scene transition -->
+    <h2 id="current_location">Current Location: Space</h2>
+  </div>
+
+
+  <!-- space related things -->
+  <!-- in transition -- disable this and enable the planet ui elements as needed -->
+  <div id="space_div">
+    <h3 id="hit_points">Ship Health Remaining: loading...</h3>    
   </div>
 
   <div style="display: flex; justify-content: center; align-items: center;">
@@ -104,6 +113,9 @@
     const space = new OuterSpaceBuilder.OuterSpaceScene();
     const earth = new EarthBuilder.EarthScene();
 
+    // i'm just going to let space have this html element to update, lol
+    space.hit_point_ui_el = document.getElementById("hit_points");
+
      /**
      * rendering manager is a lightweight, simple
      * iteration to (1) update all nodes' transformation matrices
@@ -137,8 +149,8 @@
       if (!last_time) { last_time = timestep; }
       delta_time = (timestep - start_time) / 1000 // dt in seconds from front end
       time_since_last_render = (timestep - last_time) / 1000; last_time = timestep; // tracking times since last render as well
-      frontend_data.delta_time = delta_time; // make sure this is passed to the scenes, likely will be needed.
-      frontend_data.time_since_last_render = time_since_last_render; // pass this to the scene as well
+      frontend_data.delta_time = delta_time; // TOTAL time elapsed
+      frontend_data.time_since_last_render = time_since_last_render; // time SINCE the last render
       frontend_data.canvas_width = canvas.width; // add the canvas information for mouse interaction with the screen.
       frontend_data.canvas_height = canvas.height;
 
