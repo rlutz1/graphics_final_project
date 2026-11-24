@@ -65,6 +65,8 @@ export class EarthScene extends SceneBuilder.Scene {
     this.boidPositions = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidPositions(), numPositions);
     this.boidVelocities = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidVelocities(), numPositions);
     this.init_boids(numBoids);
+
+    this.initialized = true; // set for transition logic in index.html
   } // end function
 
   /**

@@ -130,6 +130,7 @@
     }
 
       frontend_data.shoot = true;
+      console.log("shot?")
     });
     let mouseY = canvas.height / 2;
     let mouseX = canvas.width / 2;
@@ -144,7 +145,7 @@
         mouseX = Math.max(0, Math.min(canvas.width, mouseX));
       }
     });
-// END CHANGES
+    // END CHANGES
 
     let curr_scene = null; // the current scene to be rendered.
     let next_scene = null; // next scene up in the queue to be rendered.
@@ -200,7 +201,6 @@
       frontend_data.canvas_height = canvas.height;
       frontend_data.mouse_y = mouseY; // for theo/planet, no touchy
       frontend_data.mouse_x = mouseX;
-      frontend_data.shoot = false;
 
       // console.log(frontend_data); // TESTING
 
@@ -217,11 +217,14 @@
         // Initialize the new scene if not already initialized
         if (!curr_scene.initialized) {
           if(curr_scene !== space) { await curr_scene.init(renderer, aspect); } 
-          else { curr_scene.init(renderer, aspect); }
+          // else { curr_scene.init(renderer, aspect); }
         } // end if 
       } // end if
    
       curr_scene.render(frontend_data);
+      console.log(frontend_data);
+
+      frontend_data.shoot = false; // RESET for now
   
       requestAnimationFrame(render);
     } // end render
