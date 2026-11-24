@@ -368,4 +368,3 @@ export function shear(factor) {
 
     return sh
 } // end method
-

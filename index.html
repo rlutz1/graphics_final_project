@@ -168,8 +168,8 @@
         // Initialize the new scene if not already initialized
         if (!curr_scene.initialized) {
           curr_scene.init(renderer, aspect);
-        }
-      }
+        } // end if 
+      } // end if
 
       curr_scene.render(frontend_data);
       requestAnimationFrame(render);

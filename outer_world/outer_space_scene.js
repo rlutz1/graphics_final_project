@@ -61,12 +61,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     // init sun and planets, etc
     const sun = this.init_sun();
-    const planets = this.init_planets();
-    const spaceship = this.init_spaceship();
-    const asteroid_belt = this.init_asteroid_belt();
-    
     this.solar_system.sun = sun; // for easy access more than anything
+    
+    const planets = this.init_planets();
     this.solar_system.planets = planets; // can make this more specific if needed
+    
+    const spaceship = this.init_spaceship();
     this.spaceship = spaceship; // again, easy access if needed.
     this.update_hit_point_display(); // update the ui for this
     
@@ -340,29 +340,29 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   render(frontend_data={}) {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
-
-    // The transition
-    if (this.transition)
-    {
-      const tr = this.transition;
-      if (tr.start == null)
-      {
-        tr.start = frontend_data.delta_time; // for tracking the fade
-      }
-      const t = Math.min((frontend_data.delta_time - tr.start) / tr.duration, 1);
-      
-      const ease = t * t * (3 - 2 * t);
-      this.camera.fov = tr.start_fov * (1 - 0.9 * ease); // Narrow the FOV
-      this.fade = ease;
-
-      if (t >= 1)
-      {
-        this.is_over = true;
-      }
-
-      frontend_data = {}; // empty the frontend data while rendering
-    }
     if (!this.game_over) {
+
+      // The transition
+      if (this.transition)
+      {
+        const tr = this.transition;
+        if (tr.start == null)
+        {
+          tr.start = frontend_data.delta_time; // for tracking the fade
+        }
+        const t = Math.min((frontend_data.delta_time - tr.start) / tr.duration, 1);
+        
+        const ease = t * t * (3 - 2 * t);
+        this.camera.fov = tr.start_fov * (1 - 0.9 * ease); // Narrow the FOV
+        this.fade = ease;
+
+        if (t >= 1)
+        {
+          this.is_over = true;
+        }
+
+        frontend_data = {}; // empty the frontend data while rendering
+      }
 
       
       // update the time on all planets so orbits can be updated correctly
@@ -427,6 +427,20 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     } // end if
     
   } // end function
+
+  start_transition()
+  {
+    if (this.transition)
+    {
+      return;
+    }
+    this.transition = 
+    {
+      start : null,
+      duration : 2,
+      start_fov: this.camera.fov
+    };
+  }
 
   /**
    * generally, update anything that is moving dynamically
@@ -522,43 +536,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     const yaw = this.camera.rotate[1]; // the rotation around the y axis, left/right motion
     const pitch = this.camera.rotate[0]; // the rotation around the x axis, up/down tilting
 
-    
-    
-    // now, if a planet does collide, we want to alter the direction vector a bit
-    // planet_collide, if not null, returns the normalized directional vector
-    // from centroid A -> B (A is spaceship, B is a planet/sun).
-    // so we're going to subtract out the part of movement we don't want from the current
-    // Ry*Rx*[0, 0, -1]*V direction
-    // lets see if we collided with a planet
-    const planet_collide = this.spaceship_planet_collision_check();
-    // console.log(planet_collide);
-    let velocity = this.spaceship.velocity;
-
-    if (planet_collide) { 
-      const normal = planet_collide.normal; // the surface normal as calculated between bounding sphere centers; the DIRECTION to push 
-      const penetration = planet_collide.overlap; // this is HOW MUCH we should push in the norm direction
-
-      // simply correct the position here before we apply the rotation of the direction vector
-      // this will push the scene in the opposing direction
-      this.camera.translate = [
-        this.camera.translate[0] - normal[0] * penetration,
-        this.camera.translate[1] - normal[1] * penetration,
-        this.camera.translate[2] - normal[2] * penetration
-      ];
-      
-      // // potential further smoothing?
-      // const dot = (normal[0] * velocity[0]) + (normal[1] *  velocity[1]) + (normal[2] *  velocity[2])
-      // const vn = [normal[0] * dot, normal[1] * dot, normal[2] * dot];
-
-      // if (dot <= 0) {
-      //   velocity[0] -= vn[0];  
-      //   velocity[1] -= vn[1];  
-      //   velocity[2] -= vn[2]; 
-      // }
-     
-    } // end if
-    // console.log(`velocity: ${velocity}`)
-
     // the calculations of how to move forward considering the direction of
     // my camera view at this moment. includes up/down/left/right direction in the motion.
     // can derive from using direction vector [0, 0, -1] (always move in negative z)
@@ -566,18 +543,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // and that flips the direction in which to move the scene in terms of tranlation
     // with consideration to your current orientation, giving impression you are moving in direction you're pointed in.
     // this is the DIRECTION * HOW MUCH you should move the scene in.
-    // let forward_x = -Math.sin(yaw) * Math.cos(pitch) * this.spaceship.velocity[0];
-    // let forward_y = Math.sin(pitch) * this.spaceship.velocity[1];
-    // let forward_z = Math.cos(yaw) * Math.cos(pitch) * this.spaceship.velocity[2]; // flipping sign on this
-    let forward_x = -Math.sin(yaw) * Math.cos(pitch) * velocity[0];
-    let forward_y = Math.sin(pitch) * velocity[1];
-    let forward_z = Math.cos(yaw) * Math.cos(pitch) * velocity[2]; // flipping sign on this
-    
-
-    // FOR IF YOU'RE GROUNDED ON A PLANE -- great for planet probably
-    // const forward_x = -Math.sin(yaw);
-    // const forward_y = 0;
-    // const forward_z = Math.cos(yaw);
+    let forward_x = -Math.sin(yaw) * Math.cos(pitch) * this.spaceship.velocity[0];
+    let forward_y = Math.sin(pitch) * this.spaceship.velocity[1];
+    let forward_z = Math.cos(yaw) * Math.cos(pitch) * this.spaceship.velocity[2]; // flipping sign on this
 
     // forward motion
     if (frontend_data.w) {
@@ -701,20 +669,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     return null;
   } // end function
 
-  start_transition()
-  {
-    if (this.transition)
-    {
-      return;
-    }
-    this.transition = 
-    {
-      start : null,
-      duration : 2,
-      start_fov: this.camera.fov
-    };
-  }
-
   /**
    * this is basically a tester for now.
    * check to see if any planet or sun position is within [1, 1, 1] of me at [0, 0, 0]
@@ -751,7 +705,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       for (const p of planets) {
         if (shape.intersect(p.bounding_shape)) {
           console.log(`hit ${p.data.name}`)
-          this.start_transition(); // if any planets
+          this.start_transition(); // TRIGGER transition
           const d = [
             shape.center_x - p.bounding_shape.center_x, 
             shape.center_y - p.bounding_shape.center_y, 

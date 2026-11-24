@@ -85,34 +85,35 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
     this.bounding_shape = []
     // TODO
     const right_wing = new SceneBuilder.BoundingSphere({
-      center_x:  0.675 * this.scale[0],
-      center_y:  0 * this.scale[1],
-      center_z:  (-1 + this.center[2]) * this.scale[2],
-      radius: (0.65 * this.scale[0]) // TODO don't like this, for tesing only
+      center_x:  0.675,
+      center_y:  this.center[1],
+      center_z:  -2,
+      radius: 0.6 // TODO don't like this, for tesing only
     });
     const left_wing = new SceneBuilder.BoundingSphere({
-      center_x:  -0.675 * this.scale[0],
-      center_y:  0 * this.scale[1],
-      center_z:  (-1 + this.center[2]) * this.scale[2],
-      radius: (0.65 * this.scale[0]) // TODO don't like this, for tesing only
+      center_x:  -0.675,
+      center_y:  this.center[1],
+      center_z:  -2,
+      radius: 0.6 // TODO don't like this, for tesing only
     });
     // TODO this needs to account for rotation here haha
     const nose = new SceneBuilder.BoundingSphere({
-      center_x:  0 * this.scale[0],
-      center_y:  0.2 * this.scale[1],
-      center_z:  (-3.0 + this.center[2]) * this.scale[2],
-      radius: (0.5 * this.scale[0]) // TODO don't like this, for tesing only
+      center_x:  0,
+      center_y:  0,
+      center_z:  -3,
+      radius: 0.3
+    });
+    const back = new SceneBuilder.BoundingSphere({
+      center_x:  0,
+      center_y:  0,
+      center_z:  0,
+      radius: 0.3
     });
 
-    // const boundary = new SceneBuilder.BoundingSphere({
-    //   center_x:  0,
-    //   center_y:  0,
-    //   center_z:  -1 + this.position[2],
-    //   radius: 1.0 // TODO don't like this, for tesing only
-    // });
     this.bounding_shape.push(right_wing);
     this.bounding_shape.push(left_wing);
     this.bounding_shape.push(nose);
+    this.bounding_shape.push(back);
   }
 } // end class
 
