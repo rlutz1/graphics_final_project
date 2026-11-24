@@ -30,10 +30,8 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
   constructor(id="planet", shader_id="planet_basic", data=null) {
     super(id, shader_id); // takes care of some baseline stuff for now.
 
-    this.start_day = Math.random() * 10000; // set this to whatever as a starting point for the orbit
-
     // default super call sets up: this.position = [0, 0, 0]
-    this.orbit_rotation = [0, this.start_day, 0]; // special for rotation around sun.
+    this.orbit_rotation = [0, 0, 0]; // special for rotation around sun.
 
     this.data = data; // grab the general data pack.
     // this.delta_time = 0; // time since last frame
@@ -183,16 +181,12 @@ export class BackgroundSceneNode extends SceneBuilder.SceneNode {
  */
 export class AsteroidObstacle extends PlanetSceneNode {
   constructor(id="asteroid", shader_id="planet_basic") {
-    const radius = (Math.random() * 5000) + 1000; // radius between certain val -- not necessarily historically accurate
-    const buffer = 100000000; // offset from those planets; this is set by feel, can change
-    const min_distance = PLANET_DATA.mars.distance_km + buffer;
-    const max_distance = PLANET_DATA.jupiter.distance_km - buffer;
-    const distance = Math.random() * (max_distance - min_distance) + min_distance;
-
+    const radius = (Math.random() * 2000) + 1000; // radius between 100 - 530 km (1000 - 3000)
+    const distance = (Math.random() * 329100000) + 150000000; // random distance between mars and jupiter
     const orbit_period = (Math.random() * 1095) + 1095 // random orbit period between 3 - 6 years
-    const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, texture_path: "./outer_world/textures/asteroid.jpg"});
+    const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, texture_path: "./outer_world/textures/asteroid.jpg"}) 
+    // console.log(data)
     super(id, shader_id, data);
-    this.start_day = Math.random() * 10000
   }
 } // end class
 

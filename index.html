@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 
-
 <body>
 
   <!-- ======================================================= -->
@@ -127,12 +126,12 @@
     
     // going to set this as the default one being used for the moment:
     // (but uncomment and switch as needed, please be aware when pushing to main about this)
-    curr_scene = earth;
-    next_scene = space;
+    //curr_scene = earth;
+    //next_scene = space;
 
     // for potential transition testing.
-    curr_scene = space;
-    // next_scene = earth; 
+     curr_scene = space;
+     next_scene = earth; 
 
     curr_scene.init(renderer, aspect); // initialize the scene.
     
@@ -161,15 +160,16 @@
       // scene: it's very likely we don't want to re-call that for that scene.
       // a thought, but not required.
 
-      // if (curr_scene.is_over) { // some sort of switch to next flag set by game logic.
-      //   // transition outer -> planet or planet -> outer scenes
-      //   // goes here somehow some way.
-      //   curr_scene = next_scene;
-      //   next_scene = ???;
-      //   if (!curr_scene.initialized) {
-      //     curr_scene.init(renderer, aspect);
-      //   } // end if
-      // } // end if
+      if (curr_scene.is_over) { // some sort of switch to next flag set by game logic.
+        curr_scene.is_over = false;
+        const temp_scene = curr_scene;
+        curr_scene = next_scene;
+        next_scene = temp_scene;
+        // Initialize the new scene if not already initialized
+        if (!curr_scene.initialized) {
+          curr_scene.init(renderer, aspect);
+        }
+      }
 
       curr_scene.render(frontend_data);
       requestAnimationFrame(render);
