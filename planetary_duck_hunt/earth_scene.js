@@ -140,7 +140,6 @@ export class EarthScene extends SceneBuilder.Scene {
     const pitch = this.camera.rotate[0];
     const yaw = this.camera.rotate[1];
 
-    console.log(this.camera.rotate)
     const forward = [Math.sin(yaw), 0, -Math.cos(yaw)]; //where the camera faces 
 
     const forward_x = -Math.sin(yaw) * Math.cos(pitch);

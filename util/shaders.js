@@ -498,11 +498,37 @@ export class PlanetShader extends Shader {
  * + it uses identity every time instead of the camera.get_view_matrix.
  * + sets up the sun as the single point light in the scene.
  */
-export class SpaceshipShader extends PhongShader {
+export class SpaceshipShader extends Shader {
+
+  constructor(gl, sources = SourceDicts.spaceship_basic) {
+    super(sources.vertex_shader, sources.fragment_shader, gl);
+    // camera and light items (may be able to pull out into the renderer if consistent.)
+    this.model_view_loc = gl.getUniformLocation(this.program, "uModelViewMatrix"); 
+    this.projection_loc = gl.getUniformLocation(this.program, "uProjectionMatrix"); 
+    this.lights_loc = gl.getUniformLocation(this.program, "uPointLights");
+    this.atten_loc = gl.getUniformLocation(this.program, "uLightAtt");
+    this.num_lights_loc =  gl.getUniformLocation(this.program, "uNumPointLights"); 
+
+    // some lighting specific locations
+    this.material_params_loc = {};
+    this.material_params_loc["ka"] = gl.getUniformLocation(this.program, 'uMaterialParams.ka');
+    this.material_params_loc["kd"] = gl.getUniformLocation(this.program, 'uMaterialParams.kd');
+    this.material_params_loc["ks"] = gl.getUniformLocation(this.program, 'uMaterialParams.ks');
+    this.material_params_loc["shininess"] = gl.getUniformLocation(this.program, 'uMaterialParams.shininess');
+    this.material_params_loc["transparency"] = gl.getUniformLocation(this.program, 'uMaterialParams.transparency');
+
+    // more meshy information here.
+    this.pos_loc = gl.getAttribLocation(this.program, "aPosition");
+    this.norm_loc = gl.getAttribLocation(this.program, "aNormal");
+    this.color_loc = gl.getAttribLocation(this.program, "aColor");
+    this.node_transforms_loc = gl.getUniformLocation(this.program, "uModelTransformationMatrix"); 
+  }
 
   /**
-   * overriding this only slightly to be able to grab out the 
-   * sun_light as the point light source.
+   * shader is here to (1) hold the compiled shader program.
+   * and (2) bind and load up the buffers that it is aware of.
+   * this is intended highly customizable to whatever shader you want to build.
+   * just implement a new shader with load() and draw() and set the id in the node.
    */
   load(node, camera, lights, gl) {
     // from super
@@ -516,6 +542,7 @@ export class SpaceshipShader extends PhongShader {
     // only one light here. THE SUNNNNN
     const sun_light = lights[0];
     gl.uniform3fv(this.lights_loc, new Float32Array(sun_light.position)); // TODO don't love the new here... 
+    gl.uniform3fv(this.atten_loc, [1, 0, 0.003]); // attenuation from sun pt light; typically 0.008, reducing for spaceship only
     gl.uniform1i(this.num_lights_loc, 1);
 
     // set this nodes transformation matrix
@@ -545,8 +572,16 @@ export class SpaceshipShader extends PhongShader {
 
     // index buffer for drawing as triangles
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, node.mesh.ind_buff);
-    
   } // end function
+
+  /**
+   * define how to draw with this shader.
+   */
+  draw(node, gl) {
+    // draw the node.
+    gl.drawElements(gl.TRIANGLES, node.mesh.indices.length, node.mesh.index_type ?? gl.UNSIGNED_SHORT, 0);
+  } // end function
+
 } // end class
 
 export class SpaceBackgroundShader extends Shader {

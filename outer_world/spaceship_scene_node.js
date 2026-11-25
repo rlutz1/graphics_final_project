@@ -36,7 +36,7 @@ export class SpaceshipSceneNode extends SceneBuilder.SceneNode {
         { ...MeshBuilder.gen_spaceship_mesh(), mapping: -1 }
     );
     const material = new SceneBuilder.Material({
-      "ka":        [0.6, 0.6, 0.6],
+      "ka":        [0.25, 0.25, 0.25],
       "kd":        [0.8, 0.8, 0.8],
       "ks":        [1.0, 1.0, 1.0],
       "shininess": 128
