@@ -209,16 +209,19 @@
       // a thought, but not required.
 
       if (curr_scene.is_over) { // some sort of switch to next flag set by game logic.
+        renderer.clear([0, 0, 0]);
         curr_scene.is_over = false;
         const temp_scene = curr_scene;
         curr_scene = next_scene;
         next_scene = temp_scene;
+        if (curr_scene === space) { curr_scene.reset(); } // end if
         // Initialize the new scene if not already initialized
         if (!curr_scene.initialized) {
           if(curr_scene !== space) { await curr_scene.init(renderer, aspect); } 
           // else { curr_scene.init(renderer, aspect); }
         } // end if
         console.log(curr_scene); 
+
       } // end if
    
       curr_scene.render(frontend_data);

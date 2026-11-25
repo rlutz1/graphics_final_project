@@ -249,8 +249,8 @@ export class EarthScene extends SceneBuilder.Scene {
   // back cause im too stupid 
   render(frontend_data={}) {
     if (frontend_data.t) { // testing TRANSITION CORE; later should be game logic
-      this.boids.children = [];
-      this.Module._freeBoids(); // tesT?
+      this.boids.children = []; // for clarity
+      this.Module._freeBoids(); // working...
       this.is_over = true; // ?
     } else {
        const now = performance.now();
@@ -272,7 +272,6 @@ export class EarthScene extends SceneBuilder.Scene {
       if (frontend_data.shoot) this.shoot();
       super.render(this.sky_color);  // let the renderer do it's draw thing
     } // end if
-   
     
   } // end function
 

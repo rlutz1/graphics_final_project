@@ -25,6 +25,7 @@ export class Scene {
     this.camera = null; // camera, meaning more specifically the perspective used.
     this.renderer = null; // scene will have a reference to the renderer made.
     this.initialized = false; // in case a flag is useful in transitioning.
+    this.is_over = false; // for scene control
   }
 
   /**
