@@ -128,7 +128,7 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
     super(id, shader_id); // takes care of some baseline stuff for now.
     this.data = data; // can hand off a data pack as well
     this.radius = 4.0; // for better control
-    this.position = [0, 0, -30]; // where i want to be when we start scene
+    this.position = [0, 0, -60]; // where i want to be when we start scene
     // this.scale = [3, 3, 3] // potnetially. we'll see, it'd be nicer if things were a little bigger
     this.center = [...this.position, 1]; // center of me is at this position, sphere centers around origin, this will be updated from scene
     // this.center.push(1); // homogenous
@@ -215,7 +215,7 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
     this.direction = [0, 0, 0];
     const rando_speed = Math.random() + 0.1;
     this.velocity = [rando_speed, rando_speed, rando_speed]; // random speed
-    this.lifetime = (Math.random() * 50) + 100; // randomish lifetime, at least n days in length
+    this.lifetime = (Math.random() * 50) + 120; // randomish lifetime, at least n days in length
     this.dead = false; // should i be removed from scene
 
     // basic sphere bounding shape for the planet body
