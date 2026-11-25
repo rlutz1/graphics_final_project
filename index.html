@@ -155,7 +155,6 @@
 
     // create an earth and space scene to start
     const space = new OuterSpaceBuilder.OuterSpaceScene();
-    const earth = new EarthBuilder.EarthScene();
 
     // i'm just going to let space have this html element to update, lol
     space.hit_point_ui_el = document.getElementById("hit_points");
@@ -177,7 +176,7 @@
 
     // for potential transition testing.
     curr_scene = space;
-    next_scene = earth; 
+    next_scene = null; 
 
     curr_scene.init(renderer, aspect); // initialize the scene.
     
@@ -210,18 +209,17 @@
 
       if (curr_scene.is_over) { // some sort of switch to next flag set by game logic.
         renderer.clear([0, 0, 0]);
-        curr_scene.is_over = false;
+        curr_scene.reset(); // does something with space, nothing on earth rn
         const temp_scene = curr_scene;
         curr_scene = next_scene;
         next_scene = temp_scene;
-        if (curr_scene === space) { curr_scene.reset(); } // end if
-        // Initialize the new scene if not already initialized
-        if (!curr_scene.initialized) {
-          if(curr_scene !== space) { await curr_scene.init(renderer, aspect); } 
-          // else { curr_scene.init(renderer, aspect); }
+        if (curr_scene !== space) {
+          // this is not super cool, but it'll work with a basic timing mechanic.
+          // re-running init was causing some funky shit, so, in name of time:
+          curr_scene = new EarthBuilder.EarthScene();
+          await curr_scene.init(renderer, aspect);
         } // end if
-        console.log(curr_scene); 
-
+        console.log(curr_scene)
       } // end if
    
       curr_scene.render(frontend_data);

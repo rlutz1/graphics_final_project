@@ -249,9 +249,7 @@ export class EarthScene extends SceneBuilder.Scene {
   // back cause im too stupid 
   render(frontend_data={}) {
     if (frontend_data.t) { // testing TRANSITION CORE; later should be game logic
-      this.boids.children = []; // for clarity
-      this.Module._freeBoids(); // working...
-      this.is_over = true; // ?
+      this.clear();
     } else {
        const now = performance.now();
 
@@ -274,6 +272,18 @@ export class EarthScene extends SceneBuilder.Scene {
     } // end if
     
   } // end function
+
+  /**
+   * to be called on transition hook. clears memory and shit from scene.
+   * really important ones:
+   * freeBoids && is_over! the others are, meh, optional really right now.
+   */
+  clear() {
+    this.Module._freeBoids(); // CLEAR MEMORY!!
+    this.is_over = true; // set flag for index.html to switch
+    this.initialized = false; // reset this flag so on entry we just re-init.
+  } // end function
+  
 
   // BIRD BUSINESS (just grab positions/velocities from heap)
   update_boids() {

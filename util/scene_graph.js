@@ -123,6 +123,12 @@ export class Scene {
     } // end if
   } // end function
 
+  /**
+   * a signature ONLY that can be overrriden, but is there for all scenes to 
+   * enable smooth transitions in index.html
+   */
+  reset() { } // end method
+
 } // end class
 
 /**

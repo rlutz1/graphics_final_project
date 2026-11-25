@@ -341,7 +341,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
 
-    this.hit_point_ui_el.style.display = "inline"; // ensure visible
+    this.hit_point_ui_el.style.display = "block"; // ensure visible
     
     if (!this.game_over) {
 
