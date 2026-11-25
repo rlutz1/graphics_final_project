@@ -20,8 +20,8 @@
     <h1>Bird is Opps</h1>
     <!-- change this on scene transition -->
     <h2 id="current_location">Current Location: Space</h2>
+    <h3 id="planet_points">Points: 0</h3>   
   </div>
-
 
   <!-- space related things -->
   <!-- in transition -- disable this and enable the planet ui elements as needed -->
@@ -29,12 +29,17 @@
     <h3 id="hit_points">Ship Health Remaining: loading...</h3>    
   </div>
 
+  <!-- planet related things -->
+  <div id="planet_div" style="display:none;">
+    <button class="terminal-button" id="leave"></button>  
+  </div>
+
   <div style="display: flex; justify-content: center; align-items: center;">
     <div style="display: flex; flex-direction: column; gap: 10px;">
       <div class="game-container">
         <canvas id="glcanvas" width="1200" height="600"></canvas>
       <div id="crosshair"></div>
-</div>
+      </div>
     </div>
   </div>
 
@@ -155,11 +160,13 @@
 
     // create an earth and space scene to start
     const space = new OuterSpaceBuilder.OuterSpaceScene();
-    const earth = new EarthBuilder.EarthScene();
 
     // i'm just going to let space have this html element to update, lol
-    space.hit_point_ui_el = document.getElementById("hit_points");
-    space.location_ui_el = document.getElementById("current_location");
+    const hit_points = document.getElementById("hit_points");
+    space.hit_point_ui_el = hit_points;
+    const curr_location = document.getElementById("current_location");
+    space.location_ui_el = curr_location;
+
 
      /**
      * rendering manager is a lightweight, simple
@@ -177,7 +184,15 @@
 
     // for potential transition testing.
     curr_scene = space;
-    next_scene = earth; 
+    next_scene = null; 
+
+    // add leave button click action; planet stuff 
+    const leave_button = document.getElementById("leave");
+    const planet_div = document.getElementById("planet_div");
+    leave_button.addEventListener("click", () => {
+      curr_location.innerText = `Returning to space...`;
+      frontend_data.leave = true;
+    });
 
     curr_scene.init(renderer, aspect); // initialize the scene.
     
@@ -209,20 +224,31 @@
       // a thought, but not required.
 
       if (curr_scene.is_over) { // some sort of switch to next flag set by game logic.
-        curr_scene.is_over = false;
+        renderer.clear([0, 0, 0]);
+        curr_scene.reset(); // does something with space, nothing on earth rn
         const temp_scene = curr_scene;
         curr_scene = next_scene;
         next_scene = temp_scene;
-        // Initialize the new scene if not already initialized
-        if (!curr_scene.initialized) {
-          if(curr_scene !== space) { await curr_scene.init(renderer, aspect); } 
-          // else { curr_scene.init(renderer, aspect); }
-        } // end if 
+        if (curr_scene !== space) {
+          // this is not super cool, but it'll work with a basic timing mechanic.
+          // re-running init was causing some funky shit, so, in name of time:
+          curr_scene = new EarthBuilder.EarthScene();
+          await curr_scene.init(renderer, aspect);
+          hit_points.style.display = "none"; // ensure invisible
+          planet_div.style.display = "block"; // display vs not
+          leave_button.textContent = `Leave ${curr_scene.name}`;
+        } else {
+          hit_points.style.display = "block"; // ensure visible
+          planet_div.style.display = "none";
+        } // end if
+        // regardless, update location
+        curr_location.innerText = `Current Location: ${curr_scene.name}`;
       } // end if
    
       curr_scene.render(frontend_data);
 
       frontend_data.shoot = false; // RESET for now
+      frontend_data.leave = false; // reset as well
   
       requestAnimationFrame(render);
     } // end render

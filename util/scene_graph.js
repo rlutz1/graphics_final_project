@@ -25,6 +25,8 @@ export class Scene {
     this.camera = null; // camera, meaning more specifically the perspective used.
     this.renderer = null; // scene will have a reference to the renderer made.
     this.initialized = false; // in case a flag is useful in transitioning.
+    this.is_over = false; // for scene control
+    this.name = "Scene"; // for readability grabs
   }
 
   /**
@@ -121,6 +123,12 @@ export class Scene {
       });
     } // end if
   } // end function
+
+  /**
+   * a signature ONLY that can be overrriden, but is there for all scenes to 
+   * enable smooth transitions in index.html
+   */
+  reset() { } // end method
 
 } // end class
 

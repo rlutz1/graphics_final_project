@@ -11,6 +11,7 @@ export class EarthScene extends SceneBuilder.Scene {
 
   constructor() {
     super(); // takes care of base initialization fields.
+    this.name = "Earth";
 
     this.boids = null; // dummy root node to hold all the boids
     // ADDED BY THEO TO HOLD BOIDS AND ANIMATE MOVEMENT
@@ -248,25 +249,42 @@ export class EarthScene extends SceneBuilder.Scene {
   // THEO modified a bit here, mostly changed camera mechanics, then reverted 
   // back cause im too stupid 
   render(frontend_data={}) {
-    const now = performance.now();
+    if (frontend_data.leave) { // a button to be pressed
+      this.clear();
+    } else {
+       const now = performance.now();
 
-    if (this.lastFrameTime !== null) {
-      const delT = (now - this.lastFrameTime) / 1000.0;
-      this.Module._advanceBoids(delT);
-      this.update_boids();
-      this.update_dead_birds(delT);
+      if (this.lastFrameTime !== null) {
+        const delT = (now - this.lastFrameTime) / 1000.0;
+        this.Module._advanceBoids(delT);
+        this.update_boids();
+        this.update_dead_birds(delT);
 
-      this.update_perspective(frontend_data, delT);
-      this.walk_update(frontend_data, delT);
-      this.camera_level();
-      this.update_sun();
-    }
+        this.update_perspective(frontend_data, delT);
+        this.walk_update(frontend_data, delT);
+        this.camera_level();
+        this.update_sun();
+      }
 
-    this.lastFrameTime = now;
-    super.update_all_transformations(); // update all transformation nodes.
-    if (frontend_data.shoot) this.shoot();
-    super.render(this.sky_color);  // let the renderer do it's draw thing
+      this.lastFrameTime = now;
+      super.update_all_transformations(); // update all transformation nodes.
+      if (frontend_data.shoot) this.shoot();
+      super.render(this.sky_color);  // let the renderer do it's draw thing
+    } // end if
+    
   } // end function
+
+  /**
+   * to be called on transition hook. clears memory and shit from scene.
+   * really important ones:
+   * freeBoids && is_over! the others are, meh, optional really right now.
+   */
+  clear() {
+    this.Module._freeBoids(); // CLEAR MEMORY!!
+    this.is_over = true; // set flag for index.html to switch
+    this.initialized = false; // reset this flag so on entry we just re-init.
+  } // end function
+  
 
   // BIRD BUSINESS (just grab positions/velocities from heap)
   update_boids() {
