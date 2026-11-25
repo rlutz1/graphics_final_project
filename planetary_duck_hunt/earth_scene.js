@@ -248,23 +248,28 @@ export class EarthScene extends SceneBuilder.Scene {
   // THEO modified a bit here, mostly changed camera mechanics, then reverted 
   // back cause im too stupid 
   render(frontend_data={}) {
-    const now = performance.now();
+    if (frontend_data.t) { // testing TRANSITION CORE; later should be game logic
 
-    if (this.lastFrameTime !== null) {
-      const delT = (now - this.lastFrameTime) / 1000.0;
-      this.Module._advanceBoids(delT);
-      this.update_boids();
-      this.update_dead_birds(delT);
+    } else {
+       const now = performance.now();
 
-      this.update_perspective(frontend_data, delT);
-      this.walk_update(frontend_data, delT);
-      this.camera_level();
-      this.update_sun();
-    }
+      if (this.lastFrameTime !== null) {
+        const delT = (now - this.lastFrameTime) / 1000.0;
+        this.Module._advanceBoids(delT);
+        this.update_boids();
+        this.update_dead_birds(delT);
 
-    this.lastFrameTime = now;
-    super.update_all_transformations(); // update all transformation nodes.
-    if (frontend_data.shoot) this.shoot();
+        this.update_perspective(frontend_data, delT);
+        this.walk_update(frontend_data, delT);
+        this.camera_level();
+        this.update_sun();
+      }
+
+      this.lastFrameTime = now;
+      super.update_all_transformations(); // update all transformation nodes.
+      if (frontend_data.shoot) this.shoot();
+    } // end if
+   
     super.render(this.sky_color);  // let the renderer do it's draw thing
   } // end function
 
