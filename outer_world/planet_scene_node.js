@@ -204,7 +204,7 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
 
   constructor(id="random_obstacle", shader_id="planet_basic") {
     super(id, shader_id); // takes care of some baseline stuff for now.
-    const radius = (Math.random()) + 1; // radius between certain val -- not necessarily historically accurate
+    const radius = (Math.random()) + 0.5; // radius between certain val -- not necessarily historically accurate
     this.scale = [radius, radius, radius];
     this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
     this.direction = [0, 0, 0];
@@ -218,7 +218,7 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
       center_x:  this.center[0],
       center_y:  this.center[1],
       center_z:  this.center[2],
-      radius: radius // TODO don't like this, for tesing only
+      radius: radius 
     });
   } // end constructor
 
@@ -281,6 +281,7 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
  */
 export const SUN_DATA = {
   sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null, texture_path: "./outer_world/textures/sun.mp4"})
+  // sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null, texture_path: "./outer_world/textures/sunv2.mp4"})
 };
 
 export const PLANET_DATA = {
