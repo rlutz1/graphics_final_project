@@ -39,7 +39,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     // this.delta_time = 0; // time since last frame
     this.display_distance = 0; // distance from the sun, normalized for viewing.
     this.radius_distance = 0; // the radius of this planet, normalized for viewing.
-    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
+    this.center = [...this.position, 1]; // center of me is at this position, sphere centers around origin...
 
     // basic sphere bounding shape for the planet body
     this.bounding_shape = new SceneBuilder.BoundingSphere({
@@ -127,17 +127,20 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
   constructor(id="sun", shader_id="planet_basic", data=null) {
     super(id, shader_id); // takes care of some baseline stuff for now.
     this.data = data; // can hand off a data pack as well
+    this.radius = 4.0; // for better control
     this.position = [0, 0, -30]; // where i want to be when we start scene
-    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
+    // this.scale = [3, 3, 3] // potnetially. we'll see, it'd be nicer if things were a little bigger
+    this.center = [...this.position, 1]; // center of me is at this position, sphere centers around origin, this will be updated from scene
     // this.center.push(1); // homogenous
     this.bounding_shape = new SceneBuilder.BoundingSphere({
       center_x:  this.center[0],
       center_y:  this.center[1],
       center_z:  this.center[2],
-      radius: 2.5 // TODO don't like this, for tesing only
+      // radius: 2.5 * ((this.scale[0] + this.scale[1] + this.scale[2]) / 3) 
+      radius: this.radius
     });
 
-    // this.scale = [2, 2, 2] // potnetially. we'll see, it'd be nicer if things were a little bigger
+    
   } // end constructor
 
   /**
@@ -161,14 +164,15 @@ export class BackgroundSceneNode extends SceneBuilder.SceneNode {
 
   constructor(id="background", shader_id="phong_basic") {
     super(id, shader_id); // takes care of some baseline stuff for now.
-    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
+    this.center = [...this.position, 1]; // center of me is at this position, sphere centers around origin...
+    this.radius = 125; // for easy setting
 
     // basic sphere bounding shape for the planet body
     this.bounding_shape = new SceneBuilder.BoundingSphere({
       center_x:  this.center[0],
       center_y:  this.center[1],
       center_z:  this.center[2],
-      radius: 1.0 // TODO don't like this, for testing only
+      radius: this.radius
     });
   } // end constructor
 } // end class
@@ -185,8 +189,9 @@ export class AsteroidObstacle extends PlanetSceneNode {
   constructor(id="asteroid", shader_id="planet_basic") {
     const radius = (Math.random() * 5000) + 1000; // radius between certain val -- not necessarily historically accurate
     const buffer = 100000000; // offset from those planets; this is set by feel, can change
+    const buffer_jup = 150000000
     const min_distance = PLANET_DATA.mars.distance_km + buffer;
-    const max_distance = PLANET_DATA.jupiter.distance_km - buffer;
+    const max_distance = PLANET_DATA.jupiter.distance_km - buffer_jup;
     const distance = Math.random() * (max_distance - min_distance) + min_distance;
 
     const orbit_period = (Math.random() * 1095) + 1095 // random orbit period between 3 - 6 years
@@ -206,7 +211,7 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
     super(id, shader_id); // takes care of some baseline stuff for now.
     const radius = (Math.random()) + 0.5; // radius between certain val -- not necessarily historically accurate
     this.scale = [radius, radius, radius];
-    this.center = [0, 0, 0, 1]; // center of me is at this position, sphere centers around origin...
+    this.center = [...this.position, 1]; // center of me is at this position, sphere centers around origin...
     this.direction = [0, 0, 0];
     const rando_speed = Math.random() + 0.1;
     this.velocity = [rando_speed, rando_speed, rando_speed]; // random speed

@@ -14,7 +14,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.solar_system = null; // the solar system in an accessible way.
     this.day = 0; // days passing.
     this.days_per_second = 10; // how to register how many days occur in a second for planet orbits
-    this.distance_const = 35; // a constant used in distance normalization.
+    this.distance_const = 45; // a constant used in distance normalization.
+    this.radius_const = 2.0; // constant used to scale up the planets JUST a little respective to normalized radius.
     this.game_over = false; // general control for hit too many times
     this.random_obstacle_spawn_chance = 0.8; // if random number gen over 0.8, spawn a rando
     this.hit_point_ui_el = null; // an html element to alter based on the hit points of the hit points
@@ -38,12 +39,10 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // initialize the solar system
     this.init_solar_system();
 
-    // init some shitty basics, lights, camera
-    // this.set_camera(new SceneBuilder.PerspectiveCamera({
-    //   "aspect": aspect, // since my canvas is not square
-    // }))
+    // set specific space cam
     this.set_camera(new SceneBuilder.SpaceCamera({
       "aspect": aspect, // since my canvas is not square
+      "far": 150
     }))
 
     this.sun_light = new SceneBuilder.SunLight({"position": this.solar_system.sun.position});
@@ -150,15 +149,14 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       } // end if
     } // end loop
 
-    const scaler = 1;
     this.solar_system.planets.forEach((p) => {
       const normalized_radius = p.data.radius_km / max_radius;
-      p.update_radius(Math.sqrt(normalized_radius) * scaler);
+      p.update_radius(Math.sqrt(normalized_radius) * this.radius_const);
     });
 
     this.solar_system.asteroid_belt.forEach((a) => {
       const normalized_radius = a.data.radius_km / max_radius;
-      a.update_radius(Math.sqrt(normalized_radius) * scaler);
+      a.update_radius(Math.sqrt(normalized_radius) * this.radius_const);
     });
   } // end function
 
@@ -195,7 +193,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // const background = new PlanetBuilder.BackgroundSceneNode("background", "spaceship_basic");
     const background = new PlanetBuilder.BackgroundSceneNode("background", "space_background_basic");
     const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_sphere_mesh(
-      1, // radius -- placeholder!
+      background.radius, // radius -- placeholder!
       0.05, 0.05, // vSteps, uSteps
       [0.5, 0.5, 0.5]
     )); // generate a basic sphere mesh
@@ -210,11 +208,11 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
 
     background.set_mesh(mesh).set_material(material).set_texture(texture); 
-    background.scale = [75, 75, 75] // BIG BOY
+    // background.scale = [75, 75, 75] // BIG BOY
     background.center = this.spaceship.center;
     background.position = this.spaceship.position;
     // update this as well in case i use it
-    background.bounding_shape.radius = 75; 
+    // background.bounding_shape.radius = ; 
     background.bounding_shape.center_x = this.spaceship.center[0];
     background.bounding_shape.center_y = this.spaceship.center[1];
     background.bounding_shape.center_z = this.spaceship.center[2];
@@ -303,7 +301,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
       PlanetBuilder.SUN_DATA.sun
     );
     const mesh = new SceneBuilder.Mesh(this.renderer.gl, MeshBuilder.gen_planet_mesh(
-      2.5, // radius (pulled from liz's stuff)
+      sun.radius, // radius (pulled from liz's stuff)
       30, 30, // vSteps, uSteps
       PlanetBuilder.SUN_DATA.sun.color, 
       0 // color for now, texture later! TODO
@@ -488,9 +486,9 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     // BUT must negate the current translation for generation to stay around the player.
     const theta = Math.random() * (2 * Math.PI);
     const phi =  Math.random() * (Math.PI);
-    const x = this.solar_system.background.position[0] + this.solar_system.background.scale[0] * Math.sin(phi) * Math.cos(theta) - this.camera.translate[0];
-    const y = this.solar_system.background.position[1] + this.solar_system.background.scale[1] * Math.sin(phi) * Math.sin(theta) - this.camera.translate[1];
-    const z = this.solar_system.background.position[2] + this.solar_system.background.scale[2] * Math.cos(phi) - this.camera.translate[2];
+    const x = this.solar_system.background.position[0] + this.solar_system.background.radius * Math.sin(phi) * Math.cos(theta) - this.camera.translate[0];
+    const y = this.solar_system.background.position[1] + this.solar_system.background.radius * Math.sin(phi) * Math.sin(theta) - this.camera.translate[1];
+    const z = this.solar_system.background.position[2] + this.solar_system.background.radius * Math.cos(phi) - this.camera.translate[2];
     // init position on the circumference of the background (sphere)
     new_obstacle.position = [x, y, z];
 
@@ -613,7 +611,8 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.translate[2] - normal[2] * penetration
       ];
      
-      this.start_transition(planet_collide.planet); // TRIGGER transition
+      // UNCOMMENT ME!!!!!!!!
+      // this.start_transition(planet_collide.planet); // TRIGGER transition
       // update ui
       this.location_ui_el.innerText = `Entering: ${planet_collide.planet}`;
 
