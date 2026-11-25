@@ -217,7 +217,8 @@
         if (!curr_scene.initialized) {
           if(curr_scene !== space) { await curr_scene.init(renderer, aspect); } 
           // else { curr_scene.init(renderer, aspect); }
-        } // end if 
+        } // end if
+        console.log(curr_scene); 
       } // end if
    
       curr_scene.render(frontend_data);

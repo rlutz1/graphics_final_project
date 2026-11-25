@@ -249,7 +249,9 @@ export class EarthScene extends SceneBuilder.Scene {
   // back cause im too stupid 
   render(frontend_data={}) {
     if (frontend_data.t) { // testing TRANSITION CORE; later should be game logic
-
+      this.boids.children = [];
+      this.Module._freeBoids(); // tesT?
+      this.is_over = true; // ?
     } else {
        const now = performance.now();
 
@@ -268,9 +270,10 @@ export class EarthScene extends SceneBuilder.Scene {
       this.lastFrameTime = now;
       super.update_all_transformations(); // update all transformation nodes.
       if (frontend_data.shoot) this.shoot();
+      super.render(this.sky_color);  // let the renderer do it's draw thing
     } // end if
    
-    super.render(this.sky_color);  // let the renderer do it's draw thing
+    
   } // end function
 
   // BIRD BUSINESS (just grab positions/velocities from heap)
