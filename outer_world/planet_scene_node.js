@@ -284,8 +284,9 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
  * just placing these constants here.
  */
 export const SUN_DATA = {
-  sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null, texture_path: "./outer_world/textures/sun.mp4"})
-  // sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null, texture_path: "./outer_world/textures/sunv2.mp4"})
+  // sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null, texture_path: "./outer_world/textures/sun.mp4"})
+  // https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014126/Oct_Cusp_Flow_Blend_4.mp4
+  sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null, texture_path: "./outer_world/textures/sun_v2.mp4"})
 };
 
 export const PLANET_DATA = {
