@@ -114,25 +114,42 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
    * Determines height relative to the radius 
    */
   height_at(dir) {
+    // determine points
     const x = dir[0], 
           y = dir[1],
           z = dir[2];
 
     const freq = this.roll_freq;
 
+    // first add basic rolls with given frequency noise * apmlitude
     let h = this.roll_amplitude * this.base_noise(x * freq, y * freq, z * freq);
 
     // creat normal distribution (bell shape) 1 @ peak & 0 @ edges 
     // will roughen this up so it looks less gumdrop like
     // --> make wider at bottom and add noise 
     for (let i = 0; i < this.bumps.length; i++) {
-        const b = this.bumps[i];
-        const d = x * b.dir[0] + y * b.dir[1] + z * b.dir[2];
+        const b = this.bumps[i]; // bumb const
+        const d = x * b.dir[0] + y * b.dir[1] + z * b.dir[2]; // cosine of angle between dir and bump b
         if (d <= b.cos_r){
             continue; // outside the bump
         }
-        const k = 1 - (1 - d) * b.inv_span;
-        h += b.height * k * k;
+        const k = (1 - d) * b.inv_span; // 0 @ center & 1 @ the edge -- not uniform 
+        const u = Math.sqrt(Math.max(0, 1-k)); // distance from center -- uniform ;; useful fro below calculations 
+        
+        let shape;
+        // if bump is a mountain
+        if(b.mountain){
+          // create parabolic shape drop and force noise for texture 
+          shape = (1-u) * (1-u); 
+          shape *= 0.75 + 0.5 * this.base_noise(x * freq * 4, y * freq * 4, z * freq * 4); // can change some of these numbers if wanted 
+
+        }
+        else{
+          // create flat top 
+          shape = 1 - smoothstep(b.flat, 1, u);
+        }
+        
+        h += b.height * shape; 
     }
     return h;
   }
