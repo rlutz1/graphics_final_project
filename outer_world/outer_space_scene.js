@@ -273,7 +273,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         0 // adding a texture bump mapping to these
       )); // generate a basic planet mesh
       const material = new SceneBuilder.PlanetMaterial({ // create a material -- constants from liz's file
-        "ka": [0.45, 0.45, 0.45], 
+        "ka": [0.4, 0.4, 0.4], 
         "kd": [0.9, 0.9, 0.9],
         "ks": [0.5, 0.5, 0.5], 
         "shininess": 40, 
@@ -414,8 +414,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         } else {
           this.handle_obstacle_collisions(); // need to see if i hit an obstacle and do state changes
         } // end if
-
-        // THIS WILL BE CHANGED TO SCENE TRANSITION STUFF LATER
+         
         this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
         // carry out all updates from last time
         this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
@@ -611,8 +610,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.camera.translate[2] - normal[2] * penetration
       ];
      
-      // UNCOMMENT ME!!!!!!!!
-      // this.start_transition(planet_collide.planet); // TRIGGER transition
+      this.start_transition(planet_collide.planet); // TRIGGER transition
       // update ui
       this.location_ui_el.innerText = `Entering: ${planet_collide.planet}`;
 
