@@ -11,6 +11,7 @@ export class EarthScene extends SceneBuilder.Scene {
 
   constructor() {
     super(); // takes care of base initialization fields.
+    this.name = "Earth";
 
     this.boids = null; // dummy root node to hold all the boids
     // ADDED BY THEO TO HOLD BOIDS AND ANIMATE MOVEMENT
@@ -248,7 +249,7 @@ export class EarthScene extends SceneBuilder.Scene {
   // THEO modified a bit here, mostly changed camera mechanics, then reverted 
   // back cause im too stupid 
   render(frontend_data={}) {
-    if (frontend_data.t) { // testing TRANSITION CORE; later should be game logic
+    if (frontend_data.leave) { // a button to be pressed
       this.clear();
     } else {
        const now = performance.now();

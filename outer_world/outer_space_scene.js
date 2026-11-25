@@ -10,6 +10,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   
   constructor() {
     super(); // takes care of base initialization fields.
+    this.name = "Space";
 
     this.solar_system = null; // the solar system in an accessible way.
     this.day = 0; // days passing.
@@ -340,8 +341,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   render(frontend_data={}) {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
-
-    this.hit_point_ui_el.style.display = "block"; // ensure visible
     
     if (!this.game_over) {
 
@@ -358,10 +357,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.fade = ease;
 
         if (t >= 1) {
-          // ui stuff
-          this.location_ui_el.innerText = `Current Location: ${this.transition.planet}`;
-          this.hit_point_ui_el.style.display = "none"; // can remove if we still want this visible.
-          this.is_over = true;
+          this.is_over = true; // trigger front end
         } // end if
 
         frontend_data = {}; // empty the frontend data while rendering

@@ -26,6 +26,7 @@ export class Scene {
     this.renderer = null; // scene will have a reference to the renderer made.
     this.initialized = false; // in case a flag is useful in transitioning.
     this.is_over = false; // for scene control
+    this.name = "Scene"; // for readability grabs
   }
 
   /**
