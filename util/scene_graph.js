@@ -301,7 +301,7 @@ export class Mesh {
 
 
     // initialize whatever we have into a grabable buffer
-    if (vertices) {this.vert_buff = this.init_buffer(vertices, gl); console.log("askjdnas")}
+    if (vertices) {this.vert_buff = this.init_buffer(vertices, gl); }
     if (indices) {this.ind_buff = this.init_buffer(indices, gl, gl.ELEMENT_ARRAY_BUFFER);}
     if (normals) {this.norm_buff = this.init_buffer(normals, gl);}
     if (colors) {this.color_buff = this.init_buffer(colors, gl);}

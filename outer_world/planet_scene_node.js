@@ -11,6 +11,7 @@ export class PlanetData {
     distance_km=57909227,   
     color=[0.651, 0.557, 0.380], 
     orbit_period=88, 
+    axis_period=1,
     texture_path="./outer_world/textures/mercury.jpg"
     }={}
   ) {
@@ -19,6 +20,7 @@ export class PlanetData {
     this.distance_km = distance_km;
     this.color = color;
     this.orbit_period = orbit_period;
+    this.axis_period = axis_period;
     this.texture_path = texture_path;
   }
 } // end class
@@ -33,7 +35,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     this.start_day = Math.random() * 10000; // set this to whatever as a starting point for the orbit
 
     // default super call sets up: this.position = [0, 0, 0]
-    this.orbit_rotation = [0, this.start_day, 0]; // special for rotation around sun.
+    this.orbit_rotation = [0, 0, 0]; // special for rotation around sun.
 
     this.data = data; // grab the general data pack.
     // this.delta_time = 0; // time since last frame
@@ -55,9 +57,12 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
    * amount.
    */
   update_orbit(day=0) {
-    const angle = ((this.start_day + day) / this.data.orbit_period) * 2 * Math.PI;
-    // const angle  = 0
-    this.orbit_rotation = [0, angle, 0]; // y rotation around the sun
+    const orbit_angle = ((this.start_day + day) / this.data.orbit_period) * 2 * Math.PI;
+    const axis_slowdown = 50; // because other wise she's TOO fast because we allow for many days to a second for the orbits
+    const angle_axis_rot = (((this.start_day + day) / axis_slowdown) / this.data.axis_period) * 2 * Math.PI;
+
+    this.orbit_rotation = [0, orbit_angle, 0]; // y rotation around the sun
+    this.rotation = [0, angle_axis_rot, 0]; // rotation around my axis
   } // end function 
 
   /**
@@ -120,6 +125,7 @@ export class PlanetSceneNode extends SceneBuilder.SceneNode {
     // add my transformations to the world's
     this.transformation_matrix = matMul(M_parent, M_local);
   } // end function
+  
   
 } // end class
 
@@ -188,16 +194,19 @@ export class AsteroidObstacle extends PlanetSceneNode {
   constructor(id="asteroid", shader_id="planet_basic") {
     const radius = (Math.random() * 5000) + 1000; // radius between certain val -- not necessarily historically accurate
     const buffer = 100000000; // offset from those planets; this is set by feel, can change
-    const buffer_jup = 150000000
+    const buffer_jup = 150000000; // little extra after resizing
     const min_distance = PLANET_DATA.mars.distance_km + buffer;
     const max_distance = PLANET_DATA.jupiter.distance_km - buffer_jup;
     const distance = Math.random() * (max_distance - min_distance) + min_distance;
 
-    const orbit_period = (Math.random() * 1095) + 1095 // random orbit period between 3 - 6 years
-    const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, texture_path: "./outer_world/textures/asteroid.jpg"});
+    const orbit_period = (Math.random() * 1095) + 1095; // random orbit period between 3 - 6 years
+    let axis_period = (Math.random()) + 0.1;
+    if (Math.random() < 0.5) { axis_period *= -1; } // random retrogrades
+    const data = new PlanetData({name: "Asteroid", radius_km: radius, distance_km: distance, color: [0.5, 0.5, 0.5], orbit_period: orbit_period, axis_period: axis_period, texture_path: "./outer_world/textures/asteroid.jpg"});
     super(id, shader_id, data);
     this.start_day = Math.random() * 10000
-  }
+  }  
+
 } // end class
 
 /**
@@ -286,16 +295,16 @@ export class RandomAsteroidObstacle extends SceneBuilder.SceneNode {
 export const SUN_DATA = {
   // sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null, texture_path: "./outer_world/textures/sun.mp4"})
   // https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014126/Oct_Cusp_Flow_Blend_4.mp4
-  sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null, texture_path: "./outer_world/textures/sun_v2.mp4"})
+  sun: new PlanetData({name: "Sun", radius_km: 695700, distance_km: null, color: [0.949, 0.686, 0.169], orbit_period: null,  axis_period: 25, texture_path: "./outer_world/textures/sun_v2.mp4"})
 };
 
 export const PLANET_DATA = {
-  mercury: new PlanetData({name: "Mercury", radius_km: 2439.7, distance_km: 57909227, color: [0.651, 0.557, 0.380], orbit_period: 88, texture_path: "./outer_world/textures/mercury.jpg"}),
-  venus: new PlanetData({name: "Venus", radius_km: 6051.8, distance_km: 108209475, color: [0.922, 0.651, 0.545], orbit_period: 224.7, texture_path: "./outer_world/textures/venus.jpg"}),
-  earth: new PlanetData({name: "Earth",   radius_km: 6371.0,  distance_km: 149598262,  color: [0.404, 0.804, 0.890], orbit_period: 365.2, texture_path: "./outer_world/textures/earth.jpg"}),
-  mars: new PlanetData({name: "Mars",    radius_km: 3389.5,  distance_km: 227943824,  color: [0.812, 0.176, 0.114], orbit_period: 687, texture_path: "./outer_world/textures/mars.jpg"}),
-  jupiter: new PlanetData({name: "Jupiter", radius_km: 69911,   distance_km: 778340821,  color: [0.878, 0.875, 0.761], orbit_period: 4331, texture_path: "./outer_world/textures/jupiter.jpg"}),
-  saturn: new PlanetData({name: "Saturn",  radius_km: 58232,   distance_km: 1426666422, color: [0.902, 0.882, 0.604], orbit_period: 10747, texture_path: "./outer_world/textures/saturn.jpg"}),
-  uranus: new PlanetData({name: "Uranus",  radius_km: 25362,   distance_km: 2870658186, color: [0.443, 0.694, 0.780], orbit_period: 30589, texture_path: "./outer_world/textures/uranus.jpg"}),
-  neptune: new PlanetData({name: "Neptune", radius_km: 24622,   distance_km: 4498396441, color: [0.196, 0.376, 0.439], orbit_period: 59800, texture_path: "./outer_world/textures/neptune.jpg"})
+  mercury: new PlanetData({name: "Mercury", radius_km: 2439.7, distance_km: 57909227, color: [0.651, 0.557, 0.380], orbit_period: 88, axis_period: 175.9, texture_path: "./outer_world/textures/mercury.jpg"}),
+  venus: new PlanetData({name: "Venus", radius_km: 6051.8, distance_km: 108209475, color: [0.922, 0.651, 0.545], orbit_period: 224.7,  axis_period: -116.75, texture_path: "./outer_world/textures/venus.jpg"}),
+  earth: new PlanetData({name: "Earth",   radius_km: 6371.0,  distance_km: 149598262,  color: [0.404, 0.804, 0.890], orbit_period: 365.2, axis_period: 1, texture_path: "./outer_world/textures/earth.jpg"}),
+  mars: new PlanetData({name: "Mars",    radius_km: 3389.5,  distance_km: 227943824,  color: [0.812, 0.176, 0.114], orbit_period: 687,  axis_period: 1.03, texture_path: "./outer_world/textures/mars.jpg"}),
+  jupiter: new PlanetData({name: "Jupiter", radius_km: 69911,   distance_km: 778340821,  color: [0.878, 0.875, 0.761], orbit_period: 4331,  axis_period: 0.41, texture_path: "./outer_world/textures/jupiter.jpg"}),
+  saturn: new PlanetData({name: "Saturn",  radius_km: 58232,   distance_km: 1426666422, color: [0.902, 0.882, 0.604], orbit_period: 10747,  axis_period: 0.45, texture_path: "./outer_world/textures/saturn.jpg"}),
+  uranus: new PlanetData({name: "Uranus",  radius_km: 25362,   distance_km: 2870658186, color: [0.443, 0.694, 0.780], orbit_period: 30589,  axis_period: -0.72, texture_path: "./outer_world/textures/uranus.jpg"}),
+  neptune: new PlanetData({name: "Neptune", radius_km: 24622,   distance_km: 4498396441, color: [0.196, 0.376, 0.439], orbit_period: 59800,  axis_period: 0.67, texture_path: "./outer_world/textures/neptune.jpg"})
 };
