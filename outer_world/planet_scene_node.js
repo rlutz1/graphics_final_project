@@ -136,7 +136,6 @@ export class SunSceneNode extends SceneBuilder.SceneNode {
       center_x:  this.center[0],
       center_y:  this.center[1],
       center_z:  this.center[2],
-      // radius: 2.5 * ((this.scale[0] + this.scale[1] + this.scale[2]) / 3) 
       radius: this.radius
     });
 
