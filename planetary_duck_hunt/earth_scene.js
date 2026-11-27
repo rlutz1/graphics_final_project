@@ -74,6 +74,7 @@ export class EarthScene extends SceneBuilder.Scene {
     this.totalBoidsUiEl.innerText = `Birds Remaining: ${this.totalBoids}`; // all boids still here
     this.boidsLeft = this.totalBoids; // for the ui stuff
     this.initialized = true; // set for transition logic in index.html
+    this.transition = null; // transition mimicking from the space scene
   } // end function
 
   /**
@@ -256,15 +257,35 @@ export class EarthScene extends SceneBuilder.Scene {
   // back cause im too stupid 
   render(frontend_data={}) {
 
-    if (frontend_data.leave) { // a button to be pressed
-      // if not cleared completely on leave, make sure to free and leave.
-      if (!this.cleared) {
-        this.Module._freeBoids(); // CLEAR MEMORY!!
+    if (this.transition) { // if i have clicked the button
+      const tr = this.transition;
+      if (tr.start == null) {
+        tr.start = frontend_data.delta_time; // for tracking the fade
       } // end if
-      this.is_over = true; // set flag for index.html to switch
-      this.initialized = false; // this isn't really used rn, but keeping here.
-    } else {
-       const now = performance.now();
+      const t = Math.min((frontend_data.delta_time - tr.start) / tr.duration, 1);
+      
+      const ease = t * t * (3 - 2 * t);
+      this.camera.fov = tr.start_fov * (1 + 0.9 * ease); // Narrow the FOV
+      this.fade = ease;
+
+      if (t >= 1) {
+          // if not cleared completely on leave, make sure to free and leave.
+        if (!this.cleared) {
+          console.log("clear bc transition over and not clear");
+          this.Module._freeBoids(); // CLEAR MEMORY!!
+        } // end if
+        this.is_over = true; // set flag for index.html to switch
+      } // end if
+
+      frontend_data = {}; // empty the frontend data while rendering
+
+    } else { // not currently transitioning
+
+      if (frontend_data.leave) { // a button to be pressed
+        this.start_transition(); // start transition out.
+      } // end if
+
+      const now = performance.now();
 
       if (this.lastFrameTime !== null) {
         const delT = (now - this.lastFrameTime) / 1000.0;
@@ -282,22 +303,39 @@ export class EarthScene extends SceneBuilder.Scene {
       super.update_all_transformations(); // update all transformation nodes.
       if (frontend_data.shoot) this.shoot();
       this.totalBoidsUiEl.innerText = `Birds Remaining: ${this.boidsLeft}`; // update ui on bird hit      
-      super.render(this.sky_color);  // let the renderer do it's draw thing
+      
+      // ADDED FOR BASIC GAME LOGIC LOOP!
+      // if we cleared on this loop, set the flag and clear all memory only once on this clearing
+      if (!this.cleared && this.boidsLeft == 0) { this.cleared = true; this.Module._freeBoids(); console.log("clear on complete");}
+    
     } // end if
 
-    // ADDED FOR BASIC GAME LOGIC LOOP!
-    // if we cleared on this loop, set the flag and clear all memory only once on this clearing
-    if (!this.cleared && this.deadBirds.length == this.totalBoids) { this.cleared = true; this.Module._freeBoids(); }
+    super.render(this.sky_color);  // let the renderer do it's draw thing
     
   } // end function
 
+ /**
+  * whatever needs to be done when switching back to space from planet.
+  */ 
+  reset() {
+    this.camera.fov = this.transition.start_fov; // reset the fov
+    this.transition = null; // null this out for render logic
+    this.is_over = false; // no longer over 
+    this.initialized = false; // this isn't really used rn, but keeping here.
+  } // end function
+
   /**
-   * to be called on transition hook. clears memory and shit from scene.
-   * really important ones:
-   * freeBoids && is_over! the others are, meh, optional really right now.
+   * ported over from space.
    */
-  clear() {
-    
+  start_transition() {
+    if (this.transition) {
+      return;
+    } // end if
+    this.transition = {
+      start : null,
+      duration : 2,
+      start_fov: this.camera.fov
+    };
   } // end function
   
 

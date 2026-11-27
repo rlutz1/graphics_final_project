@@ -273,13 +273,12 @@
         renderer.clear([0, 0, 0]); // clear out
         
         if (curr_scene === space) { // if going from space -> planet
+
           const planet_name = curr_scene.transition.planet.toLowerCase(); // readable name of the planet, trust
-          // console.log(planet_name); // testing
-          const cleared = cleared_planets.some(item => item === planet_name); // planet cleared
-          // console.log(cleared_planets)
+          const cleared = cleared_planets.some(item => item === planet_name); // planet in clear list
+
           if (cleared) { // if cleared, load the empty planet
             curr_scene = cleared_planet_scenes[planet_name]; // grab the old scene that is empty.
-            curr_scene.is_over = false; // reset that for this part
           } else {
             // re-make the scene, either its cleared or not. no in between right now.
             const PlanetSceneClass = planet_scenes[planet_name];
@@ -296,6 +295,7 @@
           space.reset(); // reset some stuff in space so transition back is smooth
 
         } else { // if going from planet -> space
+
           const planet_name = curr_scene.name.toLowerCase();
           const cleared = cleared_planets.some(item => item === planet_name); // planet cleared already
           if (!cleared && curr_scene.cleared) { // have cleared the planet on this run
@@ -303,9 +303,10 @@
             cleared_planet_scenes[planet_name] = curr_scene; // hold on to this object for later
             // update ui
             const cleared_ui = document.getElementById("planets_cleared");
-            cleared_ui.innerText =  `${cleared_planets.join(", ")}`;
+            cleared_ui.innerText = `${cleared_planets.join(", ")}`;
           } // end if
 
+          curr_scene.reset(); // do some resets for the transition stuff
           curr_scene = space; // reset to space
 
           // ui updates
