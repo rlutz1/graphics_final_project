@@ -285,6 +285,7 @@ export class EarthScene extends SceneBuilder.Scene {
         this.start_transition(); // start transition out.
       } // end if
 
+      // run everything else regardless
       const now = performance.now();
 
       if (this.lastFrameTime !== null) {
