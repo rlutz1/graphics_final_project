@@ -31,6 +31,8 @@ export class EarthScene extends SceneBuilder.Scene {
     this.sun = null; // for light source
     this.sun_pos = [100, 100, 100]; //sun position in sky
 
+    this.cleared = false; // for basic game logic
+
   }
 
   /**
