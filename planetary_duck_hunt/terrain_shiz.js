@@ -14,20 +14,32 @@ import { seededPerlin, initFbm, mulberry32, smoothstep, spherePointPicking } fro
 export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
   
   constructor(id="bumpyland", shader="bumpyland_basic", {
-    radius=100,             // big so the surface looks flat-ish up close
-    seed=412,               // select random seed,, pick what we like
-    num_bumps=500,          // how many random bumps on the whole sphere
-    bump_radius=[2, 9],     // [min, max] footprint radius of a bump (world units)
-    bump_height=[0.4, 3.0], // [min, max] bump height
-    dip=0.15,        // fraction of bumps that are dips instead
-    roll_amplitude=1.2,     // height of the rolling base noise
-    roll_wavelength=30,     // size of the rolling hills (world units)
-    h_step=0.008,           // mesh resolution (angle step, like gen_sphere_mesh). smaller = more detail
-    v_step=0.008,
-    fog_color=[0.2, 0.2, 0.2], // will change based on planet
-    fog_density=0.02,
-    detail_strength=0.18,   // fine speckle in the shader (0 = off)
-    show_pole_marker=true   // little cone at the north pole for orientation
+    radius = 100, // big so the surface looks flat-ish up close
+    seed = 123, // select random seed,, pick what we like
+    
+    // bump parameters
+    num_bumps = 220, // how many random bumps on the whole sphere
+    bump_radius = [6, 18], // [min, max] footprint radius of a bump
+    bump_height = [0.4, 2.5], // [min, max] bump height
+
+    // various terrain type perameters (plateau, dips, motains)
+    plateau = [0.25, 0.7], // range of flatness on top of plateau 
+    dip = 0.15, // fraction of bumps that are dips instead
+    mountain = 0.1, // faction of terrain to be mountains 
+    mountain_radius = [14, 26], // randge of radius for mountains 
+    mountain_height = [5, 9], // height range 
+    roll_amplitude = 1.5, // height of the rolling base noise
+    roll_wavelength = 45, // size of the rolling hills 
+
+    // h & v for sphere
+    h_step = 0.008, 
+    v_step = 0.008,
+    
+    // finer deails 
+    fog_color = [0.2, 0.2, 0.2], // will change based on planet
+    fog_density = 0.02,
+    detail_strength = 0.18, // fine speckle in the shader (0 = off)
+    show_pole_marker = true // little cone at the north pole for orientation
   } = {}) {
     super(id, shader);
 
@@ -57,22 +69,43 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
     this.base_noise = initFbm(seededPerlin(seed)); // will have defualt fbm vals
     this.patch_noise = initFbm(seededPerlin(seed + 1), {octaves: 3}) // create differring patches,, may want to change or remove 
     
-    this.bumps = this.gen_bumps(num_bumps, bump_radius, bump_height, dip);
+    this.bumps = this.gen_bumps(num_bumps, bump_radius, bump_height, plateau, dip,
+                                mountain, mountain_radius, mountain_height);
   }
 
   /**
    * Distrubute bumps all over the planet (sphere)
+   * Depends on the various terrain distribution
+   * 
+   * for each bump, loop through to determain the type of terrain it will be 
    */
-  gen_bumps(count, [r_min, r_max], [h_min, h_max], dip) {
+  gen_bumps(count, [r_min, r_max], [h_min, h_max], [p_min, p_max], dip,
+            mountain, [mr_min, mr_max], [mh_min, mh_max]) {
+    
+    // function to select random val between rng 
+    const rando = (lo, hi) => lo + this.rng() * (hi - lo);
     const bumps = [];
     for (let i = 0; i < count; i++){
+        // seelct pint 
         const dir = spherePointPicking(this.rng);
-        const planet_r = r_min + this.rng() * (r_max - r_min);
+        // mountain flag 
+        const mountain_flag = this.rng() < mountain;
+
+        let planet_r, height, flat; // params 
+        if (mountain_flag) { // if a mountain
+          planet_r = rando(mr_min, mr_max);
+          height = rando(mh_min, mh_max);
+          flat = 0; // mountains get a peak, not a plateau
+        } else {
+          planet_r = rando(r_min, r_max);
+          height = rando(h_min, h_max);
+          flat = rando(p_min, p_max);
+          if (this.rng() < dip) height *= -0.5; // creat dip instead, reduce height
+        }
+
         const angle = planet_r / this.radius; // arclength
         const cos_r = Math.cos(angle);
-        let height = h_min + this.rng() * (h_max - h_min);
-
-        bumps.push({ dir, cos_r, inv_span: 1 / (1 - cos_r), height });
+        bumps.push({ dir, cos_r, inv_span: 1 / (1 - cos_r), height, flat, mountain });
     }
     return bumps;
   }
@@ -81,23 +114,42 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
    * Determines height relative to the radius 
    */
   height_at(dir) {
+    // determine points
     const x = dir[0], 
           y = dir[1],
           z = dir[2];
 
     const freq = this.roll_freq;
 
+    // first add basic rolls with given frequency noise * apmlitude
     let h = this.roll_amplitude * this.base_noise(x * freq, y * freq, z * freq);
 
     // creat normal distribution (bell shape) 1 @ peak & 0 @ edges 
+    // will roughen this up so it looks less gumdrop like
+    // --> make wider at bottom and add noise 
     for (let i = 0; i < this.bumps.length; i++) {
-        const b = this.bumps[i];
-        const d = x * b.dir[0] + y * b.dir[1] + z * b.dir[2];
+        const b = this.bumps[i]; // bumb const
+        const d = x * b.dir[0] + y * b.dir[1] + z * b.dir[2]; // cosine of angle between dir and bump b
         if (d <= b.cos_r){
             continue; // outside the bump
         }
-        const k = 1 - (1 - d) * b.inv_span;
-        h += b.height * k * k;
+        const k = (1 - d) * b.inv_span; // 0 @ center & 1 @ the edge -- not uniform 
+        const u = Math.sqrt(Math.max(0, k)); // distance from center -- uniform ;; useful fro below calculations 
+        
+        let shape;
+        // if bump is a mountain
+        if(b.mountain){
+          // create parabolic shape drop and force noise for texture 
+          shape = (1-u) * (1-u); 
+          shape *= 0.75 + 0.5 * this.base_noise(x * freq * 4, y * freq * 4, z * freq * 4); // can change some of these numbers if wanted 
+
+        }
+        else{
+          // create flat top 
+          shape = 1 - smoothstep(b.flat, 1, u);
+        }
+        
+        h += b.height * shape; 
     }
     return h;
   }
