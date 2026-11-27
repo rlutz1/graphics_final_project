@@ -255,9 +255,10 @@
           const planet_name = curr_scene.transition.planet.toLowerCase(); // readable name of the planet, trust
           // console.log(planet_name); // testing
           const cleared = cleared_planets.some(item => item === planet_name); // planet cleared
-
+          // console.log(cleared_planets)
           if (cleared) { // if cleared, load the empty planet
             curr_scene = cleared_planet_scenes[planet_name]; // grab the old scene that is empty.
+            curr_scene.is_over = false; // reset that for this part
           } else {
             // re-make the scene, either its cleared or not. no in between right now.
             const PlanetSceneClass = planet_scenes[planet_name];

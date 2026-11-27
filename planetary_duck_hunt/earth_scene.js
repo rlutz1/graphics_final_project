@@ -32,6 +32,7 @@ export class EarthScene extends SceneBuilder.Scene {
     this.sun_pos = [100, 100, 100]; //sun position in sky
 
     this.cleared = false; // for basic game logic
+    this.totalBoids = Infinity; // same here
 
   }
 
@@ -62,12 +63,12 @@ export class EarthScene extends SceneBuilder.Scene {
     // ADDED BY THEO TO INIT BOIDS
     this.Module = await createWASMModule();
     this.Module._initializeBoids();
-    let numBoids = this.Module._getNumBoids();
+    this.totalBoids = this.Module._getNumBoids();
     this.boidDim = this.Module._getDim();
-    const numPositions = numBoids * this.boidDim;
+    const numPositions = this.totalBoids * this.boidDim;
     this.boidPositions = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidPositions(), numPositions);
     this.boidVelocities = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidVelocities(), numPositions);
-    this.init_boids(numBoids);
+    this.init_boids(this.totalBoids);
 
     this.initialized = true; // set for transition logic in index.html
   } // end function
@@ -252,7 +253,11 @@ export class EarthScene extends SceneBuilder.Scene {
   // back cause im too stupid 
   render(frontend_data={}) {
     if (frontend_data.leave) { // a button to be pressed
-      this.clear();
+      // if not cleared completely on leave, make sure to free and leave.
+      if (!this.cleared) {
+        this.Module._freeBoids(); // CLEAR MEMORY!!
+      } // end if
+      this.clear(); // set any flags
     } else {
        const now = performance.now();
 
@@ -282,7 +287,6 @@ export class EarthScene extends SceneBuilder.Scene {
    * freeBoids && is_over! the others are, meh, optional really right now.
    */
   clear() {
-    this.Module._freeBoids(); // CLEAR MEMORY!!
     this.is_over = true; // set flag for index.html to switch
     this.initialized = false; // reset this flag so on entry we just re-init.
   } // end function
@@ -394,6 +398,9 @@ export class EarthScene extends SceneBuilder.Scene {
 
       console.log("another opp down", closestBird);
     }
+
+    // ADDED FOR BASIC GAME LOGIC LOOP!
+    if (this.deadBirds.length == this.totalBoids) { this.cleared = true; console.log("CLEARED!")}
   }
 
   update_dead_birds(delT) {
