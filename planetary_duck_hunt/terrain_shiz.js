@@ -134,7 +134,7 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
             continue; // outside the bump
         }
         const k = (1 - d) * b.inv_span; // 0 @ center & 1 @ the edge -- not uniform 
-        const u = Math.sqrt(Math.max(0, 1-k)); // distance from center -- uniform ;; useful fro below calculations 
+        const u = Math.sqrt(Math.max(0, k)); // distance from center -- uniform ;; useful fro below calculations 
         
         let shape;
         // if bump is a mountain
