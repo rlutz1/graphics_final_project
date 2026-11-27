@@ -31,10 +31,15 @@
   </div>
 
   <!-- planet related things -->
-  <div id="planet_div" style="display:none;">
-    <button class="terminal-button" id="leave"></button>  
-    <br /><br /> <!-- just a little spacing-->
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <div id="planet_div" style="display:none;">
+      <h3 id="boids_left">Birds Remaining: loading...</h3>
+      <button class="terminal-button" id="leave" ></button>  
+      <br /><br /> <!-- just a little spacing-->
+    </div>
+  
   </div>
+  
 
   <div style="display: flex; justify-content: center; align-items: center;">
     <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -211,7 +216,8 @@
       "jupiter": EarthBuilder.EarthScene,
       "saturn": EarthBuilder.EarthScene,
       "uranus": EarthBuilder.EarthScene,
-      "neptune": EarthBuilder.EarthScene
+      "neptune": EarthBuilder.EarthScene,
+      "sun": EarthBuilder.EarthScene
     };
 
     const cleared_planets = []; // global to add to for indicating ui and making sure game logic loop closed
@@ -223,7 +229,8 @@
       "jupiter": null,
       "saturn": null,
       "uranus": null,
-      "neptune": null
+      "neptune": null,
+      "sun": null
     };
 
     // add leave button click action; planet stuff 
