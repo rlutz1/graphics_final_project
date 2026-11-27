@@ -279,6 +279,7 @@
             // re-make the scene, either its cleared or not. no in between right now.
             const PlanetSceneClass = planet_scenes[planet_name];
             curr_scene = new PlanetSceneClass();
+            curr_scene.totalBoidsUiEl = document.getElementById("boids_left");
             await curr_scene.init(renderer, aspect);
           } // end if
 

@@ -33,7 +33,8 @@ export class EarthScene extends SceneBuilder.Scene {
 
     this.cleared = false; // for basic game logic
     this.totalBoids = Infinity; // same here
-
+    this.boidsLeft = this.totalBoids;
+    this.totalBoidsUiEl = null; // ui updater im allowed to have
   }
 
   /**
@@ -70,6 +71,8 @@ export class EarthScene extends SceneBuilder.Scene {
     this.boidVelocities = new Float32Array(this.Module.HEAPU8.buffer, this.Module._getBoidVelocities(), numPositions);
     this.init_boids(this.totalBoids);
 
+    this.totalBoidsUiEl.innerText = `Birds Remaining: ${this.totalBoids}`; // all boids still here
+    this.boidsLeft = this.totalBoids; // for the ui stuff
     this.initialized = true; // set for transition logic in index.html
   } // end function
 
@@ -278,6 +281,7 @@ export class EarthScene extends SceneBuilder.Scene {
       this.lastFrameTime = now;
       super.update_all_transformations(); // update all transformation nodes.
       if (frontend_data.shoot) this.shoot();
+      this.totalBoidsUiEl.innerText = `Birds Remaining: ${this.boidsLeft}`; // update ui on bird hit      
       super.render(this.sky_color);  // let the renderer do it's draw thing
     } // end if
 
@@ -402,6 +406,7 @@ export class EarthScene extends SceneBuilder.Scene {
       this.boidNodes[closestBird] = null;
 
       console.log("another opp down", closestBird);
+      this.boidsLeft -= 1; // for ui stuff
     }
 
   }
