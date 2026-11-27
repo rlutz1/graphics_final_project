@@ -263,6 +263,11 @@
       frontend_data.mouse_y = mouseY; // for theo/planet, no touchy
       frontend_data.mouse_x = mouseX;
 
+      // hit too many asteroids woops
+      if (curr_scene === space && curr_scene.game_over) {
+        alert("Ship has been detroyed! Reload page to try again.")
+      } // end if
+
       // a constant flag that should be used to signal that the current scene is over and we need a transition
       if (curr_scene.is_over) {
         renderer.clear([0, 0, 0]); // clear out
@@ -314,6 +319,11 @@
    
       // render the current scene
       curr_scene.render(frontend_data);
+
+      // this has NOT been tested but hypothetically should work?
+      if (curr_scene === space && cleared_planets.length == Object.keys(cleared_planet_scenes).length) {
+        alert("Congrats! You cleared all the planets! Reload page to play again.")
+      } // end if
 
       // frontend_data.shoot = false; // changed above to a mousedown/up control for machine gunning
       frontend_data.leave = false; // reset for next planet scene always
