@@ -252,12 +252,14 @@ export class EarthScene extends SceneBuilder.Scene {
   // THEO modified a bit here, mostly changed camera mechanics, then reverted 
   // back cause im too stupid 
   render(frontend_data={}) {
+
     if (frontend_data.leave) { // a button to be pressed
       // if not cleared completely on leave, make sure to free and leave.
       if (!this.cleared) {
         this.Module._freeBoids(); // CLEAR MEMORY!!
       } // end if
-      this.clear(); // set any flags
+      this.is_over = true; // set flag for index.html to switch
+      this.initialized = false; // this isn't really used rn, but keeping here.
     } else {
        const now = performance.now();
 
@@ -278,6 +280,10 @@ export class EarthScene extends SceneBuilder.Scene {
       if (frontend_data.shoot) this.shoot();
       super.render(this.sky_color);  // let the renderer do it's draw thing
     } // end if
+
+    // ADDED FOR BASIC GAME LOGIC LOOP!
+    // if we cleared on this loop, set the flag and clear all memory only once on this clearing
+    if (!this.cleared && this.deadBirds.length == this.totalBoids) { this.cleared = true; this.Module._freeBoids(); }
     
   } // end function
 
@@ -287,8 +293,7 @@ export class EarthScene extends SceneBuilder.Scene {
    * freeBoids && is_over! the others are, meh, optional really right now.
    */
   clear() {
-    this.is_over = true; // set flag for index.html to switch
-    this.initialized = false; // reset this flag so on entry we just re-init.
+    
   } // end function
   
 
@@ -399,8 +404,6 @@ export class EarthScene extends SceneBuilder.Scene {
       console.log("another opp down", closestBird);
     }
 
-    // ADDED FOR BASIC GAME LOGIC LOOP!
-    if (this.deadBirds.length == this.totalBoids) { this.cleared = true; console.log("CLEARED!")}
   }
 
   update_dead_birds(delT) {
