@@ -20,19 +20,26 @@
     <h1>Bird is Opps</h1>
     <!-- change this on scene transition -->
     <h2 id="current_location">Current Location: Space</h2>
-    <h3 id="planet_points">Points: 0</h3>   
+    <h2>Cleared</h2>   
+    <h3 id="planets_cleared">No Planets Cleared</h3>  
   </div>
 
   <!-- space related things -->
   <!-- in transition -- disable this and enable the planet ui elements as needed -->
-  <div id="space_div">
+  <div id="space_div" style="display: flex; justify-content: center; align-items: center;">
     <h3 id="hit_points">Ship Health Remaining: loading...</h3>    
   </div>
 
   <!-- planet related things -->
-  <div id="planet_div" style="display:none;">
-    <button class="terminal-button" id="leave"></button>  
+  <div style="display: flex; justify-content: center; align-items: center;">
+    <div id="planet_div" style="display:none;">
+      <h3 id="boids_left">Birds Remaining: loading...</h3>
+      <button class="terminal-button" id="leave" ></button>  
+      <br /><br /> <!-- just a little spacing-->
+    </div>
+  
   </div>
+  
 
   <div style="display: flex; justify-content: center; align-items: center;">
     <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -128,14 +135,33 @@
 
     
   // THEO CHANGES TO MOUSE BEHAVIOR BELOW:
-    canvas.addEventListener("click", () => {
+    // canvas.addEventListener("click", () => {
+    //   if (document.pointerLockElement !== canvas) {
+    //     canvas.requestPointerLock();
+    //     return;
+    //   }
+
+    //   frontend_data.shoot = true;
+    // });
+
+    /* changing to a hold down for some machine gunning -- mostly for demo */
+    canvas.addEventListener("mousedown", () => {
       if (document.pointerLockElement !== canvas) {
         canvas.requestPointerLock();
         return;
-    }
+      }
 
       frontend_data.shoot = true;
     });
+    canvas.addEventListener("mouseup", () => {
+      if (document.pointerLockElement !== canvas) {
+        canvas.requestPointerLock();
+        return;
+      }
+
+      frontend_data.shoot = false;
+    });
+
     let mouseY = canvas.height / 2;
     let mouseX = canvas.width / 2;
 
@@ -152,7 +178,6 @@
     // END CHANGES
 
     let curr_scene = null; // the current scene to be rendered.
-    let next_scene = null; // next scene up in the queue to be rendered.
 
     // go ahead and grab any assets from any scene's needed here.
     import * as OuterSpaceBuilder from "../outer_world/outer_space_scene.js";
@@ -177,14 +202,36 @@
      */ 
     const renderer = new Renderer(gl);
     
-    // going to set this as the default one being used for the moment:
-    // (but uncomment and switch as needed, please be aware when pushing to main about this)
-    //curr_scene = earth;
-    //next_scene = space;
 
-    // for potential transition testing.
+    // always start in space
     curr_scene = space;
-    next_scene = null; 
+
+    // map scene names to the instantiator? something like this? placeholder for now.
+    // also, only works with earth right now hahah
+    const planet_scenes = {
+      "mercury": EarthBuilder.EarthScene,
+      "venus": EarthBuilder.EarthScene,
+      "earth": EarthBuilder.EarthScene,
+      "mars": EarthBuilder.EarthScene,
+      "jupiter": EarthBuilder.EarthScene,
+      "saturn": EarthBuilder.EarthScene,
+      "uranus": EarthBuilder.EarthScene,
+      "neptune": EarthBuilder.EarthScene,
+      "sun": EarthBuilder.EarthScene
+    };
+
+    const cleared_planets = []; // global to add to for indicating ui and making sure game logic loop closed
+    const cleared_planet_scenes = { // global to add for when you want to return but keeps the dead boids haha
+      "mercury": null,
+      "venus": null,
+      "earth": null,
+      "mars": null,
+      "jupiter": null,
+      "saturn": null,
+      "uranus": null,
+      "neptune": null,
+      "sun": null
+    };
 
     // add leave button click action; planet stuff 
     const leave_button = document.getElementById("leave");
@@ -216,39 +263,70 @@
       frontend_data.mouse_y = mouseY; // for theo/planet, no touchy
       frontend_data.mouse_x = mouseX;
 
-      // console.log(frontend_data); // TESTING
+      // hit too many asteroids woops
+      if (curr_scene === space && curr_scene.game_over) {
+        alert("Ship has been detroyed! Reload page to try again.")
+      } // end if
 
-      // TODO: this could be a potential simple transition between scenes. 
-      // note that the curr_scene.initialized is there primarily for the space 
-      // scene: it's very likely we don't want to re-call that for that scene.
-      // a thought, but not required.
+      // a constant flag that should be used to signal that the current scene is over and we need a transition
+      if (curr_scene.is_over) {
+        renderer.clear([0, 0, 0]); // clear out
+        
+        if (curr_scene === space) { // if going from space -> planet
+          const planet_name = curr_scene.transition.planet.toLowerCase(); // readable name of the planet, trust
+          // console.log(planet_name); // testing
+          const cleared = cleared_planets.some(item => item === planet_name); // planet cleared
+          // console.log(cleared_planets)
+          if (cleared) { // if cleared, load the empty planet
+            curr_scene = cleared_planet_scenes[planet_name]; // grab the old scene that is empty.
+            curr_scene.is_over = false; // reset that for this part
+          } else {
+            // re-make the scene, either its cleared or not. no in between right now.
+            const PlanetSceneClass = planet_scenes[planet_name];
+            curr_scene = new PlanetSceneClass();
+            curr_scene.totalBoidsUiEl = document.getElementById("boids_left");
+            await curr_scene.init(renderer, aspect);
+          } // end if
 
-      if (curr_scene.is_over) { // some sort of switch to next flag set by game logic.
-        renderer.clear([0, 0, 0]);
-        curr_scene.reset(); // does something with space, nothing on earth rn
-        const temp_scene = curr_scene;
-        curr_scene = next_scene;
-        next_scene = temp_scene;
-        if (curr_scene !== space) {
-          // this is not super cool, but it'll work with a basic timing mechanic.
-          // re-running init was causing some funky shit, so, in name of time:
-          curr_scene = new EarthBuilder.EarthScene();
-          await curr_scene.init(renderer, aspect);
+          // ui updates
           hit_points.style.display = "none"; // ensure invisible
           planet_div.style.display = "block"; // display vs not
           leave_button.textContent = `Leave ${curr_scene.name}`;
-        } else {
+
+          space.reset(); // reset some stuff in space so transition back is smooth
+
+        } else { // if going from planet -> space
+          const planet_name = curr_scene.name.toLowerCase();
+          const cleared = cleared_planets.some(item => item === planet_name); // planet cleared already
+          if (!cleared && curr_scene.cleared) { // have cleared the planet on this run
+            cleared_planets.push(planet_name); // push this planet to the cleared list
+            cleared_planet_scenes[planet_name] = curr_scene; // hold on to this object for later
+            // update ui
+            const cleared_ui = document.getElementById("planets_cleared");
+            cleared_ui.innerText =  `${cleared_planets.join(", ")}`;
+          } // end if
+
+          curr_scene = space; // reset to space
+
+          // ui updates
           hit_points.style.display = "block"; // ensure visible
           planet_div.style.display = "none";
         } // end if
-        // regardless, update location
+        // ensure updated regardless
         curr_location.innerText = `Current Location: ${curr_scene.name}`;
+        console.log(cleared_planets, cleared_planet_scenes)
       } // end if
    
+      // render the current scene
       curr_scene.render(frontend_data);
 
-      frontend_data.shoot = false; // RESET for now
-      frontend_data.leave = false; // reset as well
+      // this has NOT been tested but hypothetically should work?
+      if (curr_scene === space && cleared_planets.length == Object.keys(cleared_planet_scenes).length) {
+        alert("Congrats! You cleared all the planets! Reload page to play again.")
+      } // end if
+
+      // frontend_data.shoot = false; // changed above to a mousedown/up control for machine gunning
+      frontend_data.leave = false; // reset for next planet scene always
   
       requestAnimationFrame(render);
     } // end render
