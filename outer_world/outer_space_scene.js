@@ -10,6 +10,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   
   constructor() {
     super(); // takes care of base initialization fields.
+    this.name = "Space";
 
     this.solar_system = null; // the solar system in an accessible way.
     this.day = 0; // days passing.
@@ -23,7 +24,6 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
 
     this.transition = null;
     this.fade = 0;
-    this.is_over = false;
   }
 
   /**
@@ -40,10 +40,12 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
     this.init_solar_system();
 
     // set specific space cam
-    this.set_camera(new SceneBuilder.SpaceCamera({
+    const camera = new SceneBuilder.SpaceCamera({
       "aspect": aspect, // since my canvas is not square
       "far": 150
-    }))
+    });
+    // camera.translate = [0, -10, 0];
+    this.set_camera(camera);
 
     this.sun_light = new SceneBuilder.SunLight({"position": this.solar_system.sun.position});
     this.fill_light = new SceneBuilder.FillLight();
@@ -339,6 +341,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
   render(frontend_data={}) {
     // yada yada, do whatever the scene needs to do at a global scale,
     // such as run collision detection with player, did i hit a boid, etc.
+    
     if (!this.game_over) {
 
       // transition to another planet on collide
@@ -354,10 +357,7 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.fade = ease;
 
         if (t >= 1) {
-          // ui stuff
-          this.location_ui_el.innerText = `Current Location: ${this.transition.planet}`;
-          this.hit_point_ui_el.style.display = "none"; // can remove if we still want this visible.
-          this.is_over = true;
+          this.is_over = true; // trigger front end
         } // end if
 
         frontend_data = {}; // empty the frontend data while rendering
@@ -418,14 +418,26 @@ export class OuterSpaceScene extends SceneBuilder.Scene {
         this.handle_planet_collisions(); // deal with planet collisions (including sun) as their own thing.
         // carry out all updates from last time
         this.update_all_transformations(); // update all the transformation nodes, using the override guy below.
-
       } // end if
 
-      // render call!
+      // render call! only when not in transition over mode so i can reset some camera stuff above.
       super.render([0, 0, 0]);  // let the renderer do it's draw thing
     } // end if
     
   } // end function
+
+  /**
+   * whatever needs to be done when switching back to space from planet.
+   */
+  reset() {
+    this.camera.fov = this.transition.start_fov; // reset the fov
+    this.transition = null; // null this out for render logic
+    this.is_over = false; // no longer over 
+    this.camera.translate = [ // ensure i'm not still colliding with the planet lol, not great but okay
+      this.camera.translate[0], this.camera.translate[1] - 15, this.camera.translate[2]
+    ]; 
+  } // end function
+
 
   /**
    * start a transition to a planet scene.

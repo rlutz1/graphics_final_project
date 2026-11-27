@@ -112,6 +112,33 @@ strong {
   text-shadow: 0 0 6px rgba(124, 255, 155, 0.5);
 }
 
+/* for maybe an exit button*/
+.terminal-button {
+  background: linear-gradient(
+    180deg, #19452e, #102b1c
+  );
+  color: #9affb4;
+  border: 1px solid #4d9868;
+  border-radius: 2px;
+  padding: 12px 25px;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: 0 0 6px #65ff91;
+  /* box-shadow:
+    inset 0 1px 0 #ffffff18,
+    0 3px 0 #c1ebcf,
+    0 0 8px #38a85a22; */
+  width:100%;
+}
+
+.terminal-button:active {
+  background: #071b10;
+  transform: translateY(2px);
+  /* box-shadow: inset 0 0 8px #000; */
+}
+
 /**
  * end ai slop
  */
