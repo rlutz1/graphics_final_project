@@ -105,7 +105,7 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
 
         const angle = planet_r / this.radius; // arclength
         const cos_r = Math.cos(angle);
-        bumps.push({ dir, cos_r, inv_span: 1 / (1 - cos_r), height, flat, mountain });
+        bumps.push({ dir, cos_r, inv_span: 1 / (1 - cos_r), height, flat, mountain:mountain_flag });
     }
     return bumps;
   }
