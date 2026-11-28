@@ -2,16 +2,18 @@ import * as SceneBuilder from "../util/scene_graph.js";
 import * as MeshBuilder from "../util/mesh_generators.js";
 import { BoidSceneNode } from "./boid_scene_node.js";
 import { BumpyLandSceneNode } from "./terrain_shiz.js"; // import terrain for the land 
-import { multiplyMat4Vec4 } from "../util/transitions.js"; 
+import { multiplyMat4Vec4 } from "../util/transitions.js";
+import { PLANET_TERRAIN_CONFIG } from "./planet_terrain_config.js"; 
 
 /**
  * a basic earth scene.
  */
 export class EarthScene extends SceneBuilder.Scene {
 
-  constructor() {
+  constructor(planet = "earth") {
     super(); // takes care of base initialization fields.
-    this.name = "Earth";
+    this.config = PLANET_TERRAIN_CONFIG[planet] ?? PLANET_TERRAIN_CONFIG.earth;
+    this.name = this.config.name;
 
     this.boids = null; // dummy root node to hold all the boids
     // ADDED BY THEO TO HOLD BOIDS AND ANIMATE MOVEMENT
@@ -21,7 +23,7 @@ export class EarthScene extends SceneBuilder.Scene {
     
     // init fields for the earth terrain
     this.terrain = null; // dummy root for terrain
-    this.sky_color = [0.5, 0.7, 0.92] // set sky color
+    this.sky_color = this.config.sky_color ?? [0.5, 0.7, 0.92] // set sky color
     this.eye_height = 1.5; // how high camera floats ** MAY WANT TO CHANGE
     this.walk_speed = 10.0; // ??? test see if good 
     this.turn_speed = 2; // test val
@@ -84,7 +86,7 @@ export class EarthScene extends SceneBuilder.Scene {
    */
   init_terrain() {
     // allocate new bumby land for eath to terrain
-    this.terrain = new BumpyLandSceneNode("earth", "bumpyland_basic"); // do ,{} inside to add specs later
+    this.terrain = new BumpyLandSceneNode(this.name, "bumpyland_basic", this.config.terrain ?? {}); // do ,{} inside to add specs later
     // init & build mesh from bumpyland
     this.terrain.init(this.renderer.gl); 
     // add terrain to the scene 
