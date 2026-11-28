@@ -15,7 +15,7 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
   
   constructor(id="bumpyland", shader="bumpyland_basic", {
     radius = 100, // big so the surface looks flat-ish up close
-    seed = 123, // select random seed,, pick what we like
+    seed = 150, // select random seed,, pick what we like
     
     // bump parameters
     num_bumps = 220, // how many random bumps on the whole sphere
@@ -30,6 +30,19 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
     mountain_height = [5, 9], // height range 
     roll_amplitude = 1.5, // height of the rolling base noise
     roll_wavelength = 45, // size of the rolling hills 
+    fbm = { octaves: 4, gain: 0.5 },
+
+    palette = {
+      base:  [0.3, 0.5, 0.2], // grass
+      patch: [0.7, 0.6, 0.4], // sand patch
+      low:   [0.4, 0.3, 0.2], // dirt
+      high:  [0.5, 0.5, 0.4], // rocks 
+      peak:  [1, 1, 1], // snoww
+    },
+
+    // start & end heights where colors fade in
+    high_band = [2.0, 3.8],
+    peak_band = [4.8, 6.0],
 
     // h & v for sphere
     h_step = 0.008, 
@@ -64,9 +77,14 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
     this.fog_density = fog_density;
     this.detail_strength = detail_strength;
 
+    // colors info
+    this.palette = palette;
+    this.high_band = high_band;
+    this.peak_band = peak_band;
+
     // create seeds w/ mulberry32 
     this.rng = mulberry32(seed);
-    this.base_noise = initFbm(seededPerlin(seed)); // will have defualt fbm vals
+    this.base_noise = initFbm(seededPerlin(seed), fbm); // will have defualt fbm vals
     this.patch_noise = initFbm(seededPerlin(seed + 1), {octaves: 3}) // create differring patches,, may want to change or remove 
     
     this.bumps = this.gen_bumps(num_bumps, bump_radius, bump_height, plateau, dip,
@@ -158,10 +176,7 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
   * Creat color for terrain depending on the height and dir
   */
   color_at(dir, h) {
-      const grass = [0.30, 0.50, 0.22];
-      const dirt  = [0.40, 0.31, 0.20];
-      const rock  = [0.52, 0.50, 0.46];
-      const sand  = [0.74, 0.64, 0.42];
+      const { base, patch: patch_color, low, high, peak } = this.palette;
 
       // blend colors
       const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
@@ -171,9 +186,10 @@ export class BumpyLandSceneNode extends SceneBuilder.SceneNode {
 
 
       // color changes depending on patch or height bounds 
-      let m = mix(grass, sand, smoothstep(0.05, 0.25, patch));
-      m = mix(m, dirt, smoothstep(0.0, -1.0, h));
-      m = mix(m, rock, smoothstep(2.0, 3.8, h));
+      let m = mix(base, patch_color, smoothstep(0.05, 0.25, patch));
+      m = mix(m, low, smoothstep(0.0, -1.0, h));
+      m = mix(m, high, smoothstep(this.high_band[0], this.high_band[1], h));
+      m = mix(m, peak, smoothstep(this.peak_band[0], this.peak_band[1], h));
         
       return m;
   }
