@@ -104,33 +104,33 @@ export const PLANET_TERRAIN_CONFIG = {
     // make red, black sky, flatish w/ craters 
     mercury : {
         name : "Mercury",
-        sky_color : MERCURY_SKY,
+        sky_color : COLORS.MERCURY_SKY,
         terrain : {
             seed: 50,
-            num_bumps : 100,
-            bump_radius: [3, 10],
-            bump_height: [0.5, 5],
-            plateau: [0.5, 1],   
-            dip: 0.75,               
+            num_bumps : 200,
+            bump_radius: [4, 14],
+            bump_height: [0.5, 2.5],
+            plateau: [0.5, 0.75],   
+            dip: 0.6,               
             mountain: 0.02,
             mountain_height: [3, 5],
-            roll_amplitude: .5,
+            roll_amplitude: .8,
             // roll_wavelength: , will keep the same as default
             palette: {
-                base: MERCURY_BASE,
-                patch: MERCURY_PATCH,
-                low: MERCURY_LOW,
-                high: MERCURY_HIGH,
-                peak: MERCURY_PEAK,
+                base: COLORS.MERCURY_BASE,
+                patch: COLORS.MERCURY_PATCH,
+                low: COLORS.MERCURY_LOW,
+                high: COLORS.MERCURY_HIGH,
+                peak: COLORS.MERCURY_PEAK,
             },
         },
     },
 
     // venius
     // yellow/orange sky 
-    venius : {
-        name : "Venius",
-        sky_color : VENUS_SKY,
+    venus : {
+        name : "Venus",
+        sky_color : COLORS.VENUS_SKY,
         terrain : {
             seed: 150,
             num_bumps : 200,
@@ -143,11 +143,11 @@ export const PLANET_TERRAIN_CONFIG = {
             roll_amplitude: 1,
             roll_wavelength: 50,
             palette: {
-                base: VENUS_BASE,
-                patch: VENUS_PATCH,
-                low: VENUS_LOW,
-                high: VENUS_HIGH,
-                peak: VENUS_PEAK,
+                base: COLORS.VENUS_BASE,
+                patch: COLORS.VENUS_PATCH,
+                low: COLORS.VENUS_LOW,
+                high: COLORS.VENUS_HIGH,
+                peak: COLORS.VENUS_PEAK,
             },
         },
     },
@@ -155,7 +155,7 @@ export const PLANET_TERRAIN_CONFIG = {
     // earth 
     earth : {
         name : "Earth",
-        sky_color : EARTH_SKY,
+        sky_color : COLORS.EARTH_SKY,
         terrain : {
             seed: 200,
             // all of these will be determined as terrain defaults
@@ -169,11 +169,11 @@ export const PLANET_TERRAIN_CONFIG = {
             //roll_amplitude: ,
             //roll_wavelength: ,
             palette: {
-                base: EARTH_BASE,
-                patch: EARTH_PATCH,
-                low: EARTH_LOW,
-                high: EARTH_HIGH,
-                peak: EARTH_PEAK,
+                base: COLORS.EARTH_BASE,
+                patch: COLORS.EARTH_PATCH,
+                low: COLORS.EARTH_LOW,
+                high: COLORS.EARTH_HIGH,
+                peak: COLORS.EARTH_PEAK,
             },
         },
     },
@@ -181,7 +181,7 @@ export const PLANET_TERRAIN_CONFIG = {
     // mars 
     mars : {
         name : "Mars",
-        sky_color : MARS_SKY,
+        sky_color : COLORS.MARS_SKY,
         terrain : {
             seed:250,
             // mars has some crazy terrain,, allegedly. so keep as default
@@ -196,11 +196,11 @@ export const PLANET_TERRAIN_CONFIG = {
             //roll_amplitude: ,
             //roll_wavelength: ,
             palette: {
-                base: MARS_BASE,
-                patch: MARS_PATCH,
-                low: MARS_LOW,
-                high: MARS_HIGH,
-                peak: MARS_PEAK,
+                base: COLORS.MARS_BASE,
+                patch: COLORS.MARS_PATCH,
+                low: COLORS.MARS_LOW,
+                high: COLORS.MARS_HIGH,
+                peak: COLORS.MARS_PEAK,
             },
         },
     },
@@ -208,7 +208,7 @@ export const PLANET_TERRAIN_CONFIG = {
     // jupiter 
     jupiter : {
         name : "Jupiter",
-        sky_color : JUPITER_SKY,
+        sky_color : COLORS.JUPITER_SKY,
         terrain : {
             seed: 300,
             num_bumps : 50,
@@ -222,11 +222,11 @@ export const PLANET_TERRAIN_CONFIG = {
             roll_wavelength: 70,
             fbm: { octaves: 3, gain: 0.4 },
             palette: {
-                base: JUPITER_BASE,
-                patch: JUPITER_PATCH,
-                low: JUPITER_LOW,
-                high: JUPITER_HIGH,
-                peak: JUPITER_PEAK,
+                base: COLORS.JUPITER_BASE,
+                patch: COLORS.JUPITER_PATCH,
+                low: COLORS.JUPITER_LOW,
+                high: COLORS.JUPITER_HIGH,
+                peak: COLORS.JUPITER_PEAK,
             },
         },
     },
@@ -234,7 +234,7 @@ export const PLANET_TERRAIN_CONFIG = {
     // satern
     saturn : {
         name : "Saturn",
-        sky_color : SATURN_SKY,
+        sky_color : COLORS.SATURN_SKY,
         terrain : {
             seed: 350,
             num_bumps : 50,
@@ -248,11 +248,11 @@ export const PLANET_TERRAIN_CONFIG = {
             roll_wavelength: 70,
             fbm: { octaves: 3, gain: 0.4 },
             palette: {
-                base: SATURN_BASE,
-                patch: SATURN_PATCH,
-                low: SATURN_LOW,
-                high: SATURN_HIGH,
-                peak: SATURN_PEAK,
+                base: COLORS.SATURN_BASE,
+                patch: COLORS.SATURN_PATCH,
+                low: COLORS.SATURN_LOW,
+                high: COLORS.SATURN_HIGH,
+                peak: COLORS.SATURN_PEAK,
             },
         },
     },
@@ -260,7 +260,7 @@ export const PLANET_TERRAIN_CONFIG = {
     // uranus 
     uranus : {
         name : "Uranus",
-        sky_color : URANUS_SKY,
+        sky_color : COLORS.URANUS_SKY,
         terrain : {
             seed:400,
             num_bumps : 50,
@@ -274,11 +274,11 @@ export const PLANET_TERRAIN_CONFIG = {
             roll_wavelength: 70,
             fbm: { octaves: 3, gain: 0.4 },
             palette: {
-                base: URANUS_BASE,
-                patch: URANUS_PATCH,
-                low: URANUS_LOW,
-                high: URANUS_HIGH,
-                peak: URANUS_PEAK,
+                base: COLORS.URANUS_BASE,
+                patch: COLORS.URANUS_PATCH,
+                low: COLORS.URANUS_LOW,
+                high: COLORS.URANUS_HIGH,
+                peak: COLORS.URANUS_PEAK,
             },
         },
     },
@@ -286,7 +286,7 @@ export const PLANET_TERRAIN_CONFIG = {
     // neptune 
     neptune : {
         name : "Neptune",
-        sky_color : NEPTUNE_SKY,
+        sky_color : COLORS.NEPTUNE_SKY,
         terrain : {
             seed: 450,
             num_bumps : 50,
@@ -300,11 +300,11 @@ export const PLANET_TERRAIN_CONFIG = {
             roll_wavelength: 70,
             fbm: { octaves: 3, gain: 0.4 },
             palette: {
-                base: NEPTUNE_BASE,
-                patch: NEPTUNE_PATCH,
-                low: NEPTUNE_LOW,
-                high: NEPTUNE_HIGH,
-                peak: NEPTUNE_PEAK,
+                base: COLORS.NEPTUNE_BASE,
+                patch: COLORS.NEPTUNE_PATCH,
+                low: COLORS.NEPTUNE_LOW,
+                high: COLORS.NEPTUNE_HIGH,
+                peak: COLORS.NEPTUNE_PEAK,
             },
         },
     },
@@ -312,7 +312,7 @@ export const PLANET_TERRAIN_CONFIG = {
     // la sun
     sun : {
         name : "Sun",
-        sky_color : SUN_SKY,
+        sky_color : COLORS.SUN_SKY,
         terrain : {
             // going to attempt to make flares?? tones of mountains basically
             seed: 500,
@@ -327,11 +327,11 @@ export const PLANET_TERRAIN_CONFIG = {
             //roll_wavelength: ,
             fbm: { octaves: 5, gain: 0.6 },
             palette: {
-                base: SUN_BASE,
-                patch: SUN_PATCH,
-                low: SUN_LOW,
-                high: SUN_HIGH,
-                peak: SUN_PEAK,
+                base: COLORS.SUN_BASE,
+                patch: COLORS.SUN_PATCH,
+                low: COLORS.SUN_LOW,
+                high: COLORS.SUN_HIGH,
+                peak: COLORS.SUN_PEAK,
             },
         },
     },

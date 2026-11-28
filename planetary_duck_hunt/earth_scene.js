@@ -2,7 +2,8 @@ import * as SceneBuilder from "../util/scene_graph.js";
 import * as MeshBuilder from "../util/mesh_generators.js";
 import { BoidSceneNode } from "./boid_scene_node.js";
 import { BumpyLandSceneNode } from "./terrain_shiz.js"; // import terrain for the land 
-import { multiplyMat4Vec4 } from "../util/transitions.js"; 
+import { multiplyMat4Vec4 } from "../util/transitions.js";
+import { PLANET_TERRAIN_CONFIG } from "./planet_terrain_config.js"; 
 
 /**
  * a basic earth scene.
@@ -11,7 +12,7 @@ export class EarthScene extends SceneBuilder.Scene {
 
   constructor(planet = "earth") {
     super(); // takes care of base initialization fields.
-    his.config = PLANET_CONFIGS[planet] ?? PLANET_CONFIGS.earth;
+    this.config = PLANET_TERRAIN_CONFIG[planet] ?? PLANET_TERRAIN_CONFIG.earth;
     this.name = this.config.name;
 
     this.boids = null; // dummy root node to hold all the boids
